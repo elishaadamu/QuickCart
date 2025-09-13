@@ -59,13 +59,13 @@ const Navbar = () => {
         <Image className="w-4 h-4" src={assets.search_icon} alt="search icon" />
         <Link href={"/wishlist"} className="flex relative">
           <Image className="w-5" src={assets.heart_icon} alt="" />
-          <div className="absolute -top-2 -right-2 text-xs bg-red-500 text-white h-4 w-4 flex justify-center items-center rounded-full">
+          <div className="absolute -top-2 -right-2 text-xs bg-blue-500 text-white h-4 w-4 flex justify-center items-center rounded-full">
             <p>{getWishlistCount()}</p>
           </div>
         </Link>
         <Link href={"/cart"} className="flex relative">
           <Image className="w-5" src={assets.cart_icon} alt="" />
-          <div className="absolute -top-2 -right-2 text-xs bg-red-500 text-white h-4 w-4 flex justify-center items-center rounded-full">
+          <div className="absolute -top-2 -right-2 text-xs bg-blue-500 text-white h-4 w-4 flex justify-center items-center rounded-full">
             <p>{getCartCount()}</p>
           </div>
         </Link>
@@ -103,13 +103,13 @@ const Navbar = () => {
         )}
         <Link href={"/wishlist"} className="flex relative">
           <Image className="w-5" src={assets.heart_icon} alt="" />
-          <div className="absolute -top-2 -right-2 text-xs bg-red-500 text-white h-4 w-4 flex justify-center items-center rounded-full">
+          <div className="absolute -top-2 -right-2 text-xs bg-blue-500 text-white h-4 w-4 flex justify-center items-center rounded-full">
             <p>{getWishlistCount()}</p>
           </div>
         </Link>
         <Link href={"/cart"} className="flex relative">
           <Image className="w-5" src={assets.cart_icon} alt="" />
-          <div className="absolute -top-2 -right-2 text-xs bg-red-500 text-white h-4 w-4 flex justify-center items-center rounded-full">
+          <div className="absolute -top-2 -right-2 text-xs bg-blue-500 text-white h-4 w-4 flex justify-center items-center rounded-full">
             <p>{getCartCount()}</p>
           </div>
         </Link>

@@ -19,53 +19,9 @@ export const AppContextProvider = (props) => {
   const [isSeller, setIsSeller] = useState(true);
   const isLoggedIn = !!userData; // Derive isLoggedIn from userData
 
-  // Load cartItems from localStorage on initial render
-  const [cartItems, setCartItems] = useState(() => {
-    if (typeof window !== "undefined") {
-      const storedCart = localStorage.getItem("cartItems_storage");
-      if (storedCart) {
-        try {
-          const parsedCart = JSON.parse(storedCart);
-          if (
-            parsedCart.timestamp &&
-            Date.now() - parsedCart.timestamp < 24 * 60 * 60 * 1000
-          ) {
-            return parsedCart.data;
-          } else {
-            localStorage.removeItem("cartItems_storage"); // Data expired
-          }
-        } catch (e) {
-          console.error("Error parsing cart data from localStorage", e);
-          localStorage.removeItem("cartItems_storage");
-        }
-      }
-    }
-    return {};
-  });
+  const [cartItems, setCartItems] = useState({});
 
-  // Load wishlistItems from localStorage on initial render
-  const [wishlistItems, setWishlistItems] = useState(() => {
-    if (typeof window !== "undefined") {
-      const storedWishlist = localStorage.getItem("wishlistItems_storage");
-      if (storedWishlist) {
-        try {
-          const parsedWishlist = JSON.parse(storedWishlist);
-          if (
-            parsedWishlist.timestamp &&
-            Date.now() - parsedWishlist.timestamp < 24 * 60 * 60 * 1000
-          ) {
-            return parsedWishlist.data;
-          } else {
-            localStorage.removeItem("wishlistItems_storage"); // Data expired
-          }
-        } catch (e) {
-          console.error("Error parsing wishlist data from localStorage", e);
-          localStorage.removeItem("wishlistItems_storage");
-        }
-      }
-    }
-    return [];
-  });
+  const [wishlistItems, setWishlistItems] = useState([]);
 
   const fetchProductData = async () => {
     setProducts(productsDummyData);
@@ -196,25 +152,84 @@ export const AppContextProvider = (props) => {
     fetchUserData();
   }, []);
 
-  // Save cartItems to localStorage whenever it changes
+  // Effect to load cart and wishlist based on userData
   useEffect(() => {
     if (typeof window !== "undefined") {
+      if (userData && userData._id) {
+        const userId = userData._id;
+        const cartStorageKey = `cartItems_storage_${userId}`;
+        const wishlistStorageKey = `wishlistItems_storage_${userId}`;
+
+        // Load cart items
+        const storedCart = localStorage.getItem(cartStorageKey);
+        if (storedCart) {
+          try {
+            const parsedCart = JSON.parse(storedCart);
+            if (parsedCart.timestamp && Date.now() - parsedCart.timestamp < 24 * 60 * 60 * 1000) {
+              setCartItems(parsedCart.data);
+            } else {
+              localStorage.removeItem(cartStorageKey); // Data expired
+              setCartItems({});
+            }
+          } catch (e) {
+            console.error("Error parsing cart data from localStorage", e);
+            localStorage.removeItem(cartStorageKey);
+            setCartItems({});
+          }
+        } else {
+          setCartItems({});
+        }
+
+        // Load wishlist items
+        const storedWishlist = localStorage.getItem(wishlistStorageKey);
+        if (storedWishlist) {
+          try {
+            const parsedWishlist = JSON.parse(storedWishlist);
+            if (parsedWishlist.timestamp && Date.now() - parsedWishlist.timestamp < 24 * 60 * 60 * 1000) {
+              setWishlistItems(parsedWishlist.data);
+            } else {
+              localStorage.removeItem(wishlistStorageKey); // Data expired
+              setWishlistItems([]);
+            }
+          } catch (e) {
+            console.error("Error parsing wishlist data from localStorage", e);
+            localStorage.removeItem(wishlistStorageKey);
+            setWishlistItems([]);
+          }
+        } else {
+          setWishlistItems([]);
+        }
+      } else {
+        // Clear cart and wishlist if no user is logged in
+        setCartItems({});
+        setWishlistItems([]);
+      }
+    }
+  }, [userData]); // Re-run when userData changes
+
+  // Save cartItems to localStorage whenever it changes (user-specific)
+  useEffect(() => {
+    if (typeof window !== "undefined" && userData && userData._id) {
+      const userId = userData._id;
+      const cartStorageKey = `cartItems_storage_${userId}`;
       localStorage.setItem(
-        "cartItems_storage",
+        cartStorageKey,
         JSON.stringify({ data: cartItems, timestamp: Date.now() })
       );
     }
-  }, [cartItems]);
+  }, [cartItems, userData]); // Depend on userData to get the key
 
-  // Save wishlistItems to localStorage whenever it changes
+  // Save wishlistItems to localStorage whenever it changes (user-specific)
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && userData && userData._id) {
+      const userId = userData._id;
+      const wishlistStorageKey = `wishlistItems_storage_${userId}`;
       localStorage.setItem(
-        "wishlistItems_storage",
+        wishlistStorageKey,
         JSON.stringify({ data: wishlistItems, timestamp: Date.now() })
       );
     }
-  }, [wishlistItems]);
+  }, [wishlistItems, userData]); // Depend on userData to get the key
 
   const value = {
     currency,
