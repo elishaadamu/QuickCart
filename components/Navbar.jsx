@@ -7,7 +7,15 @@ import { useAppContext } from "@/context/AppContext";
 import Image from "next/image";
 
 const Navbar = () => {
-  const { isSeller, router, getCartCount, getWishlistCount, userData } = useAppContext();
+  const {
+    isSeller,
+    router,
+    getCartCount,
+    getWishlistCount,
+    userData,
+    isLoggedIn,
+    logout,
+  } = useAppContext();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // State for mobile menu
 
   return (
@@ -35,25 +43,19 @@ const Navbar = () => {
           Contact
         </Link>
 
-        {userData && (
+        {isLoggedIn ? (
           <Link
             href="/dashboard"
             className="text-xs border px-4 py-1.5 rounded-full"
           >
             Dashboard
           </Link>
+        ) : (
+          <div className=""></div>
         )}
       </div>
       {/* Desktop Icons and Buttons */}
       <ul className="hidden md:flex items-center gap-4 ">
-        {userData && (
-          <Link
-            href="/wallet"
-            className="text-sm border px-4 py-1.5 rounded-full hover:bg-gray-800 hover:text-white transition"
-          >
-            Add Funds
-          </Link>
-        )}
         <Image className="w-4 h-4" src={assets.search_icon} alt="search icon" />
         <Link href={"/wishlist"} className="flex relative">
           <Image className="w-5" src={assets.heart_icon} alt="" />
@@ -67,7 +69,14 @@ const Navbar = () => {
             <p>{getCartCount()}</p>
           </div>
         </Link>
-        {!userData && (
+        {isLoggedIn ? (
+          <button
+            onClick={logout}
+            className="bg-gray-800 text-white px-4 py-1.5 rounded-full hover:bg-gray-700 transition"
+          >
+            Logout
+          </button>
+        ) : (
           <div className="flex items-center gap-2">
             <Link href={"/signin"}>
               <button className="border border-gray-800 text-gray-800 px-4 py-1.5 rounded-full hover:bg-gray-800 hover:text-white transition">
@@ -150,7 +159,7 @@ const Navbar = () => {
             >
               Contact
             </Link>
-            {userData && (
+            {isLoggedIn && (
               <Link
                 href="/wallet"
                 className="hover:text-gray-900 transition"
@@ -159,7 +168,17 @@ const Navbar = () => {
                 Add Funds
               </Link>
             )}
-            {!userData && (
+            {isLoggedIn ? (
+              <button
+                onClick={() => {
+                  logout();
+                  setIsMobileMenuOpen(false);
+                }}
+                className="bg-gray-800 text-white px-6 py-2 rounded-full w-40 hover:bg-gray-700 transition"
+              >
+                Logout
+              </button>
+            ) : (
               <div className="flex flex-col items-center gap-4 mt-4">
                 {" "}
                 {/* Sign-in/Sign-up buttons inside mobile menu */}

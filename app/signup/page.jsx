@@ -11,9 +11,11 @@ import "react-toastify/dist/ReactToastify.css";
 import { useRouter } from "next/navigation";
 import { encryptData } from "@/lib/encryption";
 import { apiUrl, API_CONFIG } from "@/configs/api";
+import { useAppContext } from "@/context/AppContext";
 
 const page = () => {
   const router = useRouter();
+  const { fetchUserData } = useAppContext();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -21,6 +23,12 @@ const page = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem("user")) {
+      router.push("/");
+    }
+  }, [router]);
 
   useEffect(() => {
     const payload = { firstName, lastName, email, phone, password };
@@ -42,8 +50,9 @@ const page = () => {
       const encryptedUser = encryptData(user);
       localStorage.setItem("user", encryptedUser);
 
+      fetchUserData(); // Call fetchUserData to update global state
       toast.success("Signup successful!");
-      router.push("/signin");
+      router.push("/");
     } catch (error) {
       console.error("Error signing up:", error);
       toast.error(

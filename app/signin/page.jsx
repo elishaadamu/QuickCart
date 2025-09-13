@@ -4,20 +4,28 @@ import Image from "next/image";
 import Logo from "@/assets/logo/logo.png";
 
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { encryptData } from "@/lib/encryption";
 import { apiUrl, API_CONFIG } from "@/configs/api";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useAppContext } from "@/context/AppContext";
 
 const page = () => {
   const router = useRouter();
+  const { fetchUserData } = useAppContext();
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem("user")) {
+      router.push("/");
+    }
+  }, [router]);
 
   const handleSignin = async (e) => {
     e.preventDefault();
@@ -56,8 +64,9 @@ const page = () => {
         "Verification - Data in localStorage:",
         localStorage.getItem("user")
       );
+      fetchUserData(); // Call fetchUserData to update global state
       toast.success("Signin successful!");
-      router.push("/dashboard");
+      router.push("/");
     } catch (error) {
       console.error("Error signing in:", error);
       toast.error(

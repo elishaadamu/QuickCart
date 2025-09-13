@@ -5,6 +5,17 @@ export const API_CONFIG = {
       SIGNUP: "/auth/register",
       SIGNIN: "/auth/login",
     },
+    ACCOUNT: {
+      CREATE: "/account/create/",
+      GET: "/account/",
+    },
+    ORDER: {
+      GET_ALL: "/orders",
+    },
+    PROFILE: {
+      UPDATE: "/profile/update",
+      GET: "/profile",
+    },
   },
 };
 

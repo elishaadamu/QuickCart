@@ -15,8 +15,10 @@ export const AppContextProvider = (props) => {
   const router = useRouter();
 
   const [products, setProducts] = useState([]);
-  const [userData, setUserData] = useState(false);
+  const [userData, setUserData] = useState(null);
   const [isSeller, setIsSeller] = useState(true);
+  const isLoggedIn = !!userData; // Derive isLoggedIn from userData
+
   // Load cartItems from localStorage on initial render
   const [cartItems, setCartItems] = useState(() => {
     if (typeof window !== "undefined") {
@@ -109,7 +111,22 @@ export const AppContextProvider = (props) => {
       setUserData(null);
     }
   };
+
+  const logout = () => {
+    localStorage.removeItem("user");
+    setUserData(null);
+    setCartItems({}); // Clear cart on logout
+    setWishlistItems([]); // Clear wishlist on logout
+    toast.success("Logged out successfully!");
+    router.push("/");
+  };
+
   const addToCart = async (itemId) => {
+    if (!isLoggedIn) {
+      toast.error("Please sign in to add items to cart.");
+      router.push("/signin");
+      return;
+    }
     let cartData = structuredClone(cartItems);
     if (cartData[itemId]) {
       cartData[itemId] += 1;
@@ -143,7 +160,7 @@ export const AppContextProvider = (props) => {
     let totalAmount = 0;
     for (const items in cartItems) {
       let itemInfo = products.find((product) => product._id === items);
-      if (cartItems[items] > 0) {
+      if (itemInfo && cartItems[items] > 0) {
         totalAmount += itemInfo.offerPrice * cartItems[items];
       }
     }
@@ -151,6 +168,11 @@ export const AppContextProvider = (props) => {
   };
 
   const addToWishlist = (itemId) => {
+    if (!isLoggedIn) {
+      toast.error("Please sign in to add items to wishlist.");
+      router.push("/signin");
+      return;
+    }
     let wishlistData = structuredClone(wishlistItems);
     if (wishlistData.includes(itemId)) {
       wishlistData = wishlistData.filter((id) => id !== itemId);
@@ -159,6 +181,8 @@ export const AppContextProvider = (props) => {
     }
     setWishlistItems(wishlistData);
   };
+
+  
 
   const getWishlistCount = () => {
     return wishlistItems.length;
@@ -210,6 +234,8 @@ export const AppContextProvider = (props) => {
     wishlistItems,
     addToWishlist,
     getWishlistCount,
+    isLoggedIn,
+    logout,
   };
 
   return (

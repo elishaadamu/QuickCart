@@ -1,18 +1,26 @@
 'use client'
-import React from "react";
+import React, { useEffect } from "react";
 import { assets } from "@/assets/assets";
 import OrderSummary from "@/components/OrderSummary";
 import Image from "next/image";
-import Navbar from "@/components/Navbar";
+
 import { useAppContext } from "@/context/AppContext";
+import { toast } from "react-toastify";
 
 const Cart = () => {
 
-  const { products, router, cartItems, addToCart, updateCartQuantity, getCartCount } = useAppContext();
+  const { products, router, cartItems, addToCart, updateCartQuantity, getCartCount, isLoggedIn } = useAppContext();
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      toast.error("Please sign in to view your cart.");
+      router.push("/signin");
+    }
+  }, [isLoggedIn, router]);
 
   return (
     <>
-      <Navbar />
+      
       <div className="flex flex-col md:flex-row gap-10 px-6 md:px-16 lg:px-32 pt-14 mb-20">
         <div className="flex-1">
           <div className="flex items-center justify-between mb-8 border-b border-gray-500/30 pb-6">

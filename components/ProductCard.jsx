@@ -2,9 +2,11 @@ import React from "react";
 import { assets } from "@/assets/assets";
 import Image from "next/image";
 import { useAppContext } from "@/context/AppContext";
+import { toast } from "react-toastify";
 
 const ProductCard = ({ product }) => {
-  const { currency, router, addToWishlist, wishlistItems } = useAppContext();
+  const { currency, router, addToWishlist, wishlistItems, isLoggedIn } =
+    useAppContext();
 
   return (
     <div
@@ -25,7 +27,17 @@ const ProductCard = ({ product }) => {
         <button
           onClick={(e) => {
             e.stopPropagation();
+            if (!isLoggedIn) {
+              toast.error("Please sign in to add items to wishlist");
+              router.push("/signin");
+              return;
+            }
             addToWishlist(product._id);
+            toast.success(
+              wishlistItems.includes(product._id)
+                ? `${product.name} removed from wishlist`
+                : `${product.name} added to wishlist`
+            );
           }}
           className={`absolute top-2 right-2 p-2 rounded-full shadow-md ${
             wishlistItems.includes(product._id) ? "bg-red-500" : "bg-white"

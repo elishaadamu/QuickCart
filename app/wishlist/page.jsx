@@ -1,14 +1,26 @@
 "use client";
 import ProductCard from "@/components/ProductCard";
 import { useAppContext } from "@/context/AppContext";
-import React from "react";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-const page = () => {
-  const { products, wishlistItems } = useAppContext();
+const Page = () => {
+  const { products, wishlistItems, isLoggedIn } = useAppContext();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      router.push("/signin");
+    }
+  }, [isLoggedIn, router]);
 
   const wishlistProducts = products.filter((product) =>
     wishlistItems.includes(product._id)
   );
+
+  if (!isLoggedIn) {
+    return null; // Or a loading spinner, or a message
+  }
 
   return (
     <div className="flex flex-col items-center gap-8 my-16 px-4 md:px-16 lg:px-32">
@@ -25,4 +37,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;

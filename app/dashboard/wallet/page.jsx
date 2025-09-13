@@ -1,112 +1,113 @@
 "use client";
-import React, { useState } from 'react';
-import Script from 'next/script'; // Import Script from next/script
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { decryptData } from "@/lib/encryption";
+import { apiUrl, API_CONFIG } from "@/configs/api";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Wallet = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [amount, setAmount] = useState('');
+  const [nin, setNin] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [accountDetails, setAccountDetails] = useState(null);
+  const [user, setUser] = useState(null);
 
-  // Replace with your actual Paystack Public Key
-  const PAYSTACK_PUBLIC_KEY = 'pk_test_YOUR_PAYSTACK_PUBLIC_KEY'; // IMPORTANT: Replace with your actual public key
-
-  const handlePaystackPayment = () => {
-    if (!amount || amount <= 0) {
-      alert('Please enter a valid amount.');
-      return;
+  useEffect(() => {
+    const encryptedUser = localStorage.getItem("user");
+    if (encryptedUser) {
+      const decryptedUser = decryptData(encryptedUser);
+      setUser(decryptedUser);
     }
+  }, []);
 
-    if (typeof window.PaystackPop === 'undefined') {
-      alert('Paystack script not loaded. Please try again.');
-      return;
+  useEffect(() => {
+    if (user) {
+      fetchAccountDetails();
     }
+  }, [user]);
 
-    window.PaystackPop.setup({
-      key: PAYSTACK_PUBLIC_KEY,
-      email: 'user@example.com', // Replace with actual user email
-      amount: amount * 100, // Amount in kobo (Naira) or cents (USD)
-      currency: 'NGN', // Or 'GHS', 'USD', 'ZAR'
-      ref: new Date().getTime().toString(), // Unique reference for the transaction
-      callback: (response) => {
-        // This is called after the transaction is completed
-        alert('Payment successful! Ref: ' + response.reference);
-        console.log(response);
-        // You should verify the transaction on your backend here
-        // For example: fetch('/api/verify-paystack-transaction', { method: 'POST', body: JSON.stringify({ reference: response.reference }) });
-      },
-      onClose: () => {
-        alert('Payment window closed.');
-      },
-    }).openIframe();
+  const fetchAccountDetails = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(
+        apiUrl(API_CONFIG.ENDPOINTS.ACCOUNT.GET + user.id)
+      );
+      setAccountDetails(response.data);
+    } catch (error) {
+      console.error("Error fetching account details:", error);
+      toast.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    setIsModalOpen(false);
+  const handleCreateAccount = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    const payload = { nin };
+    console.log(payload);
+    try {
+      await axios.post(
+        apiUrl(API_CONFIG.ENDPOINTS.ACCOUNT.CREATE + user.id),
+        payload
+      );
+      toast.success("Account created successfully!");
+      fetchAccountDetails();
+    } catch (error) {
+      console.error("Error creating account:", error);
+      toast.error(error.response?.data?.message || "Failed to create account.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
-      <Script
-        src="https://js.paystack.co/v1/inline.js"
-        strategy="lazyOnload"
-      />
+      <ToastContainer />
+      <h1 className="text-4xl font-bold mb-4">Wallet</h1>
 
-      <h1 className="text-4xl font-bold mb-4">Wallet Page</h1>
-      <p className="text-lg mb-8">This is your wallet. You can add funds here.</p>
+      {loading && <p>Loading...</p>}
 
-      <button
-        onClick={() => setIsModalOpen(true)}
-        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-      >
-        Add Funds
-      </button>
+      {!loading && accountDetails && (
+        <div className="bg-white p-8 rounded-lg shadow-lg w-96">
+          <h2 className="text-2xl font-bold mb-4">Account Details</h2>
+          <p>
+            <strong>Account Name:</strong> {accountDetails.accountName}
+          </p>
+          <p>
+            <strong>Account Number:</strong> {accountDetails.accountNumber}
+          </p>
+          <p>
+            <strong>Bank Name:</strong> {accountDetails.bankName}
+          </p>
+        </div>
+      )}
 
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-lg shadow-lg w-96">
-            <h2 className="text-2xl font-bold mb-4">Choose Funding Method</h2>
-
-            <div className="mb-4">
-              <button
-                className="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mb-2"
-                onClick={() => {
-                  alert('Virtual Account funding is not yet implemented.');
-                  setIsModalOpen(false);
-                }}
-              >
-                Add funds with Virtual Account
-              </button>
-              <button
-                className="w-full bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded"
-                onClick={() => {
-                  // This button now just reveals the Paystack input
-                }}
-              >
-                Use Paystack
-              </button>
-            </div>
-
-            <div className="mt-4">
-              <h3 className="text-xl font-bold mb-2">Paystack Payment</h3>
+      {!loading && !accountDetails && user && (
+        <div className="bg-white p-8 rounded-lg shadow-lg w-96">
+          <h2 className="text-2xl font-bold mb-4">Create Virtual Account</h2>
+          <p className="mb-4">
+            You do not have a virtual account yet. Create one to easily fund
+            your wallet.
+          </p>
+          <form onSubmit={handleCreateAccount}>
+            <div className="flex flex-col gap-1 mb-4">
+              <label>NIN (National Identification Number)</label>
               <input
-                type="number"
-                placeholder="Enter amount"
-                className="border p-2 w-full mb-4 rounded"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => setNin(e.target.value)}
+                value={nin}
+                className="border p-2 rounded-md"
+                type="text"
+                placeholder="Enter your NIN"
               />
-              <button
-                onClick={handlePaystackPayment}
-                className="w-full bg-purple-600 hover:bg-purple-800 text-white font-bold py-2 px-4 rounded"
-              >
-                Pay with Paystack
-              </button>
             </div>
-
             <button
-              onClick={() => setIsModalOpen(false)}
-              className="mt-6 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+              disabled={loading}
+              className="bg-gray-800 text-white p-2 rounded-md flex items-center justify-center w-full"
             >
-              Close
+              {loading ? "Creating..." : "Create Account"}
             </button>
-          </div>
+          </form>
         </div>
       )}
     </div>
