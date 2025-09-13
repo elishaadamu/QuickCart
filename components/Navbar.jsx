@@ -93,14 +93,6 @@ const Navbar = () => {
       </ul>
       {/* Mobile Icons and Hamburger */}
       <div className="flex items-center md:hidden gap-3">
-        {isSeller && (
-          <button
-            onClick={() => router.push("/seller")}
-            className="text-xs border px-4 py-1.5 rounded-full"
-          >
-            Seller Dashboard
-          </button>
-        )}
         <Link href={"/wishlist"} className="flex relative">
           <Image className="w-5" src={assets.heart_icon} alt="" />
           <div className="absolute -top-2 -right-2 text-xs bg-blue-500 text-white h-4 w-4 flex justify-center items-center rounded-full">
