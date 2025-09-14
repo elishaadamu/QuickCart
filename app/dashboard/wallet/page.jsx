@@ -32,6 +32,7 @@ const Wallet = () => {
       const response = await axios.get(
         apiUrl(API_CONFIG.ENDPOINTS.ACCOUNT.GET + user.id)
       );
+      console.log(response.data);
       setAccountDetails(response.data);
     } catch (error) {
       console.error("Error fetching account details:", error);

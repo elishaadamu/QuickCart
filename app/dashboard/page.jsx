@@ -11,9 +11,9 @@ const DashboardHome = () => {
     userName: "",
     totalOrders: 0,
     pendingOrders: 0,
-    walletBalance: 0,
     recentOrders: [],
   });
+  const [walletBalance, setWalletBalance] = useState(2);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -52,6 +52,30 @@ const DashboardHome = () => {
     };
 
     fetchDashboardData();
+  }, []);
+
+  useEffect(() => {
+    const fetchWalletBalance = async () => {
+      try {
+        const encryptedUser = localStorage.getItem("user");
+        if (encryptedUser) {
+          const userData = decryptData(encryptedUser);
+          const walletResponse = await axios.get(
+            apiUrl(
+              API_CONFIG.ENDPOINTS.ACCOUNT.walletBalance +
+                userData.id +
+                "/balance"
+            )
+          );
+          console.log(walletResponse.data.data);
+          setWalletBalance(walletResponse.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching wallet balance:", error);
+      }
+    };
+
+    fetchWalletBalance();
   }, []);
 
   return (
@@ -156,7 +180,7 @@ const DashboardHome = () => {
                     Wallet Balance
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
-                    ₦{dashboardData.walletBalance.toLocaleString()}
+                    ₦{walletBalance.balance}
                   </p>
                 </div>
                 <div className="p-3 bg-green-100 rounded-full">

@@ -8,6 +8,8 @@ export const API_CONFIG = {
     ACCOUNT: {
       CREATE: "/account/create/",
       GET: "/account/",
+      walletBalance: "/wallet/",
+      allWalletTransactions: "/wallet/",
     },
     ORDER: {
       GET_ALL: "/orders",
