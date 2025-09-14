@@ -21,6 +21,7 @@ const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [animate, setAnimate] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -36,6 +37,28 @@ const Navbar = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+      requestAnimationFrame(() => {
+        setAnimate(true);
+      });
+    } else {
+      document.body.style.overflow = "unset";
+    }
+
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isMobileMenuOpen]);
+
+  const handleCloseMenu = () => {
+    setAnimate(false);
+    setTimeout(() => {
+      setIsMobileMenuOpen(false);
+    }, 300);
+  };
+
   const handleProductClick = (productId) => {
     router.push(`/product/${productId}`);
     setSearchQuery("");
@@ -45,7 +68,7 @@ const Navbar = () => {
   return (
     <nav className="flex items-center justify-between px-6 md:px-16 lg:px-32 py-3 border-b border-gray-300 text-gray-700 relative bg-white shadow-md z-10">
       <Image
-        className="cursor-pointer w-[100px] md:w-[170px]"
+        className="cursor-pointer w-[170px] md:w-[250px]"
         onClick={() => router.push("/")}
         src={Logo}
         alt="logo"
@@ -72,7 +95,7 @@ const Navbar = () => {
           </Link>
         )}
       </div>
-      <ul className="hidden md:flex items-center gap-4 relative">
+      <ul className="hidden md:flex items-center gap-6 relative">
         <div className="relative">
           <input
             type="text"
@@ -145,7 +168,7 @@ const Navbar = () => {
           </div>
         )}
       </ul>
-      <div className="flex items-center md:hidden gap-3">
+      <div className="flex items-center md:hidden gap-4">
         <Image
           className="w-5 cursor-pointer"
           src={assets.search_icon}
@@ -168,7 +191,7 @@ const Navbar = () => {
           className="w-6 h-6 cursor-pointer"
           src={assets.menu_icon}
           alt="menu icon"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          onClick={() => setIsMobileMenuOpen(true)}
         />
       </div>
       {isSearchOpen && (
@@ -214,75 +237,101 @@ const Navbar = () => {
         </div>
       )}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center md:hidden">
-          <Image
-            className="absolute top-4 right-4 w-6 h-6 cursor-pointer"
-            src={assets.menu_icon}
-            alt="close menu"
-            onClick={() => setIsMobileMenuOpen(false)}
-          />
-          <div className="flex flex-col items-center gap-6 text-lg">
-            <Link
-              href="/"
-              className="hover:text-gray-900 transition"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Home
-            </Link>
-            <Link
-              href="/all-products"
-              className="hover:text-gray-900 transition"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Shop
-            </Link>
-            <Link
-              href="/about"
-              className="hover:text-gray-900 transition"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              About Us
-            </Link>
-            <Link
-              href="/"
-              className="hover:text-gray-900 transition"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Contact
-            </Link>
-            {isLoggedIn && (
-              <Link
-                href="/wallet"
-                className="hover:text-gray-900 transition"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Add Funds
-              </Link>
-            )}
-            {isLoggedIn ? (
-              <button
-                onClick={() => {
-                  logout();
-                  setIsMobileMenuOpen(false);
-                }}
-                className="bg-gray-800 text-white px-6 py-2 rounded-full w-40 hover:bg-gray-700 transition"
-              >
-                Logout
+        <div className="fixed inset-0 z-50 md:hidden">
+          {/* Overlay */}
+          <div
+            className={`fixed inset-0 bg-black transition-opacity duration-300 ${
+              animate ? "bg-opacity-50" : "bg-opacity-0"
+            }`}
+            onClick={handleCloseMenu}
+          ></div>
+
+          {/* Menu panel */}
+          <div
+            className={`fixed top-0 right-0 h-full w-4/5 max-w-sm bg-gray-900 text-white p-6 transform transition-transform duration-300 ease-in-out ${
+              animate ? "translate-x-0" : "translate-x-full"
+            }`}
+          >
+            <div className="flex justify-end">
+              <button onClick={handleCloseMenu} className="text-white">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
               </button>
-            ) : (
-              <div className="flex flex-col items-center gap-4 mt-4">
-                <Link href="/signin">
-                  <button className="border border-gray-800 text-gray-800 px-6 py-2 rounded-full w-40 hover:bg-gray-800 hover:text-white transition">
-                    Sign in
-                  </button>
+            </div>
+            <div className="flex flex-col items-center gap-6 text-lg mt-8">
+              <Link
+                href="/"
+                className="hover:text-gray-400 transition"
+                onClick={handleCloseMenu}
+              >
+                Home
+              </Link>
+              <Link
+                href="/all-products"
+                className="hover:text-gray-400 transition"
+                onClick={handleCloseMenu}
+              >
+                Shop
+              </Link>
+              <Link
+                href="/about"
+                className="hover:text-gray-400 transition"
+                onClick={handleCloseMenu}
+              >
+                About Us
+              </Link>
+              <Link
+                href="/"
+                className="hover:text-gray-400 transition"
+                onClick={handleCloseMenu}
+              >
+                Contact
+              </Link>
+              {isLoggedIn && (
+                <Link
+                  href="/dashboard"
+                  className="hover:text-gray-400 transition"
+                  onClick={handleCloseMenu}
+                >
+                  Dashboard
                 </Link>
-                <Link href="/signup">
-                  <button className="bg-gray-800 text-white px-6 py-2 rounded-full w-40 hover:bg-gray-700 transition">
-                    Sign up
-                  </button>
-                </Link>
-              </div>
-            )}
+              )}
+              {isLoggedIn ? (
+                <button
+                  onClick={() => {
+                    logout();
+                    handleCloseMenu();
+                  }}
+                  className="bg-red-600 text-white px-6 py-2 rounded-full w-40 hover:bg-red-500 transition"
+                >
+                  Logout
+                </button>
+              ) : (
+                <div className="flex flex-col items-center gap-4 mt-4">
+                  <Link href="/signin" onClick={handleCloseMenu}>
+                    <button className="border border-white text-white px-6 py-2 rounded-full w-40 hover:bg-white hover:text-gray-900 transition">
+                      Sign in
+                    </button>
+                  </Link>
+                  <Link href="/signup" onClick={handleCloseMenu}>
+                    <button className="bg-blue-600 text-white px-6 py-2 rounded-full w-40 hover:bg-blue-500 transition">
+                      Sign up
+                    </button>
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

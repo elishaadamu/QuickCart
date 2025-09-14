@@ -1,7 +1,7 @@
 "use client";
 import { assets } from "@/assets/assets";
 import Image from "next/image";
-import  Logo  from "@/assets/logo/logo.png";
+import Logo from "@/assets/logo/logo.png";
 
 import Link from "next/link";
 import React, { useState, useEffect } from "react";
@@ -71,7 +71,11 @@ const page = () => {
         className="flex flex-col gap-4 w-[90%] md:w-[450px] text-gray-700"
       >
         <Link href={"/"}>
-          <Image className="w-32 mx-auto" src={Logo} alt="" />
+          <Image
+            className="cursor-pointer w-[170px] md:w-[250px] mx-auto"
+            src={Logo}
+            alt=""
+          />
         </Link>
         <p className="text-center font-semibold text-xl">Create an account</p>
         <div className="flex flex-col gap-1">

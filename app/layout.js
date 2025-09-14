@@ -7,23 +7,25 @@ import Navbar from "@/components/Navbar"; // Import Navbar
 import Footer from "@/components/Footer"; // Import Footer
 import { usePathname } from "next/navigation";
 
-const outfit = Outfit({ subsets: ['latin'], weight: ["300", "400", "500"] })
+const outfit = Outfit({ subsets: ["latin"], weight: ["300", "400", "500"] });
 
 export default function RootLayout({ children }) {
   const pathname = usePathname();
-  const isSpecialRoute = pathname.startsWith('/dashboard') || pathname.startsWith('/signin') || pathname.startsWith('/signup');
+  const isSpecialRoute =
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/signin") ||
+    pathname.startsWith("/signup");
 
   return (
-      <html lang="en">
-        <body className={`${outfit.className} antialiased text-gray-700`} >
-          <ToastContainer />
-          <AppContextProvider>
-            {!isSpecialRoute && <Navbar />} {/* Conditionally render Navbar */}
-            {children}
-            {!isSpecialRoute && <Footer />} {/* Conditionally render Footer */}
-          </AppContextProvider>
-        </body>
-      </html>
+    <html lang="en">
+      <body className={`${outfit.className} antialiased text-gray-700`}>
+        <ToastContainer />
+        <AppContextProvider>
+          {!isSpecialRoute && <Navbar />} {/* Conditionally render Navbar */}
+          {children}
+          {!isSpecialRoute && <Footer />} {/* Conditionally render Footer */}
+        </AppContextProvider>
+      </body>
+    </html>
   );
 }
-
