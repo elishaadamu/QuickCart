@@ -44,7 +44,7 @@ const ProductCard = ({ product }) => {
           }`}
         >
           <Image
-            className="h-3 w-3"
+            className="h-3 w-3 text-blue-500"
             src={
               wishlistItems.includes(product._id)
                 ? assets.heart_icon
@@ -67,7 +67,7 @@ const ProductCard = ({ product }) => {
           {Array.from({ length: 5 }).map((_, index) => (
             <Image
               key={index}
-              className="h-3 w-3"
+              className="h-3 w-3 text-blue-500"
               src={
                 index < Math.floor(4) ? assets.star_icon : assets.star_dull_icon
               }
