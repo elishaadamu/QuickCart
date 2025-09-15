@@ -5,7 +5,9 @@ import { assets } from "@/assets/assets";
 import Link from "next/link";
 import { useAppContext } from "@/context/AppContext";
 import Image from "next/image";
-import { products } from "@/assets/productData";
+import { decryptData } from "@/lib/encryption";
+import { apiUrl, API_CONFIG } from "@/configs/api";
+import axios from "axios";
 
 const Navbar = () => {
   const {
@@ -16,12 +18,51 @@ const Navbar = () => {
     userData,
     isLoggedIn,
     logout,
+    products,
   } = useAppContext();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [animate, setAnimate] = useState(false);
+  const [pagesOpen, setPagesOpen] = useState(false);
+  const [vendorOpen, setVendorOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const [walletBalance, setWalletBalance] = useState(0);
+
+  useEffect(() => {
+    if (searchQuery.trim() !== "") {
+      const filtered = products.filter((product) =>
+        product.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredProducts(filtered);
+    } else {
+      setFilteredProducts([]);
+    }
+  }, [searchQuery, products]);
+
+  useEffect(() => {
+    const fetchWalletBalance = async () => {
+      try {
+        const encryptedUser = localStorage.getItem("user");
+        if (encryptedUser) {
+          const userData = decryptData(encryptedUser);
+          const walletResponse = await axios.get(
+            apiUrl(
+              API_CONFIG.ENDPOINTS.ACCOUNT.walletBalance +
+                userData.id +
+                "/balance"
+            )
+          );
+          setWalletBalance(walletResponse.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching wallet balance:", error);
+      }
+    };
+
+    fetchWalletBalance();
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -74,26 +115,76 @@ const Navbar = () => {
         alt="logo"
       />
       <div className="flex items-center gap-4 lg:gap-8 max-md:hidden">
-        <Link href="/" className="hover:text-gray-900 transition">
+        <Link href="/" className="hover:text-gray-900 transition text-xl">
           Home
         </Link>
-        <Link href="/all-products" className="hover:text-gray-900 transition">
+        <Link
+          href="/all-products"
+          className="hover:text-gray-900 transition text-xl"
+        >
           Shop
         </Link>
-        <Link href="/about" className="hover:text-gray-900 transition">
-          About Us
-        </Link>
-        <Link href="/" className="hover:text-gray-900 transition">
-          Contact
-        </Link>
-        {isLoggedIn && (
-          <Link
-            href="/dashboard"
-            className="text-xs border px-4 py-1.5 rounded-full"
-          >
-            Dashboard
-          </Link>
-        )}
+        <div
+          className="relative"
+          onMouseEnter={() => setPagesOpen(true)}
+          onMouseLeave={() => setPagesOpen(false)}
+        >
+          <button className="hover:text-gray-900 transition flex items-center gap-1 text-xl">
+            Pages
+            <Image
+              src={assets.arrow_icon}
+              alt="arrow"
+              className={`w-2 h-2 transform transition-transform ${
+                pagesOpen ? "rotate-90" : ""
+              }`}
+            />
+          </button>
+          {pagesOpen && (
+            <div className="absolute top-full left-0 w-40 bg-white border rounded-lg shadow-lg z-20">
+              <Link href="/about" className="block px-4 py-2 hover:bg-gray-100">
+                About Us
+              </Link>
+              <Link
+                href="/contact"
+                className="block px-4 py-2 hover:bg-gray-100"
+              >
+                Contact
+              </Link>
+            </div>
+          )}
+        </div>
+        <div
+          className="relative"
+          onMouseEnter={() => setVendorOpen(true)}
+          onMouseLeave={() => setVendorOpen(false)}
+        >
+          <button className="hover:text-gray-900 transition flex items-center gap-1 text-xl">
+            Vendor
+            <Image
+              src={assets.arrow_icon}
+              alt="arrow"
+              className={`w-2 h-2 transform transition-transform ${
+                vendorOpen ? "rotate-90" : ""
+              }`}
+            />
+          </button>
+          {vendorOpen && (
+            <div className="absolute top-full left-0 w-48 bg-white border rounded-lg shadow-lg z-20">
+              <Link
+                href="/seller/signup"
+                className="block px-4 py-2 hover:bg-gray-100"
+              >
+                Become a Vendor
+              </Link>
+              <Link
+                href="/seller/login"
+                className="block px-4 py-2 hover:bg-gray-100"
+              >
+                Vendor Login
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
       <ul className="hidden md:flex items-center gap-6 relative">
         <div className="relative">
@@ -105,16 +196,16 @@ const Navbar = () => {
             className="px-4 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           {searchQuery.trim() !== "" && (
-            <div className="absolute top-full left-0 mt-2 w-full bg-white border rounded-lg shadow-lg z-20">
+            <div className="absolute top-full left-0 w-full bg-white border rounded-lg shadow-lg z-20">
               {filteredProducts.length > 0 ? (
                 filteredProducts.map((product) => (
                   <div
-                    key={product.id}
-                    onClick={() => handleProductClick(product.id)}
+                    key={product._id}
+                    onClick={() => handleProductClick(product._id)}
                     className="p-4 hover:bg-gray-100 cursor-pointer flex items-center gap-4"
                   >
                     <Image
-                      src={product.imgSrc}
+                      src={product.image[0]}
                       alt={product.name}
                       width={40}
                       height={40}
@@ -122,7 +213,9 @@ const Navbar = () => {
                     />
                     <div>
                       <p className="font-semibold">{product.name}</p>
-                      <p className="text-sm text-gray-600">{product.price}</p>
+                      <p className="text-sm text-gray-600">
+                        ₦{product.offerPrice}
+                      </p>
                     </div>
                   </div>
                 ))
@@ -135,38 +228,79 @@ const Navbar = () => {
           )}
         </div>
         <Link href="/wishlist" className="flex relative">
-          <Image className="w-5" src={assets.heart_icon} alt="" />
+          <Image className="w-6" src={assets.heart_icon} alt="" />
           <div className="absolute -top-2 -right-2 text-xs bg-blue-500 text-white h-4 w-4 flex justify-center items-center rounded-full">
             <p>{getWishlistCount()}</p>
           </div>
         </Link>
         <Link href="/cart" className="flex relative">
-          <Image className="w-5" src={assets.cart_icon} alt="" />
+          <Image className="w-6" src={assets.cart_icon} alt="" />
           <div className="absolute -top-2 -right-2 text-xs bg-blue-500 text-white h-4 w-4 flex justify-center items-center rounded-full">
             <p>{getCartCount()}</p>
           </div>
         </Link>
-        {isLoggedIn ? (
-          <button
-            onClick={logout}
-            className="bg-gray-800 text-white px-4 py-1.5 rounded-full hover:bg-gray-700 transition"
-          >
-            Logout
-          </button>
-        ) : (
+        {isLoggedIn && (
           <div className="flex items-center gap-2">
-            <Link href="/signin">
-              <button className="border border-gray-800 text-gray-800 px-4 py-1.5 rounded-full hover:bg-gray-800 hover:text-white transition">
-                Sign in
-              </button>
-            </Link>
-            <Link href="/signup">
-              <button className="bg-gray-800 text-white px-4 py-1.5 rounded-full hover:bg-gray-700 transition">
-                Sign up
-              </button>
-            </Link>
+            <p className=" text-2xl font-semibold text-gray-800">
+              ₦{walletBalance?.balance?.toFixed(2)}
+            </p>
           </div>
         )}
+        <div
+          className="relative"
+          onMouseEnter={() => setAccountOpen(true)}
+          onMouseLeave={() => setAccountOpen(false)}
+        >
+          <Image
+            src={assets.user_icon}
+            alt="user"
+            className="w-6 h-8 cursor-pointer"
+          />
+          {accountOpen && (
+            <div className="absolute top-full right-0 w-48 bg-white border rounded-lg shadow-lg z-20">
+              {isLoggedIn ? (
+                <>
+                  <Link
+                    href="/dashboard"
+                    className="block px-4 py-2 hover:bg-gray-100"
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    href="/my-orders"
+                    className="block px-4 py-2 hover:bg-gray-100"
+                  >
+                    My Orders
+                  </Link>
+                  <button
+                    onClick={() => {
+                      logout();
+                      setAccountOpen(false);
+                    }}
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/signin"
+                    className="block px-4 py-2 hover:bg-gray-100"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/signup"
+                    className="block px-4 py-2 hover:bg-gray-100"
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </ul>
       <div className="flex items-center md:hidden gap-4">
         <Image
@@ -176,13 +310,13 @@ const Navbar = () => {
           onClick={() => setIsSearchOpen(!isSearchOpen)}
         />
         <Link href="/wishlist" className="flex relative">
-          <Image className="w-5" src={assets.heart_icon} alt="" />
+          <Image className="w-6" src={assets.heart_icon} alt="" />
           <div className="absolute -top-2 -right-2 text-xs bg-blue-500 text-white h-4 w-4 flex justify-center items-center rounded-full">
             <p>{getWishlistCount()}</p>
           </div>
         </Link>
         <Link href="/cart" className="flex relative">
-          <Image className="w-5" src={assets.cart_icon} alt="" />
+          <Image className="w-6" src={assets.cart_icon} alt="" />
           <div className="absolute -top-2 -right-2 text-xs bg-blue-500 text-white h-4 w-4 flex justify-center items-center rounded-full">
             <p>{getCartCount()}</p>
           </div>
@@ -205,16 +339,16 @@ const Navbar = () => {
               className="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             {searchQuery.trim() !== "" && (
-              <div className="absolute top-full left-0 mt-2 w-full bg-white border rounded-lg shadow-lg">
+              <div className="absolute top-full left-0 w-full bg-white border rounded-lg shadow-lg">
                 {filteredProducts.length > 0 ? (
                   filteredProducts.map((product) => (
                     <div
-                      key={product.id}
-                      onClick={() => handleProductClick(product.id)}
+                      key={product._id}
+                      onClick={() => handleProductClick(product._id)}
                       className="p-4 hover:bg-gray-100 cursor-pointer flex items-center gap-4"
                     >
                       <Image
-                        src={product.imgSrc}
+                        src={product.image[0]}
                         alt={product.name}
                         width={40}
                         height={40}
@@ -222,7 +356,9 @@ const Navbar = () => {
                       />
                       <div>
                         <p className="font-semibold">{product.name}</p>
-                        <p className="text-sm text-gray-600">{product.price}</p>
+                        <p className="text-sm text-gray-600">
+                          ₦{product.offerPrice}
+                        </p>
                       </div>
                     </div>
                   ))
@@ -290,13 +426,27 @@ const Navbar = () => {
                 onClick={handleCloseMenu}
               >
                 About Us
-              </Link>
+              </Link>{" "}
               <Link
-                href="/"
+                href="/contact"
                 className="hover:text-gray-400 transition"
                 onClick={handleCloseMenu}
               >
                 Contact
+              </Link>
+              <Link
+                href="/seller/signup"
+                className="hover:text-gray-400 transition"
+                onClick={handleCloseMenu}
+              >
+                Become a Vendor
+              </Link>
+              <Link
+                href="/seller/login"
+                className="hover:text-gray-400 transition"
+                onClick={handleCloseMenu}
+              >
+                Vendor Login
               </Link>
               {isLoggedIn && (
                 <Link

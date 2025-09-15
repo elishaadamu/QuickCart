@@ -16,6 +16,7 @@ const Cart = () => {
     updateCartQuantity,
     getCartCount,
     isLoggedIn,
+    currency,
   } = useAppContext();
 
   useEffect(() => {
@@ -94,7 +95,7 @@ const Cart = () => {
                         </div>
                       </td>
                       <td className="py-4 md:px-4 px-1 text-gray-600">
-                        ${product.offerPrice}
+                        {currency}{product.offerPrice}
                       </td>
                       <td className="py-4 md:px-4 px-1">
                         <div className="flex items-center md:gap-2 gap-1">
@@ -133,7 +134,7 @@ const Cart = () => {
                         </div>
                       </td>
                       <td className="py-4 md:px-4 px-1 text-gray-600">
-                        ${(product.offerPrice * cartItems[itemId]).toFixed(2)}
+                        {currency}{(product.offerPrice * cartItems[itemId]).toFixed(2)}
                       </td>
                     </tr>
                   );

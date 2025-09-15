@@ -64,7 +64,7 @@ const OnDeliveryOrders = () => {
                 <tr key={order.id}>
                   <td className="py-2 px-4 border-b">{order.id}</td>
                   <td className="py-2 px-4 border-b">{new Date(order.date).toLocaleDateString()}</td>
-                  <td className="py-2 px-4 border-b">${order.totalAmount}</td>
+                  <td className="py-2 px-4 border-b">₦{order.totalAmount}</td>
                   <td className="py-2 px-4 border-b">{order.status}</td>
                 </tr>
               ))}

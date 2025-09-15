@@ -14,7 +14,7 @@ import "react-toastify/dist/ReactToastify.css";
 const Product = () => {
   const { id } = useParams();
 
-  const { products, router, addToCart, isLoggedIn } = useAppContext();
+  const { products, router, addToCart, isLoggedIn, currency } = useAppContext();
 
   const [mainImage, setMainImage] = useState(null);
   const [productData, setProductData] = useState(null);
@@ -99,9 +99,9 @@ const Product = () => {
             </div>
             <p className="text-gray-600 mt-3">{productData.description}</p>
             <p className="text-3xl font-medium mt-6">
-              ${productData.offerPrice}
+              {currency}{productData.offerPrice}
               <span className="text-base font-normal text-gray-800/60 line-through ml-2">
-                ${productData.price}
+                {currency}{productData.price}
               </span>
             </p>
             <hr className="bg-gray-600 my-6" />

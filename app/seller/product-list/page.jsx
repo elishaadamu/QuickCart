@@ -8,7 +8,7 @@ import Loading from "@/components/Loading";
 
 const ProductList = () => {
 
-  const { router } = useAppContext()
+  const { router, currency } = useAppContext()
 
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -56,7 +56,7 @@ const ProductList = () => {
                     </span>
                   </td>
                   <td className="px-4 py-3 max-sm:hidden">{product.category}</td>
-                  <td className="px-4 py-3">${product.offerPrice}</td>
+                  <td className="px-4 py-3">{currency}{product.offerPrice}</td>
                   <td className="px-4 py-3 max-sm:hidden">
                     <button onClick={() => router.push(`/product/${product._id}`)} className="flex items-center gap-1 px-1.5 md:px-3.5 py-2 bg-orange-600 text-white rounded-md">
                       <span className="hidden md:block">Visit</span>

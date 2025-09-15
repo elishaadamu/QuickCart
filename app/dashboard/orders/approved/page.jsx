@@ -69,7 +69,7 @@ const ApprovedOrders = () => {
                   <td className="py-2 px-4 border-b">
                     {new Date(order.date).toLocaleDateString()}
                   </td>
-                  <td className="py-2 px-4 border-b">${order.totalAmount}</td>
+                  <td className="py-2 px-4 border-b">₦{order.totalAmount}</td>
                   <td className="py-2 px-4 border-b">{order.status}</td>
                 </tr>
               ))}
