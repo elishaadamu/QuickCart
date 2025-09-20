@@ -5,7 +5,6 @@ import { decryptData } from "@/lib/encryption";
 import { apiUrl, API_CONFIG } from "@/configs/api";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import PaystackPop from "@paystack/inline-js";
 
 const Wallet = () => {
   const [nin, setNin] = useState("");
@@ -15,7 +14,8 @@ const Wallet = () => {
   const [amount, setAmount] = useState("");
   const [showFundModal, setShowFundModal] = useState(false);
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
+    const PaystackPop = (await import("@paystack/inline-js")).default;
     const paystack = new PaystackPop();
     paystack.newTransaction({
       key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
