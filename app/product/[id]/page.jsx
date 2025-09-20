@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { assets } from "@/assets/assets";
 import ProductCard from "@/components/ProductCard";
+import ImageMagnify from "@/components/ImageMagnify/ImageMagnify.jsx";
 
 import Image from "next/image";
 import { useParams } from "next/navigation";
@@ -34,16 +35,23 @@ const Product = () => {
       <div className="px-6 md:px-16 lg:px-32 pt-14 space-y-10">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
           <div className="px-5 lg:px-16 xl:px-20">
-            <div className="rounded-lg overflow-hidden bg-gray-500/10 mb-4">
-              <Image
-                src={mainImage || productData.image[0]}
-                alt="alt"
-                className="w-full h-auto object-cover mix-blend-multiply"
-                width={1280}
-                height={720}
+            <div
+              className="rounded-lg overflow-hidden bg-gray-500/10 mb-4 relative"
+              style={{ zIndex: 1 }}
+            >
+              {/* Magnifier effect */}
+              <ImageMagnify
+                smallImage={{
+                  alt: productData.name,
+                  src: mainImage || productData.image[0],
+                }}
+                largeImage={{
+                  src: mainImage || productData.image[0],
+                }}
               />
             </div>
 
+            {/* Thumbnails */}
             <div className="grid grid-cols-4 gap-4">
               {productData.image.map((image, index) => (
                 <div
@@ -63,32 +71,21 @@ const Product = () => {
             </div>
           </div>
 
+          {/* Product Details */}
           <div className="flex flex-col">
             <h1 className="text-3xl font-medium text-gray-800/90 mb-4">
               {productData.name}
             </h1>
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-0.5">
-                <Image
-                  className="h-4 w-4"
-                  src={assets.star_icon}
-                  alt="star_icon"
-                />
-                <Image
-                  className="h-4 w-4"
-                  src={assets.star_icon}
-                  alt="star_icon"
-                />
-                <Image
-                  className="h-4 w-4"
-                  src={assets.star_icon}
-                  alt="star_icon"
-                />
-                <Image
-                  className="h-4 w-4"
-                  src={assets.star_icon}
-                  alt="star_icon"
-                />
+                {[...Array(4)].map((_, i) => (
+                  <Image
+                    key={i}
+                    className="h-4 w-4"
+                    src={assets.star_icon}
+                    alt="star_icon"
+                  />
+                ))}
                 <Image
                   className="h-4 w-4"
                   src={assets.star_dull_icon}
@@ -99,9 +96,11 @@ const Product = () => {
             </div>
             <p className="text-gray-600 mt-3">{productData.description}</p>
             <p className="text-3xl font-medium mt-6">
-              {currency}{productData.offerPrice}
+              {currency}
+              {productData.offerPrice}
               <span className="text-base font-normal text-gray-800/60 line-through ml-2">
-                {currency}{productData.price}
+                {currency}
+                {productData.price}
               </span>
             </p>
             <hr className="bg-gray-600 my-6" />
@@ -124,6 +123,7 @@ const Product = () => {
               </table>
             </div>
 
+            {/* Buttons */}
             <div className="flex items-center mt-10 gap-4">
               <button
                 onClick={() => {
@@ -161,6 +161,8 @@ const Product = () => {
             </div>
           </div>
         </div>
+
+        {/* Featured products */}
         <div className="flex flex-col items-center">
           <div className="flex flex-col items-center mb-4 mt-16">
             <p className="text-3xl font-medium">

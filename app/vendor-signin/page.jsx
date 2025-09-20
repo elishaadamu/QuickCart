@@ -6,64 +6,51 @@ import Logo from "@/assets/logo/logo.png";
 import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { useRouter } from "next/navigation";
 import { encryptData } from "@/lib/encryption";
 import { apiUrl, API_CONFIG } from "@/configs/api";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { useAppContext } from "@/context/AppContext";
 
-const page = () => {
+const VendorSigninPage = () => {
   const router = useRouter();
   const { fetchUserData } = useAppContext();
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  useEffect(() => {
-    if (localStorage.getItem("user")) {
-      router.push("/");
-    }
-  }, [router]);
-
-  useEffect(() => {
-    const payload = { firstName, lastName, email, phone, password };
-    console.log(payload);
-  }, [firstName, lastName, email, phone, password]);
-
-  const handleSignup = async (e) => {
+  const handleSignin = async (e) => {
     e.preventDefault();
     setLoading(true);
-
-    if (password.length < 6) {
-      toast.error("Password must be at least 6 characters long.");
-      setLoading(false);
-      return;
-    }
-
-    const payload = { firstName, lastName, email, phone, password };
+    const payload = { phone, password }; // Added role: "vendor"
+    console.log(payload);
     try {
       const response = await axios.post(
-        apiUrl(API_CONFIG.ENDPOINTS.AUTH.SIGNUP),
+        apiUrl(API_CONFIG.ENDPOINTS.VENDOR.SIGNIN),
         payload
       );
-      const { user } = response.data;
 
-      // Encrypt and store user data
-      const encryptedUser = encryptData(user);
+      if (!response.data) {
+        throw new Error("No data received from server");
+      }
+
+      const encryptedUser = encryptData(response.data);
+
+      if (!encryptedUser) {
+        throw new Error("Failed to encrypt user data");
+      }
+
       localStorage.setItem("user", encryptedUser);
-
       fetchUserData(); // Call fetchUserData to update global state
-      toast.success("Signup successful!");
-      router.push("/");
+      toast.success("Vendor signin successful!"); // Changed toast message
+      router.push("/seller"); // Redirect to seller dashboard after signin
     } catch (error) {
-      console.error("Error signing up:", error);
+      console.error("Error signing in as vendor:", error); // Changed error message
       toast.error(
-        error.response?.data?.message || "An error occurred during signup."
+        error.response?.data?.message ||
+          "An error occurred during vendor signin."
       );
     } finally {
       setLoading(false);
@@ -74,7 +61,7 @@ const page = () => {
     <div className="flex justify-center items-center my-16">
       <ToastContainer />
       <form
-        onSubmit={handleSignup}
+        onSubmit={handleSignin}
         className="flex flex-col gap-4 w-[90%] md:w-[450px] text-gray-700"
       >
         <Link href={"/"}>
@@ -84,39 +71,8 @@ const page = () => {
             alt=""
           />
         </Link>
-        <p className="text-center font-semibold text-xl">Create an account</p>
-        <div className="flex gap-4">
-          <div className="flex flex-col gap-1 w-1/2">
-            <label>First Name</label>
-            <input
-              onChange={(e) => setFirstName(e.target.value)}
-              value={firstName}
-              className="border p-2 rounded-md"
-              type="text"
-              placeholder="Enter your first name"
-            />
-          </div>
-          <div className="flex flex-col gap-1 w-1/2">
-            <label>Last Name</label>
-            <input
-              onChange={(e) => setLastName(e.target.value)}
-              value={lastName}
-              className="border p-2 rounded-md"
-              type="text"
-              placeholder="Enter your last name"
-            />
-          </div>
-        </div>
-        <div className="flex flex-col gap-1">
-          <label>Email</label>
-          <input
-            onChange={(e) => setEmail(e.target.value)}
-            value={email}
-            className="border p-2 rounded-md"
-            type="email"
-            placeholder="Enter your email"
-          />
-        </div>
+        <p className="text-center font-semibold text-xl">Vendor Login</p>{" "}
+        {/* Changed title */}
         <div className="flex flex-col gap-1">
           <label>Phone Number</label>
           <input
@@ -169,13 +125,15 @@ const page = () => {
               ></path>
             </svg>
           ) : (
-            "Sign up"
+            "Sign in as Vendor" // Changed button text
           )}
         </button>
         <p className="text-sm text-center">
-          Already have an account?{" "}
-          <Link className="text-blue-500" href={"/signin"}>
-            Sign in
+          Don't have a vendor account?{" "}
+          <Link className="text-blue-500" href={"/vendor-signup"}>
+            {" "}
+            {/* Changed signup link */}
+            Sign up
           </Link>
         </p>
       </form>
@@ -183,4 +141,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default VendorSigninPage;

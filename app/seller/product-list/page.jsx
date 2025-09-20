@@ -1,79 +1,225 @@
-'use client'
+"use client";
 import React, { useEffect, useState } from "react";
-import { assets, productsDummyData } from "@/assets/assets";
+import { assets } from "@/assets/assets";
 import Image from "next/image";
 import { useAppContext } from "@/context/AppContext";
 import Footer from "@/components/seller/Footer";
 import Loading from "@/components/Loading";
+import { API_CONFIG, apiUrl } from "@/configs/api";
+import axios from "axios";
+import ActionMenu from "@/components/seller/ActionMenu";
 
 const ProductList = () => {
+  const { router, currency, userData, authLoading } = useAppContext();
+  const userId = userData?.id;
 
-  const { router, currency } = useAppContext()
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
-  const [products, setProducts] = useState([])
-  const [loading, setLoading] = useState(true)
+  const fetchSellerProduct = async (id) => {
+    try {
+      if (!id) {
+        throw new Error("User not authenticated");
+      }
+      const response = await axios.get(
+        apiUrl(API_CONFIG.ENDPOINTS.PRODUCT.GET_SELLER_PRODUCTS + id),
+        {
+          withCredentials: true,
+        }
+      );
+      console.log("Product data:", response.data);
+      setProducts(response.data || []);
+    } catch (err) {
+      console.error("Failed to fetch products:", err);
+      setError(
+        err.response?.data?.message ||
+          "Failed to fetch products. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const fetchSellerProduct = async () => {
-    setProducts(productsDummyData)
-    setLoading(false)
-  }
+  const handleDelete = (productId) => {
+    setProducts(products.filter((p) => p._id !== productId));
+  };
+
+  const handleEdit = (updatedProduct) => {
+    setProducts(
+      products.map((p) => (p._id === updatedProduct._id ? updatedProduct : p))
+    );
+  };
 
   useEffect(() => {
-    fetchSellerProduct();
-  }, [])
+    if (!authLoading) {
+      if (userId) {
+        fetchSellerProduct(userId);
+      } else {
+        setError("Please login to view your products.");
+        setLoading(false);
+      }
+    }
+  }, [userId, authLoading]);
+
+  const openModal = (product) => {
+    setSelectedProduct(product);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedProduct(null);
+  };
 
   return (
-    <div className="flex-1 min-h-screen flex flex-col justify-between">
-      {loading ? <Loading /> : <div className="w-full md:p-10 p-4">
-        <h2 className="pb-4 text-lg font-medium">All Product</h2>
-        <div className="flex flex-col items-center max-w-4xl w-full overflow-hidden rounded-md bg-white border border-gray-500/20">
-          <table className=" table-fixed w-full overflow-hidden">
-            <thead className="text-gray-900 text-sm text-left">
-              <tr>
-                <th className="w-2/3 md:w-2/5 px-4 py-3 font-medium truncate">Product</th>
-                <th className="px-4 py-3 font-medium truncate max-sm:hidden">Category</th>
-                <th className="px-4 py-3 font-medium truncate">
-                  Price
-                </th>
-                <th className="px-4 py-3 font-medium truncate max-sm:hidden">Action</th>
-              </tr>
-            </thead>
-            <tbody className="text-sm text-gray-500">
-              {products.map((product, index) => (
-                <tr key={index} className="border-t border-gray-500/20">
-                  <td className="md:px-4 pl-2 md:pl-4 py-3 flex items-center space-x-3 truncate">
-                    <div className="bg-gray-500/10 rounded p-2">
-                      <Image
-                        src={product.image[0]}
-                        alt="product Image"
-                        className="w-16"
-                        width={1280}
-                        height={720}
-                      />
-                    </div>
-                    <span className="truncate w-full">
-                      {product.name}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 max-sm:hidden">{product.category}</td>
-                  <td className="px-4 py-3">{currency}{product.offerPrice}</td>
-                  <td className="px-4 py-3 max-sm:hidden">
-                    <button onClick={() => router.push(`/product/${product._id}`)} className="flex items-center gap-1 px-1.5 md:px-3.5 py-2 bg-orange-600 text-white rounded-md">
-                      <span className="hidden md:block">Visit</span>
-                      <Image
-                        className="h-3.5"
-                        src={assets.redirect_icon}
-                        alt="redirect_icon"
-                      />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+    <div className="flex-1 min-h-screen flex flex-col justify-start items-center">
+      {loading ? (
+        <Loading />
+      ) : error ? (
+        <div className="w-full md:p-10 p-4">
+          <div className="p-4 text-sm text-red-500 bg-red-100 rounded-md">
+            {error}
+          </div>
         </div>
-      </div>}
-      <Footer />
+      ) : (
+        <div className="w-full max-w-full md:p-10 p-4 mx-auto">
+          <h2 className="pb-4 text-lg font-medium">All Products</h2>
+          <div className="flex flex-col items-center max-w-4xl w-full rounded-md bg-white border border-gray-500/20">
+            <div className="overflow-x-auto w-full">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50 text-gray-900 text-sm text-left">
+                  <tr>
+                    <th className="px-6 py-3 font-medium tracking-wider">
+                      Product
+                    </th>
+                    <th className="px-6 py-3 font-medium tracking-wider">
+                      Category
+                    </th>
+                    <th className="px-6 py-3 font-medium tracking-wider">
+                      Price
+                    </th>
+                    <th className="px-6 py-3 font-medium tracking-wider">
+                      Stock
+                    </th>
+                    <th className="px-6 py-3 font-medium tracking-wider">
+                      Condition
+                    </th>
+                    <th className="px-6 py-3 font-medium tracking-wider">
+                      State
+                    </th>
+                    <th className="px-6 py-3 font-medium tracking-wider">
+                      Approved
+                    </th>
+                    <th className="px-6 py-3 font-medium tracking-wider">
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200 text-sm text-gray-500">
+                  {products.length > 0 ? (
+                    products.map((product, index) => (
+                      <tr key={index}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div
+                              className="flex-shrink-0 h-10 w-10 cursor-pointer"
+                              onClick={() => openModal(product)}
+                            >
+                              <Image
+                                src={product.images[0]}
+                                alt="product Image"
+                                className="h-10 w-10 rounded-full"
+                                width={40}
+                                height={40}
+                              />
+                            </div>
+                            <div className="ml-4">
+                              <div className="font-medium text-gray-900">
+                                {product.name}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {product.category}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {currency}
+                          {product.price}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {product.stock}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {product.condition}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {product.state}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span
+                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              product.approved
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {product.approved ? "Yes" : "No"}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap relative">
+                          <ActionMenu
+                            product={product}
+                            onDelete={handleDelete}
+                            onEdit={handleEdit}
+                          />
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan="8"
+                        className="px-6 py-4 text-center text-gray-500"
+                      >
+                        No products found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+      {isModalOpen && selectedProduct && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-1000">
+          <div className="bg-white p-4 rounded-lg max-w-3xl w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">Product Images</h3>
+              <button onClick={closeModal} className="text-gray-500 text-2xl">
+                &times;
+              </button>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {selectedProduct.images.map((image, index) => (
+                <div key={index} className="relative w-full h-48">
+                  <Image
+                    src={image}
+                    alt={`Product image ${index + 1}`}
+                    layout="fill"
+                    objectFit="cover"
+                    className="rounded-md"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

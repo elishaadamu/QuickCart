@@ -1,8 +1,9 @@
-'use client';
-import React from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import Logo from '@/assets/logo/logo.png';
+"use client";
+import React from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
+import Logo from "@/assets/logo/logo.png";
 
 const Sidebar = ({
   isSidebarOpen,
@@ -13,15 +14,17 @@ const Sidebar = ({
   openMenu,
   setOpenMenu,
 }) => {
+  const pathname = usePathname();
+
   return (
     <aside
       className={`fixed inset-y-0 left-0 z-30 w-64 bg-gray-800 text-white transform transition-transform duration-300 ease-in-out ${
-        isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        isSidebarOpen ? "translate-x-0" : "-translate-x-full"
       } md:translate-x-0`}
     >
       <div className="flex flex-col h-full">
         <div className="flex items-center justify-between p-4 border-b border-gray-700">
-          <Link href={'/'}>
+          <Link href={"/"}>
             <Image className="w-40 mx-auto" src={Logo} alt="logo" />
           </Link>
           <button
@@ -48,7 +51,9 @@ const Sidebar = ({
           <nav className="space-y-2">
             <Link
               href="/dashboard"
-              className="flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors"
+              className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors ${
+                pathname === "/dashboard" ? "bg-gray-700" : ""
+              }`}
             >
               <svg
                 className="w-5 h-5"
@@ -68,7 +73,9 @@ const Sidebar = ({
 
             <Link
               href="/dashboard/wallet"
-              className="flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors"
+              className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors ${
+                pathname === "/dashboard/wallet" ? "bg-gray-700" : ""
+              }`}
             >
               <svg
                 className="w-5 h-5"
@@ -109,7 +116,7 @@ const Sidebar = ({
                 </div>
                 <svg
                   className={`w-4 h-4 transition-transform duration-200 ${
-                    openOrders ? 'rotate-180' : ''
+                    openOrders ? "rotate-180" : ""
                   }`}
                   fill="none"
                   stroke="currentColor"
@@ -124,28 +131,44 @@ const Sidebar = ({
                 </svg>
               </button>
 
-              <div className={`space-y-1 ${openOrders ? 'block' : 'hidden'}`}>
+              <div className={`space-y-1 ${openOrders ? "block" : "hidden"}`}>
                 <Link
                   href="/dashboard/orders/pending"
-                  className="block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+                  className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
+                    pathname === "/dashboard/orders/pending"
+                      ? "bg-gray-700"
+                      : ""
+                  }`}
                 >
                   Pending
                 </Link>
                 <Link
                   href="/dashboard/orders/approved"
-                  className="block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+                  className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
+                    pathname === "/dashboard/orders/approved"
+                      ? "bg-gray-700"
+                      : ""
+                  }`}
                 >
                   Approved
                 </Link>
                 <Link
                   href="/dashboard/orders/on-delivery"
-                  className="block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+                  className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
+                    pathname === "/dashboard/orders/on-delivery"
+                      ? "bg-gray-700"
+                      : ""
+                  }`}
                 >
                   On Delivery
                 </Link>
                 <Link
                   href="/dashboard/orders/delivered"
-                  className="block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+                  className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
+                    pathname === "/dashboard/orders/delivered"
+                      ? "bg-gray-700"
+                      : ""
+                  }`}
                 >
                   Delivered
                 </Link>
@@ -175,7 +198,7 @@ const Sidebar = ({
                 </div>
                 <svg
                   className={`w-4 h-4 transition-transform duration-200 ${
-                    openMenu ? 'rotate-180' : ''
+                    openMenu ? "rotate-180" : ""
                   }`}
                   fill="none"
                   stroke="currentColor"
@@ -190,25 +213,48 @@ const Sidebar = ({
                 </svg>
               </button>
 
-              <div className={`space-y-1 ${openMenu ? 'block' : 'hidden'}`}>
+              <div className={`space-y-1 ${openMenu ? "block" : "hidden"}`}>
                 <Link
                   href="/dashboard/personal-details"
-                  className="block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+                  className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
+                    pathname === "/dashboard/personal-details"
+                      ? "bg-gray-700"
+                      : ""
+                  }`}
                 >
                   Personal Details
                 </Link>
                 <Link
-                  href="/dashboard/address"
-                  className="block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+                  href="/dashboard/pin-management"
+                  className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
+                    pathname === "/dashboard/pin-management" ? "bg-gray-700" : ""
+                  }`}
                 >
-                  Address
+                  PIN Management
+                </Link>
+                <Link
+                  href="/dashboard/change-password"
+                  className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
+                    pathname === "/dashboard/change-password" ? "bg-gray-700" : ""
+                  }`}
+                >
+                  Change Password
+                </Link>
+                <div className="border-t border-gray-700 my-1"></div>
+                <Link
+                  href="/dashboard/delete-account"
+                  className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-red-500`}
+                >
+                  Delete Account
                 </Link>
               </div>
             </div>
 
             <Link
               href="/dashboard/inbox"
-              className="flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors"
+              className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors ${
+                pathname === "/dashboard/inbox" ? "bg-gray-700" : ""
+              }`}
             >
               <svg
                 className="w-5 h-5"
@@ -228,7 +274,9 @@ const Sidebar = ({
 
             <Link
               href="/dashboard/coupons"
-              className="flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors"
+              className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors ${
+                pathname === "/dashboard/coupons" ? "bg-gray-700" : ""
+              }`}
             >
               <svg
                 className="w-5 h-5"
@@ -248,7 +296,9 @@ const Sidebar = ({
 
             <Link
               href="/dashboard/support-ticket"
-              className="flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors"
+              className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors ${
+                pathname === "/dashboard/support-ticket" ? "bg-gray-700" : ""
+              }`}
             >
               <svg
                 className="w-5 h-5"
@@ -268,7 +318,9 @@ const Sidebar = ({
 
             <Link
               href="/dashboard/refer-earn"
-              className="flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors"
+              className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors ${
+                pathname === "/dashboard/refer-earn" ? "bg-gray-700" : ""
+              }`}
             >
               <svg
                 className="w-5 h-5"
@@ -288,7 +340,9 @@ const Sidebar = ({
 
             <Link
               href="/dashboard/request-delivery"
-              className="flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors"
+              className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors ${
+                pathname === "/dashboard/request-delivery" ? "bg-gray-700" : ""
+              }`}
             >
               <svg
                 className="w-5 h-5"

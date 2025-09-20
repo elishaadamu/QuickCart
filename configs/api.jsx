@@ -13,10 +13,36 @@ export const API_CONFIG = {
     },
     ORDER: {
       GET_ALL: "/orders",
+      GET_SELLER_ORDERS: "/orders/seller",
+      UPDATE_STATUS: "/orders/status",
     },
     PROFILE: {
       UPDATE: "/profile/update",
       GET: "/profile",
+      UPDATE_USER: "/user/update",
+      DELETE: "/user/delete/",
+    },
+    SECURITY: {
+      SET_PIN: "/wallet/setPin",
+      UPDATE_PIN: "/wallet/changePin",
+      CHANGE_PASSWORD: "/security/change-password",
+      RESET_PASSWORD: "/security/reset-password",
+    },
+    USER: {
+      DELETE: "/user/delete/",
+    },
+    CUSTOMER: {
+      SIGNIN: "/customer/login",
+    },
+    VENDOR: {
+      SIGNIN: "/vendor/login",
+    },
+    PRODUCT: {
+      ADD: "/product/",
+      GET_SELLER_PRODUCTS: "/product/my-products/",
+      GET_PRODUCT: "/product",
+      UPDATE: "/product/",
+      DELETE: "/product/",
     },
   },
 };

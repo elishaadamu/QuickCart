@@ -14,7 +14,10 @@ export default function RootLayout({ children }) {
   const isSpecialRoute =
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/signin") ||
-    pathname.startsWith("/signup");
+    pathname.startsWith("/signup") ||
+    pathname.startsWith("/vendor-signup") ||
+    pathname.startsWith("/vendor-signin") ||
+    pathname.startsWith("/seller");
 
   return (
     <html lang="en">

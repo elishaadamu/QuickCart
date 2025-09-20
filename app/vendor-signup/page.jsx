@@ -13,7 +13,7 @@ import { encryptData } from "@/lib/encryption";
 import { apiUrl, API_CONFIG } from "@/configs/api";
 import { useAppContext } from "@/context/AppContext";
 
-const page = () => {
+const VendorSignupPage = () => {
   const router = useRouter();
   const { fetchUserData } = useAppContext();
   const [firstName, setFirstName] = useState("");
@@ -23,17 +23,6 @@ const page = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
-  useEffect(() => {
-    if (localStorage.getItem("user")) {
-      router.push("/");
-    }
-  }, [router]);
-
-  useEffect(() => {
-    const payload = { firstName, lastName, email, phone, password };
-    console.log(payload);
-  }, [firstName, lastName, email, phone, password]);
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -45,25 +34,34 @@ const page = () => {
       return;
     }
 
-    const payload = { firstName, lastName, email, phone, password };
+    const payload = {
+      firstName,
+      lastName,
+      email,
+      phone,
+      password,
+      role: "vendor",
+    };
+    console.log(payload);
     try {
       const response = await axios.post(
         apiUrl(API_CONFIG.ENDPOINTS.AUTH.SIGNUP),
         payload
       );
       const { user } = response.data;
-
+      console.log("Signup response:", response.data);
       // Encrypt and store user data
       const encryptedUser = encryptData(user);
       localStorage.setItem("user", encryptedUser);
 
-      fetchUserData(); // Call fetchUserData to update global state
-      toast.success("Signup successful!");
-      router.push("/");
+      fetchUserData();
+      toast.success("Vendor signup successful!");
+      router.push("/seller"); // Redirect to seller dashboard after signup
     } catch (error) {
-      console.error("Error signing up:", error);
+      console.error("Error signing up as vendor:", error);
       toast.error(
-        error.response?.data?.message || "An error occurred during signup."
+        error.response?.data?.message ||
+          "An error occurred during vendor signup."
       );
     } finally {
       setLoading(false);
@@ -84,68 +82,75 @@ const page = () => {
             alt=""
           />
         </Link>
-        <p className="text-center font-semibold text-xl">Create an account</p>
-        <div className="flex gap-4">
-          <div className="flex flex-col gap-1 w-1/2">
-            <label>First Name</label>
+        <p className="text-center font-semibold text-xl">
+          Create a Vendor Account
+        </p>
+
+        <div className="flex flex-col gap-4">
+          <div className="flex gap-4">
+            <div className="flex flex-col gap-1 w-1/2">
+              <label>First Name</label>
+              <input
+                onChange={(e) => setFirstName(e.target.value)}
+                value={firstName}
+                className="border p-2 rounded-md"
+                type="text"
+                placeholder="Enter your first name"
+              />
+            </div>
+            <div className="flex flex-col gap-1 w-1/2">
+              <label>Last Name</label>
+              <input
+                onChange={(e) => setLastName(e.target.value)}
+                value={lastName}
+                className="border p-2 rounded-md"
+                type="text"
+                placeholder="Enter your last name"
+              />
+            </div>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label>Email</label>
             <input
-              onChange={(e) => setFirstName(e.target.value)}
-              value={firstName}
+              onChange={(e) => setEmail(e.target.value)}
+              value={email}
               className="border p-2 rounded-md"
-              type="text"
-              placeholder="Enter your first name"
+              type="email"
+              placeholder="Enter your email"
             />
           </div>
-          <div className="flex flex-col gap-1 w-1/2">
-            <label>Last Name</label>
+          <div className="flex flex-col gap-1">
+            <label>Phone Number</label>
             <input
-              onChange={(e) => setLastName(e.target.value)}
-              value={lastName}
+              onChange={(e) => setPhone(e.target.value)}
+              value={phone}
               className="border p-2 rounded-md"
-              type="text"
-              placeholder="Enter your last name"
+              type="tel"
+              placeholder="Enter your phone number"
+            />
+          </div>
+          <div className="flex flex-col gap-1 relative">
+            <label>Password</label>
+            <input
+              onChange={(e) => setPassword(e.target.value)}
+              value={password}
+              className="border p-2 rounded-md pr-10"
+              type={showPassword ? "text" : "password"}
+              placeholder="Enter your password"
+            />
+            <Image
+              onClick={() => setShowPassword(!showPassword)}
+              className="w-5 cursor-pointer absolute right-3 top-9"
+              src={showPassword ? assets.eye_close_icon : assets.eye_open_icon}
+              alt="Toggle password visibility"
             />
           </div>
         </div>
-        <div className="flex flex-col gap-1">
-          <label>Email</label>
-          <input
-            onChange={(e) => setEmail(e.target.value)}
-            value={email}
-            className="border p-2 rounded-md"
-            type="email"
-            placeholder="Enter your email"
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <label>Phone Number</label>
-          <input
-            onChange={(e) => setPhone(e.target.value)}
-            value={phone}
-            className="border p-2 rounded-md"
-            type="tel"
-            placeholder="Enter your phone number"
-          />
-        </div>
-        <div className="flex flex-col gap-1 relative">
-          <label>Password</label>
-          <input
-            onChange={(e) => setPassword(e.target.value)}
-            value={password}
-            className="border p-2 rounded-md pr-10"
-            type={showPassword ? "text" : "password"}
-            placeholder="Enter your password"
-          />
-          <Image
-            onClick={() => setShowPassword(!showPassword)}
-            className="w-5 cursor-pointer absolute right-3 top-9"
-            src={showPassword ? assets.eye_close_icon : assets.eye_open_icon}
-            alt="Toggle password visibility"
-          />
-        </div>
+
         <button
+          type="submit"
           disabled={loading}
-          className="bg-gray-800 text-white p-2 rounded-md flex items-center justify-center"
+          className="bg-gray-800 text-white p-2 rounded-md flex items-center justify-center w-full mt-4"
         >
           {loading ? (
             <svg
@@ -169,12 +174,13 @@ const page = () => {
               ></path>
             </svg>
           ) : (
-            "Sign up"
+            "Sign up as Vendor"
           )}
         </button>
+
         <p className="text-sm text-center">
-          Already have an account?{" "}
-          <Link className="text-blue-500" href={"/signin"}>
+          Already have a vendor account?{" "}
+          <Link className="text-blue-500" href={"/vendor-signin"}>
             Sign in
           </Link>
         </p>
@@ -183,4 +189,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default VendorSignupPage;

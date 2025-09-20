@@ -5,10 +5,12 @@ import { decryptData, encryptData } from "@/lib/encryption";
 import { ToastContainer, toast } from "react-toastify";
 import { apiUrl, API_CONFIG } from "@/configs/api";
 import "react-toastify/dist/ReactToastify.css";
+import Loading from "@/components/Loading";
 
 const PersonalDetails = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
   const [profile, setProfile] = useState({
     firstName: "",
     lastName: "",
@@ -19,16 +21,16 @@ const PersonalDetails = () => {
 
   useEffect(() => {
     const fetchUserData = () => {
-      const encryptedUser = localStorage.getItem("user");
-      if (encryptedUser) {
-        const userData = decryptData(encryptedUser);
-        setProfile({
-          firstName: userData.firstName || "",
-          lastName: userData.lastName || "",
-          email: userData.email || "",
-          phone: userData.phone || "",
-          address: userData.address || "",
-        });
+      try {
+        const encryptedUser = localStorage.getItem("user");
+
+        if (encryptedUser) {
+          const userData = decryptData(encryptedUser);
+          console.log(userData);
+          setProfile(userData);
+        }
+      } finally {
+        setPageLoading(false);
       }
     };
 
@@ -48,13 +50,11 @@ const PersonalDetails = () => {
     try {
       const encryptedUser = localStorage.getItem("user");
       const userData = decryptData(encryptedUser);
-
-      const response = await axios.patch(
-        apiUrl(API_CONFIG.ENDPOINTS.PROFILE.UPDATE),
-        {
-          userId: userData.id,
-          ...profile,
-        }
+      const { role, ...payload } = profile;
+      console.log(payload);
+      const response = await axios.put(
+        `${apiUrl(API_CONFIG.ENDPOINTS.PROFILE.UPDATE_USER)}/${userData.id}`,
+        payload
       );
 
       if (response.data) {
@@ -75,6 +75,10 @@ const PersonalDetails = () => {
       setLoading(false);
     }
   };
+
+  if (pageLoading) {
+    return <Loading />;
+  }
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -155,8 +159,7 @@ const PersonalDetails = () => {
                 </p>
               )}
             </div>
-
-            <div className="md:col-span-2">
+            <div>
               <label className="block text-sm font-medium text-gray-700">
                 Address
               </label>
@@ -173,6 +176,12 @@ const PersonalDetails = () => {
                   {profile.address || "Not provided"}
                 </p>
               )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Role
+              </label>
+              <p className="mt-1 text-gray-900">{profile.role || "User"}</p>
             </div>
           </div>
 

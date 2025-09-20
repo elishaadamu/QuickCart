@@ -5,12 +5,31 @@ import { decryptData } from "@/lib/encryption";
 import { apiUrl, API_CONFIG } from "@/configs/api";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import PaystackPop from "@paystack/inline-js";
 
 const Wallet = () => {
   const [nin, setNin] = useState("");
   const [loading, setLoading] = useState(false);
   const [accountDetails, setAccountDetails] = useState(null);
   const [user, setUser] = useState(null);
+  const [amount, setAmount] = useState("");
+  const [showFundModal, setShowFundModal] = useState(false);
+
+  const handlePayment = () => {
+    const paystack = new PaystackPop();
+    paystack.newTransaction({
+      key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
+      email: user?.email,
+      amount: amount * 100, // Convert to kobo
+      ref: new Date().getTime().toString(),
+      onSuccess: (transaction) => {
+        onSuccess(transaction);
+      },
+      onCancel: () => {
+        onClose();
+      },
+    });
+  };
 
   useEffect(() => {
     const encryptedUser = localStorage.getItem("user");
@@ -42,6 +61,30 @@ const Wallet = () => {
     }
   };
 
+  const onSuccess = async (transaction) => {
+    setLoading(true);
+    try {
+      // Call your backend API to verify and process the payment
+      await axios.post(apiUrl(API_CONFIG.ENDPOINTS.ACCOUNT.FUND + user.id), {
+        amount: amount,
+        reference: transaction.reference,
+      });
+
+      toast.success("Wallet funded successfully!");
+      setAmount("");
+      fetchAccountDetails(); // Refresh wallet balance
+    } catch (error) {
+      console.error("Error processing payment:", error);
+      toast.error("Failed to process payment. Please contact support.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onClose = () => {
+    toast.info("Payment cancelled");
+  };
+
   const handleCreateAccount = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -70,17 +113,60 @@ const Wallet = () => {
       {loading && <p>Loading...</p>}
 
       {!loading && accountDetails && (
-        <div className="bg-white p-8 rounded-lg shadow-lg w-96">
-          <h2 className="text-2xl font-bold mb-4">Account Details</h2>
-          <p>
-            <strong>Account Name:</strong> {accountDetails.accountName}
-          </p>
-          <p>
-            <strong>Account Number:</strong> {accountDetails.accountNumber}
-          </p>
-          <p>
-            <strong>Bank Name:</strong> {accountDetails.bankName}
-          </p>
+        <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-full md:max-w-3xl">
+          <div className=" bg-gray-50  rounded-lg">
+            <h2 className="text-xl font-semibold text-gray-700 mb-2">
+              Wallet Balance
+            </h2>
+            <p className="text-3xl font-bold text-gray-900">
+              ₦{accountDetails.balance}
+            </p>
+          </div>
+          <hr className="my-4 border-t" />
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold mb-4">Account Details</h2>
+            <div className="space-y-3">
+              <p className="flex justify-between">
+                <span className="text-gray-600">Account Name:</span>
+                <span className="font-medium">
+                  {accountDetails.accountName}
+                </span>
+              </p>
+              <p className="flex justify-between">
+                <span className="text-gray-600">Account Number:</span>
+                <span className="font-medium">
+                  {accountDetails.accountNumber}
+                </span>
+              </p>
+              <p className="flex justify-between">
+                <span className="text-gray-600">Bank Name:</span>
+                <span className="font-medium">{accountDetails.bankName}</span>
+              </p>
+            </div>
+          </div>
+          <div className="border-t pt-6">
+            <h3 className="text-lg font-semibold mb-4">Fund Wallet</h3>
+            <div className="space-y-4">
+              <div className="flex flex-col gap-2">
+                <label className="text-gray-600">Amount (₦)</label>
+                <input
+                  type="number"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="border p-2 rounded-md"
+                  placeholder="Enter amount"
+                  min="100"
+                />
+              </div>
+              <button
+                onClick={handlePayment}
+                disabled={!amount || loading || !user?.email}
+                className="bg-blue-600 text-white p-3 rounded-md w-full hover:bg-blue-700 transition disabled:bg-blue-300"
+              >
+                {loading ? "Processing..." : "Fund Wallet"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

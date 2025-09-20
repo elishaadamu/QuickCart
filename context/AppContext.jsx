@@ -17,6 +17,7 @@ export const AppContextProvider = (props) => {
   const [products, setProducts] = useState([]);
   const [userData, setUserData] = useState(null);
   const [isSeller, setIsSeller] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
   const isLoggedIn = !!userData; // Derive isLoggedIn from userData
 
   const [cartItems, setCartItems] = useState({});
@@ -29,16 +30,9 @@ export const AppContextProvider = (props) => {
 
   const fetchUserData = async () => {
     try {
-      console.log("Fetching user data from localStorage...");
       const encryptedUser = localStorage.getItem("user");
-      console.log("Raw data from localStorage:", {
-        exists: !!encryptedUser,
-        value: encryptedUser,
-        length: encryptedUser?.length,
-      });
 
       if (!encryptedUser) {
-        console.log("No encrypted data found in localStorage");
         setUserData(null);
         return;
       }
@@ -51,10 +45,8 @@ export const AppContextProvider = (props) => {
       });
 
       if (decryptedUser) {
-        console.log("Setting user data in context:", decryptedUser);
         setUserData(decryptedUser);
       } else {
-        console.log("Decryption returned null, clearing storage");
         localStorage.removeItem("user");
         setUserData(null);
       }
@@ -65,6 +57,8 @@ export const AppContextProvider = (props) => {
       });
       localStorage.removeItem("user");
       setUserData(null);
+    } finally {
+      setAuthLoading(false);
     }
   };
 
@@ -138,8 +132,6 @@ export const AppContextProvider = (props) => {
     setWishlistItems(wishlistData);
   };
 
-  
-
   const getWishlistCount = () => {
     return wishlistItems.length;
   };
@@ -165,7 +157,10 @@ export const AppContextProvider = (props) => {
         if (storedCart) {
           try {
             const parsedCart = JSON.parse(storedCart);
-            if (parsedCart.timestamp && Date.now() - parsedCart.timestamp < 24 * 60 * 60 * 1000) {
+            if (
+              parsedCart.timestamp &&
+              Date.now() - parsedCart.timestamp < 24 * 60 * 60 * 1000
+            ) {
               setCartItems(parsedCart.data);
             } else {
               localStorage.removeItem(cartStorageKey); // Data expired
@@ -185,7 +180,10 @@ export const AppContextProvider = (props) => {
         if (storedWishlist) {
           try {
             const parsedWishlist = JSON.parse(storedWishlist);
-            if (parsedWishlist.timestamp && Date.now() - parsedWishlist.timestamp < 24 * 60 * 60 * 1000) {
+            if (
+              parsedWishlist.timestamp &&
+              Date.now() - parsedWishlist.timestamp < 24 * 60 * 60 * 1000
+            ) {
               setWishlistItems(parsedWishlist.data);
             } else {
               localStorage.removeItem(wishlistStorageKey); // Data expired
@@ -251,6 +249,7 @@ export const AppContextProvider = (props) => {
     getWishlistCount,
     isLoggedIn,
     logout,
+    authLoading,
   };
 
   return (

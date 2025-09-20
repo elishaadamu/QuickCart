@@ -30,6 +30,13 @@ const page = () => {
   const handleSignin = async (e) => {
     e.preventDefault();
     setLoading(true);
+
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters long.");
+      setLoading(false);
+      return;
+    }
+
     const payload = { phone, password };
     console.log(payload);
     try {
