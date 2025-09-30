@@ -44,7 +44,7 @@ const HeaderSlider = () => {
   };
 
   return (
-    <div className="overflow-hidden relative w-full">
+    <div className="overflow-hidden relative w-full md:flex-[80%] pr-0 md:mr-6">
       <div
         className="flex transition-transform duration-700 ease-in-out"
         style={{

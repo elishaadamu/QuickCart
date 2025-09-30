@@ -8,6 +8,7 @@ import Loading from "@/components/Loading";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { categoriesData } from "@/components/CategorySidebar";
 import { decryptData } from "@/lib/encryption";
 
 const AddProduct = () => {
@@ -241,20 +242,11 @@ const AddProduct = () => {
                   onChange={(e) => setCategory(e.target.value)}
                   value={category}
                 >
-                  <option value="Electronics">Electronics</option>
-                  <option value="Fashion">Fashion</option>
-                  <option value="Foods and Drinks">Foods and Drinks</option>
-                  <option value="Furnitures">Furnitures</option>
-                  <option value="Beauty & Health">Beauty & Health</option>
-                  <option value="Automobiles">Automobiles</option>
-                  <option value="Property">Property</option>
-                  <option value="Kitchen Utensils">Kitchen Utensils</option>
-                  <option value="Home appliance">Home appliance</option>
-                  <option value="Agriculture">Agriculture</option>
-                  <option value="Industrial equipment">
-                    Industrial equipment
-                  </option>
-                  <option value="Digital products">Digital products</option>
+                  {categoriesData.map((cat) => (
+                    <option key={cat.name} value={cat.name}>
+                      {cat.name}
+                    </option>
+                  ))}
                 </select>
               </div>
 

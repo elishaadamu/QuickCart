@@ -36,6 +36,7 @@ export const API_CONFIG = {
     },
     VENDOR: {
       SIGNIN: "/vendor/login",
+      GET_ALL: "/vendor/stats/",
     },
     PRODUCT: {
       ADD: "/product/",
@@ -43,6 +44,14 @@ export const API_CONFIG = {
       GET_PRODUCT: "/product",
       UPDATE: "/product/",
       DELETE: "/product/",
+    },
+    CATEGORY: {
+      GET_ALL: "/category",
+    },
+    RATING: {
+      ADD: "/rating",
+      GET_BY_VENDOR: "/rating/", // Append vendorId
+      DELETE: "/rating/", // Append vendorId/userId
     },
   },
 };

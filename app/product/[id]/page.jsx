@@ -43,24 +43,24 @@ const Product = () => {
               <ImageMagnify
                 smallImage={{
                   alt: productData.name,
-                  src: mainImage || productData.image[0],
+                  src: mainImage || productData.images[0]?.url,
                 }}
                 largeImage={{
-                  src: mainImage || productData.image[0],
+                  src: mainImage || productData.images[0]?.url,
                 }}
               />
             </div>
 
             {/* Thumbnails */}
             <div className="grid grid-cols-4 gap-4">
-              {productData.image.map((image, index) => (
+              {productData.images.map((image, index) => (
                 <div
                   key={index}
-                  onClick={() => setMainImage(image)}
+                  onClick={() => setMainImage(image.url)}
                   className="cursor-pointer rounded-lg overflow-hidden bg-gray-500/10"
                 >
                   <Image
-                    src={image}
+                    src={image.url}
                     alt="alt"
                     className="w-full h-auto object-cover mix-blend-multiply"
                     width={1280}

@@ -3,9 +3,11 @@ import Link from "next/link";
 import { assets } from "../../assets/assets";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { FaAngleLeft, FaAngleRight } from "react-icons/fa";
 
-const SideBar = () => {
+const SideBar = ({ isCollapsed, setIsCollapsed }) => {
   const pathname = usePathname();
+
   const menuItems = [
     { name: "Add Product", path: "/seller", icon: assets.add_icon },
     {
@@ -17,7 +19,17 @@ const SideBar = () => {
   ];
 
   return (
-    <div className="md:w-64 w-16 border-r min-h-screen text-base border-gray-300 py-2 flex flex-col">
+    <div
+      className={`border-r min-h-screen text-base border-gray-300 py-2 flex flex-col relative transition-width duration-300 ${
+        isCollapsed ? "w-16" : "w-64"
+      }`}
+    >
+      <button
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        className="absolute -right-3 top-1/2 transform -translate-y-1/2 bg-white border-2 border-gray-300 rounded-full p-1 z-10"
+      >
+        {isCollapsed ? <FaAngleRight /> : <FaAngleLeft />}
+      </button>
       {menuItems.map((item) => {
         const isActive = pathname === item.path;
 
@@ -35,7 +47,7 @@ const SideBar = () => {
                 alt={`${item.name.toLowerCase()}_icon`}
                 className="w-7 h-7"
               />
-              <p className="md:block hidden text-center">{item.name}</p>
+              {!isCollapsed && <p className="text-center">{item.name}</p>}
             </div>
           </Link>
         );

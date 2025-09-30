@@ -4,8 +4,82 @@ import axios from "axios";
 import { decryptData, encryptData } from "@/lib/encryption";
 import { ToastContainer, toast } from "react-toastify";
 import { apiUrl, API_CONFIG } from "@/configs/api";
+import { FaUserEdit, FaCamera } from "react-icons/fa";
+import Image from "next/image";
 import "react-toastify/dist/ReactToastify.css";
 import Loading from "@/components/Loading";
+
+const FormField = ({
+  label,
+  name,
+  value,
+  isEditing,
+  onChange,
+  type = "text",
+  readOnly = false,
+}) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-600">{label}</label>
+    {isEditing && !readOnly ? (
+      type === "textarea" ? (
+        <textarea
+          name={name}
+          value={value || ""}
+          onChange={onChange}
+          rows="3"
+          className="mt-1 p-3 block w-full rounded-md border border-gray-300 bg-gray-50 focus:bg-white focus:border-gray-300 focus:ring-0 sm:text-sm transition"
+        />
+      ) : (
+        <input
+          type={type}
+          name={name}
+          value={value || ""}
+          onChange={onChange}
+          className="mt-1 p-3 block w-full rounded-md border border-gray-300 bg-gray-50 focus:bg-white focus:border-gray-300 focus:ring-0 sm:text-sm transition"
+        />
+      )
+    ) : (
+      <p className="mt-1 p-3 text-gray-900 font-medium p-2 bg-gray-50 rounded-md min-h-[42px]">
+        {value || <span className="text-gray-400">Not provided</span>}
+      </p>
+    )}
+  </div>
+);
+
+const ImageField = ({ label, name, src, isEditing, onChange }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-600 mb-2">
+      {label}
+    </label>
+    <div className="relative w-full h-32 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
+      {src && (
+        <Image
+          src={src}
+          alt={`${label} preview`}
+          layout="fill"
+          objectFit="cover"
+        />
+      )}
+      {isEditing && (
+        <label
+          htmlFor={name}
+          className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center text-white cursor-pointer opacity-0 hover:opacity-100 transition-opacity"
+        >
+          <FaCamera size={24} />
+          <span className="text-sm mt-1 p-3">Change</span>
+          <input
+            id={name}
+            name={name}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={onChange}
+          />
+        </label>
+      )}
+    </div>
+  </div>
+);
 
 const PersonalDetails = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -17,6 +91,10 @@ const PersonalDetails = () => {
     email: "",
     phone: "",
     address: "",
+    businessName: "",
+    businessDesc: "",
+    avatar: null,
+    banner: null,
   });
 
   useEffect(() => {
@@ -45,13 +123,52 @@ const PersonalDetails = () => {
     }));
   };
 
+  const handleFileChange = (e) => {
+    const { name, files } = e.target;
+    const file = files[0];
+
+    if (file) {
+      if (file.size > 100 * 1024) {
+        // 100kb limit
+        toast.error("Image size should not exceed 100KB.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfile((prev) => ({
+          ...prev,
+          [name]: reader.result, // base64 string
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleUpdateProfile = async () => {
     setLoading(true);
     try {
       const encryptedUser = localStorage.getItem("user");
       const userData = decryptData(encryptedUser);
-      const { role, ...payload } = profile;
-      console.log(payload);
+
+      let payload;
+      if (userData.role === "vendor") {
+        payload = {
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          phone: profile.phone,
+          address: profile.address,
+          businessName: profile.businessName,
+          businessDesc: profile.businessDesc,
+          avatar: profile.avatar,
+          banner: profile.banner,
+        };
+        console.log(payload);
+      } else {
+        const { role, ...userPayload } = profile;
+        payload = userPayload;
+      }
+
       const response = await axios.put(
         `${apiUrl(API_CONFIG.ENDPOINTS.PROFILE.UPDATE_USER)}/${userData.id}`,
         payload
@@ -83,120 +200,136 @@ const PersonalDetails = () => {
   return (
     <div className="max-w-4xl mx-auto">
       <ToastContainer />
-
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <div className="flex justify-between items-center mb-6">
+      <div className="bg-white rounded-xl shadow-lg p-6 md:p-8">
+        <div className="flex justify-between items-start mb-8 border-b pb-6">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Personal Details</h1>
-            <p className="text-gray-600">Update your personal information</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+              Personal Details
+            </h1>
+            <p className="text-gray-500 mt-1 p-3">
+              Manage and protect your account.
+            </p>
           </div>
           <button
             onClick={() => setIsEditing(!isEditing)}
-            className="px-4 py-2 text-sm font-medium text-white bg-gray-800 rounded-md hover:bg-gray-700"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors duration-300"
           >
-            {isEditing ? "Cancel" : "Edit Profile"}
+            {isEditing ? (
+              "Cancel"
+            ) : (
+              <>
+                <FaUserEdit />
+                Edit Profile
+              </>
+            )}
           </button>
         </div>
 
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                First Name
-              </label>
-              {isEditing ? (
-                <input
-                  type="text"
-                  name="firstName"
-                  value={profile.firstName}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-gray-500 focus:ring-gray-500"
-                />
-              ) : (
-                <p className="mt-1 text-gray-900">{profile.firstName}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Last Name
-              </label>
-              {isEditing ? (
-                <input
-                  type="text"
-                  name="lastName"
-                  value={profile.lastName}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-gray-500 focus:ring-gray-500"
-                />
-              ) : (
-                <p className="mt-1 text-gray-900">{profile.lastName}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Email
-              </label>
-              <p className="mt-1 text-gray-900">{profile.email}</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Phone Number
-              </label>
-              {isEditing ? (
-                <input
-                  type="tel"
-                  name="phone"
-                  value={profile.phone}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-gray-500 focus:ring-gray-500"
-                />
-              ) : (
-                <p className="mt-1 text-gray-900">
-                  {profile.phone || "Not provided"}
-                </p>
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Address
-              </label>
-              {isEditing ? (
-                <textarea
-                  name="address"
-                  value={profile.address}
-                  onChange={handleInputChange}
-                  rows="3"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-gray-500 focus:ring-gray-500"
-                />
-              ) : (
-                <p className="mt-1 text-gray-900">
-                  {profile.address || "Not provided"}
-                </p>
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Role
-              </label>
-              <p className="mt-1 text-gray-900">{profile.role || "User"}</p>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+          <FormField
+            label="First Name"
+            name="firstName"
+            value={profile.firstName}
+            isEditing={isEditing}
+            onChange={handleInputChange}
+          />
+          <FormField
+            label="Last Name"
+            name="lastName"
+            value={profile.lastName}
+            isEditing={isEditing}
+            onChange={handleInputChange}
+          />
+          <FormField
+            label="Email"
+            name="email"
+            value={profile.email}
+            isEditing={isEditing}
+            readOnly
+          />
+          <FormField
+            label="Phone Number"
+            name="phone"
+            value={profile.phone}
+            isEditing={isEditing}
+            onChange={handleInputChange}
+            type="tel"
+          />
+          <div className="md:col-span-2">
+            <FormField
+              label="Address"
+              name="address"
+              value={profile.address}
+              isEditing={isEditing}
+              onChange={handleInputChange}
+              type="textarea"
+            />
           </div>
 
-          {isEditing && (
-            <div className="flex justify-end">
-              <button
-                onClick={handleUpdateProfile}
-                disabled={loading}
-                className="px-4 py-2 text-sm font-medium text-white bg-gray-800 rounded-md hover:bg-gray-700 disabled:bg-gray-400"
-              >
-                {loading ? "Saving..." : "Save Changes"}
-              </button>
-            </div>
+          {profile.role === "vendor" && (
+            <>
+              <div className="md:col-span-2 pt-4 border-t mt-4">
+                <h2 className="text-xl font-bold text-gray-700">
+                  Business Information
+                </h2>
+              </div>
+              <div className="md:col-span-2">
+                <FormField
+                  label="Business Name"
+                  name="businessName"
+                  value={profile.businessName}
+                  isEditing={isEditing}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="md:col-span-2">
+                <FormField
+                  label="Business Description"
+                  name="businessDesc"
+                  value={profile.businessDesc}
+                  isEditing={isEditing}
+                  onChange={handleInputChange}
+                  type="textarea"
+                />
+              </div>
+              <ImageField
+                label="Avatar (Logo)"
+                name="avatar"
+                src={profile.avatar}
+                isEditing={isEditing}
+                onChange={handleFileChange}
+              />
+              <ImageField
+                label="Banner"
+                name="banner"
+                src={profile.banner}
+                isEditing={isEditing}
+                onChange={handleFileChange}
+              />
+            </>
           )}
+
+          <div className="md:col-span-2 pt-4 border-t mt-4">
+            <FormField
+              label="Role"
+              name="role"
+              value={profile.role}
+              isEditing={false}
+            />
+          </div>
         </div>
+
+        {isEditing && (
+          <div className="flex justify-end mt-8 pt-6 border-t">
+            <button
+              onClick={handleUpdateProfile}
+              disabled={loading}
+              className="px-6 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-all duration-300"
+            >
+              {loading ? "Saving..." : "Save Changes"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
