@@ -11,25 +11,42 @@ import { useAppContext } from "@/context/AppContext";
 import React from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import axios from "axios";
+import { apiUrl, API_CONFIG } from "@/configs/api";
 
 const Product = () => {
   const { id } = useParams();
 
   const { products, router, addToCart, isLoggedIn, currency } = useAppContext();
-
   const [mainImage, setMainImage] = useState(null);
-  const [productData, setProductData] = useState(null);
-
-  const fetchProductData = async () => {
-    const product = products.find((product) => product._id === id);
-    setProductData(product);
-  };
+  const [loading, setLoading] = useState(true);
+  const [product, setProduct] = useState(null);
 
   useEffect(() => {
-    fetchProductData();
-  }, [id, products.length]);
+    const fetchVendorProducts = async () => {
+      try {
+        const response = await axios.get(
+          apiUrl(API_CONFIG.ENDPOINTS.PRODUCT.GET_PRODUCT)
+        );
+        const foundProduct = response.data.find((item) => item._id === id);
+        if (foundProduct) {
+          setProduct(foundProduct);
+          console.log(foundProduct);
+        }
+      } catch (error) {
+        console.error("Error fetching vendor products:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchVendorProducts();
+  }, [id]);
 
-  return productData ? (
+  if (loading || !product) {
+    return <Loading />;
+  }
+
+  return (
     <>
       <ToastContainer position="top-right" autoClose={3000} />
       <div className="px-6 md:px-16 lg:px-32 pt-14 space-y-10">
@@ -42,18 +59,18 @@ const Product = () => {
               {/* Magnifier effect */}
               <ImageMagnify
                 smallImage={{
-                  alt: productData.name,
-                  src: mainImage || productData.images[0]?.url,
+                  alt: product.name,
+                  src: mainImage || product.images[0]?.url,
                 }}
                 largeImage={{
-                  src: mainImage || productData.images[0]?.url,
+                  src: mainImage || product.images[0]?.url,
                 }}
               />
             </div>
 
             {/* Thumbnails */}
             <div className="grid grid-cols-4 gap-4">
-              {productData.images.map((image, index) => (
+              {product.images.map((image, index) => (
                 <div
                   key={index}
                   onClick={() => setMainImage(image.url)}
@@ -74,7 +91,7 @@ const Product = () => {
           {/* Product Details */}
           <div className="flex flex-col">
             <h1 className="text-3xl font-medium text-gray-800/90 mb-4">
-              {productData.name}
+              {product.name}
             </h1>
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-0.5">
@@ -94,30 +111,41 @@ const Product = () => {
               </div>
               <p>(4.5)</p>
             </div>
-            <p className="text-gray-600 mt-3">{productData.description}</p>
-            <p className="text-3xl font-medium mt-6">
-              {currency}
-              {productData.offerPrice}
-              <span className="text-base font-normal text-gray-800/60 line-through ml-2">
-                {currency}
-                {productData.price}
-              </span>
-            </p>
+            <p className="text-gray-600 mt-3">{product.description}</p>
+            <div className="text-3xl font-medium mt-6">
+              {product.offerPrice ? (
+                <>
+                  {currency}
+                  {product.offerPrice}
+                  <span className="text-base font-normal text-gray-800/60 line-through ml-2">
+                    {currency}
+                    {product.price}
+                  </span>
+                </>
+              ) : (
+                <>
+                  {currency}
+                  {product.price}
+                </>
+              )}
+            </div>
             <hr className="bg-gray-600 my-6" />
             <div className="overflow-x-auto">
               <table className="table-auto border-collapse w-full max-w-72">
                 <tbody>
                   <tr>
-                    <td className="text-gray-600 font-medium">Brand</td>
-                    <td className="text-gray-800/50 ">Generic</td>
+                    <td className="text-gray-600 font-medium">
+                      Stocks Available
+                    </td>
+                    <td className="text-gray-800/50 ">{product.stock}</td>
                   </tr>
                   <tr>
-                    <td className="text-gray-600 font-medium">Color</td>
-                    <td className="text-gray-800/50 ">Multi</td>
+                    <td className="text-gray-600 font-medium">Condition</td>
+                    <td className="text-gray-800/50 ">{product.condition}</td>
                   </tr>
                   <tr>
                     <td className="text-gray-600 font-medium">Category</td>
-                    <td className="text-gray-800/50">{productData.category}</td>
+                    <td className="text-gray-800/50">{product.category}</td>
                   </tr>
                 </tbody>
               </table>
@@ -132,10 +160,8 @@ const Product = () => {
                     router.push("/signin");
                     return;
                   }
-                  addToCart(productData._id);
-                  toast.success(
-                    `${productData.name} has been added to your cart!`
-                  );
+                  addToCart(product._id);
+                  toast.success(`${product.name} has been added to your cart!`);
                 }}
                 className="w-full py-3.5 bg-gray-100 text-gray-800/80 hover:bg-gray-200 transition"
               >
@@ -148,10 +174,8 @@ const Product = () => {
                     router.push("/signin");
                     return;
                   }
-                  addToCart(productData._id);
-                  toast.success(
-                    `${productData.name} has been added to your cart!`
-                  );
+                  addToCart(product._id);
+                  toast.success(`${product.name} has been added to your cart!`);
                   router.push("/cart");
                 }}
                 className="w-full py-3.5 bg-blue-500 text-white hover:bg-blue-600 transition"
@@ -182,8 +206,6 @@ const Product = () => {
         </div>
       </div>
     </>
-  ) : (
-    <Loading />
   );
 };
 export default Product;

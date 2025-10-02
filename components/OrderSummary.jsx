@@ -1,27 +1,98 @@
 import { addressDummyData } from "@/assets/assets";
 import { useAppContext } from "@/context/AppContext";
 import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { toast } from "react-toastify";
+import { apiUrl, API_CONFIG } from "@/configs/api";
+import PinInput from "./PinInput";
 
 const OrderSummary = () => {
-  const { currency, router, getCartCount, getCartAmount } = useAppContext();
-  const [selectedAddress, setSelectedAddress] = useState(null);
+  const {
+    currency,
+    router,
+    getCartCount,
+    getCartAmount,
+    userData,
+    cartItems,
+    products,
+  } = useAppContext();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [, setPageLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [addresses, setAddresses] = useState("");
+  const [pin, setPin] = useState("");
 
-  const [userAddresses, setUserAddresses] = useState([]);
+  const createOrder = async () => {
+    if (!pin || pin.length !== 4) {
+      toast.error("Please enter your 4-digit transaction PIN.");
+      return;
+    }
+    setLoading(true);
 
-  const fetchUserAddresses = async () => {
-    setUserAddresses(addressDummyData);
+    const totalAmount = getCartAmount() + Math.floor(getCartAmount() * 0.02);
+    const orderProducts = Object.keys(cartItems)
+      .map((itemId) => {
+        const product = products.find((p) => p._id === itemId);
+        if (product && cartItems[itemId] > 0) {
+          return {
+            productId: product._id,
+            name: product.name,
+            quantity: cartItems[itemId],
+            price: product.price,
+          };
+        }
+        return null;
+      })
+      .filter(Boolean);
+
+    const payload = {
+      userId: userData.id,
+      products: orderProducts,
+      deliveryAddress: addresses.shippingAddress,
+      state: addresses.shippingState,
+      zipcode: addresses.zipCode,
+      phone: userData.phone, // Assuming phone is available on the user object
+      pin,
+      totalAmount,
+    };
+    console.log("Order payload:", payload);
+    try {
+      const response = await axios.post(
+        apiUrl(API_CONFIG.ENDPOINTS.ORDER.CREATE),
+        payload
+      );
+      toast.success("Order placed successfully!");
+      router.push("dashboard/orders");
+    } catch (error) {
+      console.error("Error creating order:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        "Failed to place order. Please try again.";
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleAddressSelect = (address) => {
-    setSelectedAddress(address);
-    setIsDropdownOpen(false);
+  const fetchAddresses = async () => {
+    setPageLoading(true);
+    try {
+      const response = await axios.get(
+        `${apiUrl(API_CONFIG.ENDPOINTS.PROFILE.GET)}/${userData.id}`
+      );
+      console.log("response", response.data.user);
+      setAddresses(response.data.user || []);
+    } catch (error) {
+      console.error("Error fetching addresses:", error);
+      toast.error("Failed to fetch shipping addresses.");
+    } finally {
+      setPageLoading(false);
+    }
   };
-
-  const createOrder = async () => {};
-
   useEffect(() => {
-    fetchUserAddresses();
+    if (userData) {
+      fetchAddresses();
+    }
   }, []);
 
   return (
@@ -40,11 +111,7 @@ const OrderSummary = () => {
               className="peer w-full text-left px-4 pr-2 py-2 bg-white text-gray-700 focus:outline-none"
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             >
-              <span>
-                {selectedAddress
-                  ? `${selectedAddress.fullName}, ${selectedAddress.area}, ${selectedAddress.city}, ${selectedAddress.state}`
-                  : "Select Address"}
-              </span>
+              <span>{addresses.shippingAddress}</span>
               <svg
                 className={`w-5 h-5 inline float-right transition-transform duration-200 ${
                   isDropdownOpen ? "rotate-0" : "-rotate-90"
@@ -65,21 +132,24 @@ const OrderSummary = () => {
 
             {isDropdownOpen && (
               <ul className="absolute w-full bg-white border shadow-md mt-1 z-10 py-1.5">
-                {userAddresses.map((address, index) => (
-                  <li
-                    key={index}
-                    className="px-4 py-2 hover:bg-gray-500/10 cursor-pointer"
-                    onClick={() => handleAddressSelect(address)}
-                  >
-                    {address.fullName}, {address.area}, {address.city},{" "}
-                    {address.state}
-                  </li>
-                ))}
+                <li className="px-4 py-2 hover:bg-gray-500/10 cursor-pointer">
+                  <span className="text-xs text-gray-500">
+                    First Name: {userData.firstName}
+                  </span>
+                  <br />
+                  {addresses.shippingAddress}
+                  <br />
+                  {addresses.shippingState} {"State"}
+                  <br />
+                  {addresses.zipCode}
+                  <br />
+                </li>
+
                 <li
-                  onClick={() => router.push("/add-address")}
+                  onClick={() => router.push("/dashboard/shipping")}
                   className="px-4 py-2 hover:bg-gray-500/10 cursor-pointer text-center"
                 >
-                  + Add New Address
+                  Edit Shipping Address
                 </li>
               </ul>
             )}
@@ -133,11 +203,22 @@ const OrderSummary = () => {
         </div>
       </div>
 
+      <div className="mt-5">
+        <label
+          htmlFor="pin"
+          className="text-base font-medium uppercase text-gray-600 block mb-2"
+        >
+          Transaction PIN
+        </label>
+        <PinInput length={4} onChange={setPin} />
+      </div>
+
       <button
         onClick={createOrder}
-        className="w-full bg-blue-600 text-white py-3 mt-5 hover:bg-blue-700"
+        disabled={loading}
+        className="w-full bg-blue-600 text-white py-3 mt-5 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed"
       >
-        Place Order
+        {loading ? "Placing Order..." : "Place Order"}
       </button>
     </div>
   );

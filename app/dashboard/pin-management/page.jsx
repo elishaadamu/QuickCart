@@ -92,6 +92,7 @@ const SetPinForm = () => {
       return;
     }
     setLoading(true);
+    console.log("Setting PIN", newPin);
     try {
       await axios.post(
         apiUrl(API_CONFIG.ENDPOINTS.SECURITY.SET_PIN + "/" + userId),
@@ -103,6 +104,7 @@ const SetPinForm = () => {
       setNewPin("");
       setConfirmPin("");
     } catch (error) {
+      console.error("Error setting PIN:", error);
       toast.error(error.response?.data?.message || "Failed to set PIN");
     } finally {
       setLoading(false);
@@ -176,6 +178,7 @@ const UpdatePinForm = () => {
       setNewPin("");
       setConfirmPin("");
     } catch (error) {
+      console.error("Error updating PIN:", error);
       toast.error(error.response?.data?.message || "Failed to update PIN");
     } finally {
       setLoading(false);

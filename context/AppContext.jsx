@@ -1,8 +1,10 @@
 "use client";
-import { productsDummyData, userDummyData } from "@/assets/assets";
+import { productsDummyData } from "@/assets/assets";
 import { decryptData } from "@/lib/encryption";
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState } from "react";
+import axios from "axios";
+import { apiUrl, API_CONFIG } from "@/configs/api";
 
 export const AppContext = createContext();
 
@@ -25,7 +27,14 @@ export const AppContextProvider = (props) => {
   const [wishlistItems, setWishlistItems] = useState([]);
 
   const fetchProductData = async () => {
-    setProducts(productsDummyData);
+    try {
+      const response = await axios.get(
+        apiUrl(API_CONFIG.ENDPOINTS.PRODUCT.GET_PRODUCT)
+      );
+      setProducts(response.data || []);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    }
   };
 
   const fetchUserData = async () => {
@@ -111,7 +120,7 @@ export const AppContextProvider = (props) => {
     for (const items in cartItems) {
       let itemInfo = products.find((product) => product._id === items);
       if (itemInfo && cartItems[items] > 0) {
-        totalAmount += itemInfo.offerPrice * cartItems[items];
+        totalAmount += itemInfo.price * cartItems[items];
       }
     }
     return Math.floor(totalAmount * 100) / 100;

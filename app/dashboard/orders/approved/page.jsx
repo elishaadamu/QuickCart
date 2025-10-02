@@ -29,7 +29,7 @@ const ApprovedOrders = () => {
     setLoading(true);
     try {
       const response = await axios.get(
-        apiUrl(API_CONFIG.ENDPOINTS.ORDER.GET_ALL),
+        apiUrl(API_CONFIG.ENDPOINTS.ORDER.GET_ALL + user.id),
         {
           params: {
             userId: user.id,
@@ -37,7 +37,8 @@ const ApprovedOrders = () => {
           },
         }
       );
-      setOrders(response.data);
+      console.log("Approved orders response:", response.data);
+      setOrders(response.data.orders || []);
     } catch (error) {
       toast.error("Failed to fetch approved orders.");
     } finally {
@@ -45,6 +46,15 @@ const ApprovedOrders = () => {
     }
   };
 
+  const getStatusClass = (status) => {
+    switch (status.toLowerCase()) {
+      case "paid":
+      case "approved":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
   return (
     <div>
       <ToastContainer />
@@ -56,21 +66,45 @@ const ApprovedOrders = () => {
           <table className="min-w-full bg-white">
             <thead>
               <tr>
-                <th className="py-2 px-4 border-b">Order ID</th>
-                <th className="py-2 px-4 border-b">Date</th>
-                <th className="py-2 px-4 border-b">Total Amount</th>
-                <th className="py-2 px-4 border-b">Status</th>
+                <th className="py-2 text-left px-4 border-b">Order ID</th>
+                <th className="py-2 text-left px-4 border-b">Product(s)</th>
+                <th className="py-2 text-left px-4 border-b">Quantity</th>
+                <th className="py-2 text-left px-4 border-b">Date</th>
+                <th className="py-2 text-left px-4 border-b">
+                  Delivery Address
+                </th>
+                <th className="py-2 text-left px-4 border-b">Total Amount</th>
+                <th className="py-2 text-left px-4 border-b">Status</th>
               </tr>
             </thead>
             <tbody>
               {orders.map((order) => (
-                <tr key={order.id}>
-                  <td className="py-2 px-4 border-b">{order.id}</td>
+                <tr key={order._id} className="hover:bg-gray-50">
+                  <td className="py-2 px-4 border-b">{order._id}</td>
                   <td className="py-2 px-4 border-b">
-                    {new Date(order.date).toLocaleDateString()}
+                    {order.products.map((p) => p.name).join(", ")}
                   </td>
-                  <td className="py-2 px-4 border-b">₦{order.totalAmount}</td>
-                  <td className="py-2 px-4 border-b">{order.status}</td>
+                  <td className="py-2 px-4 border-b text-center">
+                    {order.products.reduce((total, p) => total + p.quantity, 0)}
+                  </td>
+                  <td className="py-2 px-4 border-b">
+                    {new Date(order.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className="py-2 px-4 border-b">
+                    {order.deliveryAddress}
+                  </td>
+                  <td className="py-2 px-4 border-b">
+                    ₦{order.totalAmount.toFixed(2)}
+                  </td>
+                  <td className="py-2 px-4 border-b">
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(
+                        order.status
+                      )}`}
+                    >
+                      {order.status}
+                    </span>
+                  </td>
                 </tr>
               ))}
             </tbody>

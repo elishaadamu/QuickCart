@@ -4,7 +4,7 @@ import axios from "axios";
 import { decryptData, encryptData } from "@/lib/encryption";
 import { ToastContainer, toast } from "react-toastify";
 import { apiUrl, API_CONFIG } from "@/configs/api";
-import { FaUserEdit, FaCamera } from "react-icons/fa";
+import { FaUserEdit } from "react-icons/fa";
 import Image from "next/image";
 import "react-toastify/dist/ReactToastify.css";
 import Loading from "@/components/Loading";
@@ -46,41 +46,6 @@ const FormField = ({
   </div>
 );
 
-const ImageField = ({ label, name, src, isEditing, onChange }) => (
-  <div>
-    <label className="block text-sm font-medium text-gray-600 mb-2">
-      {label}
-    </label>
-    <div className="relative w-full h-32 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
-      {src && (
-        <Image
-          src={src}
-          alt={`${label} preview`}
-          layout="fill"
-          objectFit="cover"
-        />
-      )}
-      {isEditing && (
-        <label
-          htmlFor={name}
-          className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center text-white cursor-pointer opacity-0 hover:opacity-100 transition-opacity"
-        >
-          <FaCamera size={24} />
-          <span className="text-sm mt-1 p-3">Change</span>
-          <input
-            id={name}
-            name={name}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={onChange}
-          />
-        </label>
-      )}
-    </div>
-  </div>
-);
-
 const PersonalDetails = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -104,7 +69,7 @@ const PersonalDetails = () => {
 
         if (encryptedUser) {
           const userData = decryptData(encryptedUser);
-          console.log(userData);
+          console.log("My details", userData);
           setProfile(userData);
         }
       } finally {
@@ -123,27 +88,26 @@ const PersonalDetails = () => {
     }));
   };
 
-  const handleFileChange = (e) => {
-    const { name, files } = e.target;
-    const file = files[0];
+  const fetchProfile = async () => {
+    setLoading(true);
+    try {
+      const encryptedUser = localStorage.getItem("user");
+      const userData = decryptData(encryptedUser);
 
-    if (file) {
-      if (file.size > 100 * 1024) {
-        // 100kb limit
-        toast.error("Image size should not exceed 100KB.");
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfile((prev) => ({
-          ...prev,
-          [name]: reader.result, // base64 string
-        }));
-      };
-      reader.readAsDataURL(file);
+      const response = await axios.get(
+        `${apiUrl(API_CONFIG.ENDPOINTS.PROFILE.GET)}/${userData.id}`
+      );
+      console.log("Profile data", response.data);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast.error(error.response?.data?.message || "Failed to update profile");
+    } finally {
+      setLoading(false);
     }
   };
+  useEffect(() => {
+    fetchProfile();
+  }, []);
 
   const handleUpdateProfile = async () => {
     setLoading(true);
@@ -160,8 +124,6 @@ const PersonalDetails = () => {
           address: profile.address,
           businessName: profile.businessName,
           businessDesc: profile.businessDesc,
-          avatar: profile.avatar,
-          banner: profile.banner,
         };
         console.log(payload);
       } else {
@@ -292,20 +254,6 @@ const PersonalDetails = () => {
                   type="textarea"
                 />
               </div>
-              <ImageField
-                label="Avatar (Logo)"
-                name="avatar"
-                src={profile.avatar}
-                isEditing={isEditing}
-                onChange={handleFileChange}
-              />
-              <ImageField
-                label="Banner"
-                name="banner"
-                src={profile.banner}
-                isEditing={isEditing}
-                onChange={handleFileChange}
-              />
             </>
           )}
 

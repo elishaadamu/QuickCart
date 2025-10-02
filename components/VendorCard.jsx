@@ -20,7 +20,7 @@ const VendorCard = ({
   >
     <div className="relative">
       <Image
-        src={banner || "https://picsum.photos/seed/1/400/200"}
+        src={banner?.url || "https://picsum.photos/seed/1/400/200"}
         alt={`${businessName}'s banner`}
         className="w-full h-24 object-cover"
         width={400}
@@ -28,7 +28,7 @@ const VendorCard = ({
       />
       <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-20 h-20 border-4 border-white rounded-full overflow-hidden bg-gray-200">
         <Image
-          src={avatar || "https://i.pravatar.cc/150"}
+          src={avatar?.url || "https://i.pravatar.cc/150"}
           alt={`${businessName} logo`}
           width={80}
           height={80}

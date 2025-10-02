@@ -31,6 +31,7 @@ const Navbar = () => {
   const [animate, setAnimate] = useState(false);
   const [pagesOpen, setPagesOpen] = useState(false);
   const [vendorOpen, setVendorOpen] = useState(false);
+  const [deliveryOpen, setDeliveryOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [walletBalance, setWalletBalance] = useState(0);
@@ -113,6 +114,12 @@ const Navbar = () => {
     setIsSearchOpen(false);
   };
 
+  const handleSearchIconClick = () => {
+    setIsSearchOpen(true);
+    // Focus the input when the modal opens
+    setTimeout(() => document.getElementById("search-modal-input")?.focus(), 0);
+  };
+
   return (
     <nav className=" border-b border-gray-300 text-gray-700 relative bg-white shadow-md z-10">
       <div className="max-w-[1440px] mx-auto flex items-center  justify-between px-6 md:px-4 lg:px-4 py-3">
@@ -143,16 +150,7 @@ const Navbar = () => {
           >
             Shop
           </Link>
-          <Link
-            href="/all-vendors"
-            className={`transition text-[18px] ${
-              pathname === "/all-vendors"
-                ? "text-blue-600 font-medium"
-                : "text-gray-700 hover:text-gray-900"
-            }`}
-          >
-            Vendors
-          </Link>
+
           <div
             className="relative"
             onMouseEnter={() => setIsCategoryMenuOpen(true)}
@@ -234,8 +232,19 @@ const Navbar = () => {
               >
                 Contact
               </Link>
+              <Link
+                href="/all-vendors"
+                className={`block px-4 py-2 ${
+                  pathname === "/all-vendors"
+                    ? "bg-gray-100 text-blue-600"
+                    : "hover:bg-gray-100"
+                }`}
+              >
+                All Vendors
+              </Link>
             </div>
           </div>
+
           {isLoggedIn && userData?.role === "vendor" ? (
             <Link
               href="/seller"
@@ -293,52 +302,54 @@ const Navbar = () => {
               </div>
             </div>
           )}
-        </div>
-        <ul className="hidden md:flex items-center gap-6 relative">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search products..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="px-4 py-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+          <div
+            className="relative"
+            onMouseEnter={() => setDeliveryOpen(true)}
+            onMouseLeave={() => setDeliveryOpen(false)}
+          >
+            <button className="hover:text-gray-900 transition flex items-center gap-1 text-[18px]">
+              Delivery Man
+              <Image
+                src={assets.arrow_icon}
+                alt="arrow"
+                className={`w-2 h-2 transform transition-transform ${
+                  deliveryOpen ? "rotate-90" : ""
+                }`}
+              />
+            </button>
             <div
-              className={`absolute top-full left-0 w-full bg-white border rounded-lg shadow-lg z-20 transform transition-all duration-200 ease-in-out origin-top ${
-                searchQuery.trim() !== ""
+              className={`absolute top-full mt-3 left-0 w-56 bg-white border rounded-lg shadow-lg z-20 transform transition-all duration-200 ease-in-out origin-top ${
+                deliveryOpen
                   ? "opacity-100 scale-100 visible"
                   : "opacity-0 scale-95 invisible"
               }`}
             >
-              {filteredProducts.length > 0 ? (
-                filteredProducts.map((product) => (
-                  <div
-                    key={product._id}
-                    onClick={() => handleProductClick(product._id)}
-                    className="p-3 hover:bg-gray-100 cursor-pointer flex items-center gap-2"
-                  >
-                    <Image
-                      src={product.image[0]}
-                      alt={product.name}
-                      width={40}
-                      height={40}
-                      className="rounded-md"
-                    />
-                    <div>
-                      <p className="">{product.name}</p>
-                      <p className="text-sm text-gray-600">
-                        ₦{product.offerPrice}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="p-4 text-center text-gray-500">
-                  No products found
-                </div>
-              )}
+              <Link
+                href="/delivery-signup"
+                className={`block px-4 py-2 ${
+                  pathname === "/delivery-signup"
+                    ? "bg-gray-100 text-blue-600"
+                    : "hover:bg-gray-100"
+                }`}
+              >
+                Become a Delivery Man
+              </Link>
+              <Link
+                href="/delivery-signin"
+                className="block px-4 py-2 hover:bg-gray-100"
+              >
+                Sign In
+              </Link>
             </div>
           </div>
+        </div>
+        <ul className="hidden md:flex items-center gap-6 relative">
+          <Image
+            className="w-5 cursor-pointer"
+            src={assets.search_icon}
+            alt="search icon"
+            onClick={handleSearchIconClick}
+          />
           <Link href="/wishlist" className="flex relative">
             <Image className="w-6" src={assets.heart_icon} alt="" />
             <div className="absolute -top-2 -right-2 text-xs bg-blue-500 text-white h-4 w-4 flex justify-center items-center rounded-full">
@@ -375,7 +386,7 @@ const Navbar = () => {
                         className="flex items-center gap-3 py-2 border-b last:border-b-0"
                       >
                         <Image
-                          src={product.image[0]}
+                          src={product.images?.[0]?.url || ""}
                           alt={product.name}
                           width={50}
                           height={50}
@@ -386,7 +397,7 @@ const Navbar = () => {
                             {product.name}
                           </p>
                           <p className="text-xs text-gray-600">
-                            {cartItems[itemId]} x ₦{product.offerPrice}
+                            {cartItems[itemId]} x ₦{product.price}
                           </p>
                         </div>
                       </div>
@@ -485,7 +496,7 @@ const Navbar = () => {
             className="w-5 cursor-pointer"
             src={assets.search_icon}
             alt="search icon"
-            onClick={() => setIsSearchOpen(!isSearchOpen)}
+            onClick={handleSearchIconClick}
           />
           <Link href="/wishlist" className="flex relative">
             <Image className="w-6" src={assets.heart_icon} alt="" />
@@ -507,20 +518,25 @@ const Navbar = () => {
           />
         </div>
         {isSearchOpen && (
-          <div className="absolute top-full left-0 w-full bg-white z-20 p-4 border-b">
-            <div className="relative">
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-start pt-20"
+            onClick={() => setIsSearchOpen(false)}
+          >
+            <div
+              className="relative w-11/12 md:w-1/2 lg:w-1/3"
+              onClick={(e) => e.stopPropagation()}
+            >
               <input
                 type="text"
                 placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                id="search-modal-input"
+                className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <div
-                className={`absolute top-full left-0 w-full bg-white border rounded-lg shadow-lg transform transition-all duration-200 ease-in-out origin-top ${
-                  searchQuery.trim() !== ""
-                    ? "opacity-100 scale-100 visible"
-                    : "opacity-0 scale-95 invisible"
+                className={`absolute top-full mt-2 left-0 w-full bg-white border rounded-lg shadow-lg z-20 max-h-96 overflow-y-auto ${
+                  searchQuery.trim() !== "" ? "block" : "hidden"
                 }`}
               >
                 {filteredProducts.length > 0 ? (
@@ -528,17 +544,17 @@ const Navbar = () => {
                     <div
                       key={product._id}
                       onClick={() => handleProductClick(product._id)}
-                      className="p-4 hover:bg-gray-100 cursor-pointer flex items-center gap-4"
+                      className="p-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3"
                     >
                       <Image
-                        src={product.image[0]}
+                        src={product.images?.[0]?.url || ""}
                         alt={product.name}
-                        width={40}
-                        height={40}
-                        className="rounded-md"
+                        width={50}
+                        height={50}
+                        className="rounded-md object-cover"
                       />
                       <div>
-                        <p className="font-semibold">{product.name}</p>
+                        <p className="font-medium">{product.name}</p>
                         <p className="text-sm text-gray-600">
                           ₦{product.offerPrice}
                         </p>
@@ -546,7 +562,7 @@ const Navbar = () => {
                     </div>
                   ))
                 ) : (
-                  <div className="p-4 text-center text-gray-500">
+                  <div className="p-3 text-center text-gray-500">
                     No products found
                   </div>
                 )}

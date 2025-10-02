@@ -12,15 +12,17 @@ export const API_CONFIG = {
       allWalletTransactions: "/wallet/",
     },
     ORDER: {
-      GET_ALL: "/orders",
+      GET_ALL: "/order/user/",
       GET_SELLER_ORDERS: "/orders/seller",
       UPDATE_STATUS: "/orders/status",
+      CREATE: "/order/create",
     },
     PROFILE: {
       UPDATE: "/profile/update",
-      GET: "/profile",
+      GET: "/user/profile",
       UPDATE_USER: "/user/update",
       DELETE: "/user/delete/",
+      SHIPPING: "/profile/shipping",
     },
     SECURITY: {
       SET_PIN: "/wallet/setPin",
@@ -37,6 +39,7 @@ export const API_CONFIG = {
     VENDOR: {
       SIGNIN: "/vendor/login",
       GET_ALL: "/vendor/stats/",
+      UPDATE_IMAGES: "/vendor/update-images/",
     },
     PRODUCT: {
       ADD: "/product/",
