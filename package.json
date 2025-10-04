@@ -1,9 +1,9 @@
 {
-  "name": "ecommerce-inngest",
+  "name": "quickcart",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev -p 5173",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

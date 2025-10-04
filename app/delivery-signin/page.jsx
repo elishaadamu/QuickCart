@@ -16,7 +16,7 @@ import { useAppContext } from "@/context/AppContext";
 const DeliverySigninPage = () => {
   const router = useRouter();
   const { fetchUserData } = useAppContext();
-  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -25,11 +25,11 @@ const DeliverySigninPage = () => {
     e.preventDefault();
     setLoading(true);
 
-    const payload = { phone, password, service: "delivery" };
+    const payload = { email, password };
     console.log(payload);
     try {
       const response = await axios.post(
-        apiUrl(API_CONFIG.ENDPOINTS.DELIVERY.SIGNIN),
+        apiUrl(API_CONFIG.ENDPOINTS.DELIVERY.LOGIN),
         payload
       );
 
@@ -46,7 +46,7 @@ const DeliverySigninPage = () => {
       localStorage.setItem("user", encryptedUser);
       fetchUserData(); // Call fetchUserData to update global state
       toast.success("Delivery partner signin successful!");
-      router.push("/delivery/dashboard"); // Redirect to delivery dashboard after signin
+      router.push("/delivery-dashboard"); // Redirect to delivery dashboard after signin
     } catch (error) {
       console.error("Error signing in as delivery partner:", error);
       toast.error(
@@ -76,14 +76,14 @@ const DeliverySigninPage = () => {
           Delivery Partner Login
         </p>
         <div className="flex flex-col gap-1">
-          <label>Phone Number</label>
+          <label>Email</label>
           <input
             required
-            onChange={(e) => setPhone(e.target.value)}
-            value={phone}
+            onChange={(e) => setEmail(e.target.value)}
+            value={email}
             className="border p-2 rounded-md"
-            type="tel"
-            placeholder="Enter your phone number"
+            type="email"
+            placeholder="Enter your email"
           />
         </div>
         <div className="flex flex-col gap-1 relative">

@@ -9,7 +9,7 @@ import axios from "axios";
 import { apiUrl, API_CONFIG } from "@/configs/api";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import Sidebar from "@/components/dashboard/Sidebar";
+import Sidebar from "@/components/delivery-dashboard/Sidebar";
 
 const WalletNotification = ({ onDismiss }) => (
   <div className="fixed top-4 right-4 w-1/2 md:w-[350px] bg-yellow-200 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg shadow-lg z-50 flex justify-between items-center">
@@ -47,8 +47,7 @@ const WalletNotification = ({ onDismiss }) => (
 
 const DashboardLayout = ({ children }) => {
   const router = useRouter();
-  const [openOrders, setOpenOrders] = useState(false);
-  const [openMenu, setOpenMenu] = useState(false);
+  const [openSettings, setOpenSettings] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [userData, setUserData] = useState(null);
   const [hasWallet, setHasWallet] = useState(true);
@@ -56,7 +55,7 @@ const DashboardLayout = ({ children }) => {
   useEffect(() => {
     const user = localStorage.getItem("user");
     if (!user) {
-      router.push("/signin");
+      router.push("/delivery-signin");
     } else {
       const decryptedData = decryptData(user);
       setUserData(decryptedData);
@@ -85,6 +84,7 @@ const DashboardLayout = ({ children }) => {
 
   const handleLogout = () => {
     localStorage.removeItem("user");
+    console.log("Logging out and redirecting to homepage...");
     router.push("/");
   };
 
@@ -108,10 +108,8 @@ const DashboardLayout = ({ children }) => {
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
         handleLogout={handleLogout}
-        openOrders={openOrders}
-        setOpenOrders={setOpenOrders}
-        openMenu={openMenu}
-        setOpenMenu={setOpenMenu}
+        openSettings={openSettings}
+        setOpenSettings={setOpenSettings}
       />
 
       <div className="md:pl-64 flex flex-col min-h-screen">
@@ -136,7 +134,7 @@ const DashboardLayout = ({ children }) => {
               </svg>
             </button>
             <Link href={"/"}>
-              <Image className="w-40 mx-auto" src={Logo} alt="logo" />
+              <Image className="w-50 mx-auto" src={Logo} alt="logo" />
             </Link>
           </div>
         </div>

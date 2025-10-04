@@ -26,6 +26,8 @@ const DeliverySignupPage = () => {
   const [dob, setDob] = useState("");
   const [residentialAddress, setResidentialAddress] = useState("");
   const [state, setState] = useState("");
+  const [lga, setLga] = useState("");
+  const [lgas, setLgas] = useState([]);
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -46,6 +48,7 @@ const DeliverySignupPage = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [states, setStates] = useState([]);
+  const [lgaLoading, setLgaLoading] = useState(false);
 
   // Determine if a driver's license is required
   const requiresLicense = vehicleTypes.some((type) => type !== "Motorcycle");
@@ -66,6 +69,29 @@ const DeliverySignupPage = () => {
     };
     fetchStates();
   }, []);
+
+  // Fetch LGAs when state changes
+  useEffect(() => {
+    const getLgasFromApi = async () => {
+      if (!state) return;
+      setLgaLoading(true);
+      setLgas([]);
+      setLga("");
+      try {
+        const response = await axios.get(
+          `https://nga-states-lga.onrender.com/?state=${state}`
+        );
+        setLgas(response.data);
+      } catch (error) {
+        toast.error("Failed to fetch LGAs for the selected state.");
+        console.error("Error fetching LGAs:", error);
+      } finally {
+        setLgaLoading(false);
+      }
+    };
+
+    getLgasFromApi();
+  }, [state]);
 
   const handleVehicleTypeChange = (e) => {
     const { value, checked } = e.target;
@@ -112,6 +138,7 @@ const DeliverySignupPage = () => {
       !password ||
       !residentialAddress ||
       !state ||
+      !lga ||
       !nin ||
       !bankName ||
       !accountNumber ||
@@ -150,6 +177,7 @@ const DeliverySignupPage = () => {
       dob: dob,
       residentialAddress,
       state,
+      localGovernment: lga,
       email,
       phone,
       password,
@@ -164,9 +192,10 @@ const DeliverySignupPage = () => {
       accountName,
     };
 
+    console.log("Signup payload:", payload); // Debugging line
     try {
       const response = await axios.post(
-        apiUrl(API_CONFIG.ENDPOINTS.AUTH.SIGNUP), // Assuming a general signup endpoint
+        apiUrl(API_CONFIG.ENDPOINTS.DELIVERY.CREATE), // Assuming a general signup endpoint
         payload
       );
       const { user } = response.data;
@@ -177,7 +206,7 @@ const DeliverySignupPage = () => {
 
       fetchUserData();
       toast.success("Delivery person signup successful!");
-      router.push("/delivery/dashboard"); // Redirect to delivery dashboard
+      router.push("/delivery-signin"); // Redirect to delivery dashboard
     } catch (error) {
       console.error("Error signing up as delivery person:", error);
       toast.error(
@@ -320,7 +349,7 @@ const DeliverySignupPage = () => {
                 placeholder="Enter your full address"
               />
             </div>
-            <div className="flex flex-col gap-1 md:col-span-2">
+            <div className="flex flex-col gap-1">
               <label>
                 State <span className="text-red-500">*</span>
               </label>
@@ -336,6 +365,27 @@ const DeliverySignupPage = () => {
                 {states.map((s) => (
                   <option key={s} value={s}>
                     {s}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label>
+                LGA <span className="text-red-500">*</span>
+              </label>
+              <select
+                required
+                onChange={(e) => setLga(e.target.value)}
+                value={lga}
+                className="border p-2 rounded-md bg-white disabled:bg-gray-100"
+                disabled={!state || lgaLoading}
+              >
+                <option value="" disabled>
+                  {lgaLoading ? "Loading LGAs..." : "Select LGA"}
+                </option>
+                {lgas.map((l) => (
+                  <option key={l} value={l}>
+                    {l}
                   </option>
                 ))}
               </select>

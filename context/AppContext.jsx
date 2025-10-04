@@ -22,6 +22,9 @@ export const AppContextProvider = (props) => {
   const [authLoading, setAuthLoading] = useState(true);
   const isLoggedIn = !!userData; // Derive isLoggedIn from userData
 
+  const [states, setStates] = useState([]);
+  const [lgas, setLgas] = useState([]);
+
   const [cartItems, setCartItems] = useState({});
 
   const [wishlistItems, setWishlistItems] = useState([]);
@@ -48,9 +51,7 @@ export const AppContextProvider = (props) => {
 
       const decryptedUser = decryptData(encryptedUser);
       console.log("Decryption result:", {
-        success: !!decryptedUser,
-        decryptedData: decryptedUser,
-        dataType: typeof decryptedUser,
+        decryptedUser,
       });
 
       if (decryptedUser) {
@@ -76,10 +77,33 @@ export const AppContextProvider = (props) => {
     setUserData(null);
     setCartItems({}); // Clear cart on logout
     setWishlistItems([]); // Clear wishlist on logout
-    toast.success("Logged out successfully!");
-    router.push("/");
+    console.log("Logging out and redirecting to homepage...");
+    // It's better to show toast notifications in the component that calls logout.
+    router.push("/"); // Redirect to the homepage
   };
 
+  const fetchStates = async () => {
+    try {
+      const response = await fetch("https://nga-states-lga.onrender.com/fetch");
+      const data = await response.json();
+      setStates(data || []);
+    } catch (error) {
+      console.error("Error fetching states:", error);
+    }
+  };
+
+  const fetchLgas = async (stateName) => {
+    if (!stateName) return;
+    try {
+      const response = await fetch(
+        `https://nga-states-lga.onrender.com/?state=${stateName}`
+      );
+      const data = await response.json();
+      setLgas(data || []);
+    } catch (error) {
+      console.error(`Error fetching LGAs for ${stateName}:`, error);
+    }
+  };
   const addToCart = async (itemId) => {
     if (!isLoggedIn) {
       toast.error("Please sign in to add items to cart.");
@@ -147,6 +171,7 @@ export const AppContextProvider = (props) => {
 
   useEffect(() => {
     fetchProductData();
+    fetchStates();
   }, []);
 
   useEffect(() => {
@@ -259,6 +284,9 @@ export const AppContextProvider = (props) => {
     isLoggedIn,
     logout,
     authLoading,
+    states,
+    lgas,
+    fetchLgas,
   };
 
   return (

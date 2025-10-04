@@ -56,6 +56,16 @@ export const API_CONFIG = {
       GET_BY_VENDOR: "/rating/", // Append vendorId
       DELETE: "/rating/", // Append vendorId/userId
     },
+    DELIVERY: {
+      CREATE: "/delivery/create-delivery-man",
+      LOGIN: "/delivery/login",
+      UPDATE: "/delivery/delivery-man",
+      CREATE_WALLET: "/wallet/create-wallet/",
+    },
+    DELIVERY_WITHDRAWAL: {
+      CREATE: "/withdraw",
+      GET_BY_USER: "/withdraw/user/", // append userId
+    },
   },
 };
 
