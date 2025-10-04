@@ -5,6 +5,8 @@ import axios from "axios";
 import { apiUrl, API_CONFIG } from "@/configs/api";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useAppContext } from "@/context/AppContext";
+
 import { decryptData } from "@/lib/encryption";
 
 const Header = ({ title }) => (
@@ -72,14 +74,9 @@ const SetPinForm = () => {
   const [confirmPin, setConfirmPin] = useState("");
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState(null);
+  const { userData, authLoading } = useAppContext();
 
-  useEffect(() => {
-    const user = localStorage.getItem("user");
-    if (user) {
-      const decryptedData = decryptData(user);
-      setUserId(decryptedData.id);
-    }
-  }, []);
+  const currentUser = userData?.user;
 
   const handleSetPin = async (e) => {
     e.preventDefault();
@@ -91,11 +88,12 @@ const SetPinForm = () => {
       toast.error("PINs do not match");
       return;
     }
+    if (!currentUser?._id) return;
     setLoading(true);
     console.log("Setting PIN", newPin);
     try {
       await axios.post(
-        apiUrl(API_CONFIG.ENDPOINTS.SECURITY.SET_PIN + "/" + userId),
+        apiUrl(API_CONFIG.ENDPOINTS.SECURITY.SET_PIN + "/" + currentUser._id),
         {
           newPin,
         }

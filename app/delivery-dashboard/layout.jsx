@@ -16,7 +16,7 @@ const WalletNotification = ({ onDismiss }) => (
     <div>
       <p className="font-bold">Create Your Wallet!</p>
       <p>
-        You need to create a wallet for transactions.{" "}
+        You need to create a wallet for transactions.
         <Link href="/dashboard/wallet" className="font-bold underline">
           Create Wallet
         </Link>
@@ -133,8 +133,8 @@ const DashboardLayout = ({ children }) => {
                 />
               </svg>
             </button>
-            <Link href={"/"}>
-              <Image className="w-50 mx-auto" src={Logo} alt="logo" />
+            <Link href={"/"} className="flex items-center">
+              <Image className="w-50 mx-auto" src={Logo} alt="logo" priority />
             </Link>
           </div>
         </div>

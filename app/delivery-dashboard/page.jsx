@@ -7,6 +7,7 @@ import { apiUrl, API_CONFIG } from "@/configs/api";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useAppContext } from "@/context/AppContext";
+import { AiFillBank } from "react-icons/ai";
 
 const DashboardHome = () => {
   const { userData, authLoading } = useAppContext();
@@ -37,7 +38,7 @@ const DashboardHome = () => {
             `${API_CONFIG.ENDPOINTS.ACCOUNT.walletBalance}${currentUser._id}/balance`
           )
         );
-        console.log(response.data.data.balance);
+        console.log(response);
         setWalletBalance(response.data.data.balance);
         setHasWallet(true);
       } catch (error) {
@@ -298,7 +299,10 @@ const DashboardHome = () => {
                 <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 rounded-full opacity-20 -mr-10 -mt-10"></div>
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="text-sm opacity-80">Bank</p>
+                    <p className="text-sm opacity-80 flex items-center gap-2">
+                      <AiFillBank />
+                      <span>Bank</span>
+                    </p>
                     <h2 className="text-lg font-semibold">
                       {currentUser?.bankName || "N/A"}
                     </h2>
@@ -306,7 +310,7 @@ const DashboardHome = () => {
                   <div className="text-right">
                     <p className="text-sm opacity-80">Wallet Balance</p>
                     <h1 className="text-3xl font-bold">
-                      ₦{walletBalance?.toLocaleString() || "0.00"}
+                      ₦{walletBalance?.toFixed(1) || "0.00"}
                     </h1>
                   </div>
                 </div>
@@ -498,7 +502,7 @@ const DashboardHome = () => {
           {/* Quick Actions */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
             <Link
-              href="/delivery-dashboard/wallet"
+              href="/delivery-dashboard/withdraw"
               className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
             >
               <h3 className="text-lg font-medium text-gray-900">

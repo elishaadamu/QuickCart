@@ -2,9 +2,10 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import axios from "axios";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import { apiUrl, API_CONFIG } from "@/configs/api";
 import { useAppContext } from "@/context/AppContext";
+import { AiFillBank } from "react-icons/ai";
 
 const Withdraw = () => {
   const [withdrawals, setWithdrawals] = useState([]);
@@ -20,29 +21,29 @@ const Withdraw = () => {
   const pinInputs = useRef([]);
   const currentUser = userData?.user;
 
-  useEffect(() => {
-    // Only attempt to fetch when we have a user id available
+  const fetchBalance = useCallback(async () => {
     if (!currentUser?._id) return;
-
-    setLoading(true);
-    const fetchBalance = async () => {
-      try {
-        const response = await axios.get(
-          apiUrl(
-            `${API_CONFIG.ENDPOINTS.ACCOUNT.walletBalance}${currentUser._id}/balance`
-          )
-        );
-        console.log(response.data.data.balance);
-        setWalletBalance(response.data.data.balance);
-        setHasWallet(true);
-      } catch (error) {
-        console.log(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchBalance();
+    // Don't set loading for balance refresh
+    try {
+      const response = await axios.get(
+        apiUrl(
+          `${API_CONFIG.ENDPOINTS.ACCOUNT.walletBalance}${currentUser._id}/balance`
+        )
+      );
+      setWalletBalance(response.data.data.balance);
+      setHasWallet(true);
+    } catch (error) {
+      console.log("Error fetching balance:", error);
+      // Don't show toast on balance fetch error to avoid being noisy
+    }
   }, [currentUser]);
+
+  useEffect(() => {
+    if (!currentUser?._id) return;
+    setLoading(true);
+    fetchBalance();
+    setLoading(false); // Set loading to false after initial fetch
+  }, [currentUser, fetchBalance]);
   const fetchWithdrawals = useCallback(async () => {
     if (!currentUser?._id) return;
     setLoading(true);
@@ -52,8 +53,7 @@ const Withdraw = () => {
           API_CONFIG.ENDPOINTS.DELIVERY_WITHDRAWAL.GET_BY_USER + currentUser._id
         )
       );
-      console.log(response.data);
-      const withdrawalData = response.data.withdrawals || response.data || [];
+      const withdrawalData = response.data.data || [];
       setWithdrawals(Array.isArray(withdrawalData) ? withdrawalData : []);
     } catch (error) {
       console.error("Error fetching withdrawals:", error);
@@ -95,17 +95,20 @@ const Withdraw = () => {
     try {
       const payload = {
         role: currentUser.role,
-        amount: parseFloat(amount),
+        amount: amount,
         pin,
       };
       console.log("Submitting withdrawal with payload:", payload);
-      await axios.post(
-        apiUrl(API_CONFIG.ENDPOINTS.DELIVERY_WITHDRAWAL.CREATE),
+      const response = await axios.post(
+        apiUrl(
+          API_CONFIG.ENDPOINTS.DELIVERY_WITHDRAWAL.CREATE + currentUser._id
+        ),
         payload
       );
       toast.success("Withdrawal request submitted successfully!");
       setAmount("");
       setPin("");
+      fetchBalance(); // Re-fetch balance to update UI
       fetchWithdrawals();
       // Consider refreshing user data from context if balance is not updated automatically
     } catch (error) {
@@ -146,6 +149,7 @@ const Withdraw = () => {
 
   return (
     <div className="p-6 space-y-8">
+      <ToastContainer />
       {/* Wallet Card Section */}
       <div className="mb-8">
         {/* Wallet Balance */}
@@ -154,7 +158,10 @@ const Withdraw = () => {
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 rounded-full opacity-20 -mr-10 -mt-10"></div>
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-sm opacity-80">Bank</p>
+                <p className="text-sm opacity-80 flex items-center gap-2">
+                  <AiFillBank />
+                  <span>Bank</span>
+                </p>
                 <h2 className="text-lg font-semibold">
                   {currentUser?.bankName || "N/A"}
                 </h2>
@@ -162,7 +169,7 @@ const Withdraw = () => {
               <div className="text-right">
                 <p className="text-sm opacity-80">Wallet Balance</p>
                 <h1 className="text-3xl font-bold">
-                  ₦{walletBalance?.toLocaleString() || "0.00"}
+                  ₦{walletBalance?.toFixed(1) || "0.00"}
                 </h1>
               </div>
             </div>
@@ -242,7 +249,7 @@ const Withdraw = () => {
             <button
               type="submit"
               disabled={submitting || !pin || pin.length < 4 || !amount}
-              className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 ease-in-out shadow-md hover:shadow-lg disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center justify-center"
             >
               {submitting && (
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
@@ -264,19 +271,25 @@ const Withdraw = () => {
       {/* Withdrawal History */}
       <div>
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Recent Withdrawals</h1>
-          <div className="flex space-x-2">
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          <div>
+            <h1 className="text-2xl font-bold">Recent Withdrawals</h1>
+            <Link
+              href="/delivery-dashboard/withdrawal-history"
+              className="mt-2 inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="all">All Transactions</option>
-              <option value="pending">Pending</option>
-              <option value="completed">Completed</option>
-              <option value="failed">Failed</option>
-            </select>
+              View All
+            </Link>
           </div>
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">Filter by Status</option>
+            <option value="pending">Pending</option>
+            <option value="completed">Completed</option>
+            <option value="failed">Failed</option>
+          </select>
         </div>
 
         {loading ? (
@@ -296,7 +309,7 @@ const Withdraw = () => {
                       Amount
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Bank Account
+                      Bank Details
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
@@ -318,15 +331,18 @@ const Withdraw = () => {
                     </tr>
                   ) : (
                     filteredWithdrawals.slice(0, 5).map((withdrawal) => (
-                      <tr key={withdrawal.id} className="hover:bg-gray-50">
+                      <tr
+                        key={withdrawal.transactionId}
+                        className="hover:bg-gray-50"
+                      >
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {withdrawal.reference}
+                          {withdrawal.transactionId}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           ₦{withdrawal.amount.toFixed(2)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {withdrawal.bankName} - {withdrawal.accountNumber}
+                          {currentUser?.bankName} - {currentUser?.accountNumber}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span

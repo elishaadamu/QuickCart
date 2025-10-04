@@ -63,7 +63,7 @@ export const API_CONFIG = {
       CREATE_WALLET: "/wallet/create-wallet/",
     },
     DELIVERY_WITHDRAWAL: {
-      CREATE: "/withdraw",
+      CREATE: "/withdraw/",
       GET_BY_USER: "/withdraw/user/", // append userId
     },
   },
