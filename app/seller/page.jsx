@@ -5,11 +5,11 @@ import Image from "next/image";
 import { useAppContext } from "@/context/AppContext";
 import { API_CONFIG, apiUrl } from "@/configs/api";
 import Loading from "@/components/Loading";
-import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { categoriesData } from "@/components/CategorySidebar";
 import { decryptData } from "@/lib/encryption";
+import statesData from "@/lib/states.json";
+import axios from "axios";
 
 const AddProduct = () => {
   const { router, userData } = useAppContext();
@@ -17,29 +17,34 @@ const AddProduct = () => {
   const [images, setImages] = useState(new Array(4).fill(null));
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("Electronics");
+  const [category, setCategory] = useState("");
   const [price, setPrice] = useState("");
   const [state, setState] = useState("");
   const [minOrder, setMinOrder] = useState("");
   const [condition, setCondition] = useState("NEW");
   const [stock, setStock] = useState("");
   const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState([]);
   const [error, setError] = useState("");
-  const [states, setStates] = useState([]);
+  const [states] = useState(statesData.state);
 
   useEffect(() => {
-    const fetchStates = async () => {
+    const fetchCategories = async () => {
       try {
         const response = await axios.get(
-          "https://nga-states-lga.onrender.com/fetch"
+          apiUrl(API_CONFIG.ENDPOINTS.CATEGORY.GET_ALL)
         );
-        setStates(response.data);
+        console.log("Fetched categories:", response.data);
+        setCategories(response.data.categories);
+        if (response.data.length > 0) {
+          setCategory(response.data[0].name); // Set default category
+        }
       } catch (error) {
-        console.error("Error fetching states:", error);
-        toast.error("Failed to fetch states.");
+        toast.error("Failed to fetch categories.");
+        console.error("Error fetching categories:", error);
       }
     };
-    fetchStates();
+    fetchCategories();
   }, []);
 
   const handleSubmit = async (e) => {
@@ -242,9 +247,9 @@ const AddProduct = () => {
                   onChange={(e) => setCategory(e.target.value)}
                   value={category}
                 >
-                  {categoriesData.map((cat) => (
-                    <option key={cat.name} value={cat.name}>
-                      {cat.name}
+                  {categories.map((cat) => (
+                    <option key={cat._id} value={cat.name}>
+                      {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
                     </option>
                   ))}
                 </select>

@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import statesData from "@/lib/states.json";
 
 const AddressFormModal = ({ isOpen, onClose, onSave, address, loading }) => {
   const [formData, setFormData] = useState({
@@ -8,7 +8,7 @@ const AddressFormModal = ({ isOpen, onClose, onSave, address, loading }) => {
     shippingState: "",
     zipCode: "",
   });
-  const [states, setStates] = useState([]);
+  const [states] = useState(statesData.state);
 
   useEffect(() => {
     if (address) {
@@ -25,20 +25,6 @@ const AddressFormModal = ({ isOpen, onClose, onSave, address, loading }) => {
       });
     }
   }, [address]);
-
-  useEffect(() => {
-    const getStatesFromApi = async () => {
-      try {
-        let response = await axios.get(
-          "https://nga-states-lga.onrender.com/fetch"
-        );
-        setStates(response.data);
-      } catch (error) {
-        console.error("Error fetching states:", error);
-      }
-    };
-    getStatesFromApi();
-  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

@@ -61,6 +61,7 @@ export const API_CONFIG = {
       LOGIN: "/delivery/login",
       UPDATE: "/delivery/delivery-man",
       CREATE_WALLET: "/wallet/create-wallet/",
+      REQUEST_DELIVERY: "/delivery-request/create/",
     },
     DELIVERY_WITHDRAWAL: {
       CREATE: "/withdraw/",

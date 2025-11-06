@@ -13,6 +13,7 @@ const Wallet = () => {
   const [user, setUser] = useState(null);
   const [amount, setAmount] = useState("");
   const [showFundModal, setShowFundModal] = useState(false);
+  const [walletBalance, setWalletBalance] = useState(0);
 
   const handlePayment = async () => {
     const PaystackPop = (await import("@paystack/inline-js")).default;
@@ -51,7 +52,7 @@ const Wallet = () => {
       const response = await axios.get(
         apiUrl(API_CONFIG.ENDPOINTS.ACCOUNT.GET + user.id)
       );
-      console.log(response.data);
+      console.log("Details", response.data);
       setAccountDetails(response.data);
     } catch (error) {
       console.error("Error fetching account details:", error);
@@ -104,6 +105,29 @@ const Wallet = () => {
       setLoading(false);
     }
   };
+  useEffect(() => {
+    const fetchWalletBalance = async () => {
+      try {
+        const encryptedUser = localStorage.getItem("user");
+        if (encryptedUser) {
+          const userData = decryptData(encryptedUser);
+          const walletResponse = await axios.get(
+            apiUrl(
+              API_CONFIG.ENDPOINTS.ACCOUNT.walletBalance +
+                userData.id +
+                "/balance"
+            )
+          );
+          console.log("Wallet Balance", walletResponse.data.data);
+          setWalletBalance(walletResponse.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching wallet balance:", error);
+      }
+    };
+
+    fetchWalletBalance();
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
@@ -119,7 +143,7 @@ const Wallet = () => {
               Wallet Balance
             </h2>
             <p className="text-3xl font-bold text-gray-900">
-              ₦{accountDetails.balance}
+              ₦{walletBalance.balance}
             </p>
           </div>
           <hr className="my-4 border-t" />

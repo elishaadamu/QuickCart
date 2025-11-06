@@ -136,7 +136,7 @@ const DashboardLayout = ({ children }) => {
               </svg>
             </button>
             <Link href={"/"}>
-              <Image className="w-40 mx-auto" src={Logo} alt="logo" />
+              <Image className="w-[12rem] mx-auto" src={Logo} alt="logo" />
             </Link>
           </div>
         </div>

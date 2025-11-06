@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState } from "react";
 import axios from "axios";
 import { apiUrl, API_CONFIG } from "@/configs/api";
+import statesData from "@/lib/states.json";
+import lgasData from "@/lib/lgas.json";
 
 export const AppContext = createContext();
 
@@ -21,8 +23,7 @@ export const AppContextProvider = (props) => {
   const [isSeller, setIsSeller] = useState(true);
   const [authLoading, setAuthLoading] = useState(true);
   const isLoggedIn = !!userData; // Derive isLoggedIn from userData
-
-  const [states, setStates] = useState([]);
+  const [states] = useState(statesData.state || []);
   const [lgas, setLgas] = useState([]);
 
   const [cartItems, setCartItems] = useState({});
@@ -82,27 +83,10 @@ export const AppContextProvider = (props) => {
     router.push("/"); // Redirect to the homepage
   };
 
-  const fetchStates = async () => {
-    try {
-      const response = await fetch("https://nga-states-lga.onrender.com/fetch");
-      const data = await response.json();
-      setStates(data || []);
-    } catch (error) {
-      console.error("Error fetching states:", error);
-    }
-  };
-
-  const fetchLgas = async (stateName) => {
+  const fetchLgas = (stateName) => {
     if (!stateName) return;
-    try {
-      const response = await fetch(
-        `https://nga-states-lga.onrender.com/?state=${stateName}`
-      );
-      const data = await response.json();
-      setLgas(data || []);
-    } catch (error) {
-      console.error(`Error fetching LGAs for ${stateName}:`, error);
-    }
+    const lgasForState = lgasData[stateName] || [];
+    setLgas(lgasForState);
   };
   const addToCart = async (itemId) => {
     if (!isLoggedIn) {
@@ -171,7 +155,6 @@ export const AppContextProvider = (props) => {
 
   useEffect(() => {
     fetchProductData();
-    fetchStates();
   }, []);
 
   useEffect(() => {

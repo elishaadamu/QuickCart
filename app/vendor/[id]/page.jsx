@@ -192,7 +192,7 @@ const VendorPage = () => {
       <div className="bg-white rounded-lg shadow-md mb-12 overflow-hidden">
         <div className="relative">
           <Image
-            src={vendor.banner.url || "https://picsum.photos/seed/1/1200/300"}
+            src={vendor?.banner?.url || "https://picsum.photos/seed/1/1200/300"}
             alt={`${vendor.businessName} banner`}
             width={1200}
             height={300}
@@ -201,7 +201,7 @@ const VendorPage = () => {
           />
           <div className="absolute bottom-0 left-8 transform translate-y-1/2">
             <Image
-              src={vendor.avatar.url || "https://i.pravatar.cc/150"}
+              src={vendor?.avatar?.url || "https://i.pravatar.cc/150"}
               alt={`${vendor.businessName} logo`}
               width={150}
               height={150}

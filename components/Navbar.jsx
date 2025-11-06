@@ -124,7 +124,7 @@ const Navbar = () => {
     <nav className=" border-b border-gray-300 text-gray-700 relative bg-white shadow-md z-10">
       <div className="max-w-[1440px] mx-auto flex items-center  justify-between px-6 md:px-4 lg:px-4 py-3">
         <Image
-          className="cursor-pointer w-[170px] md:w-[250px]"
+          className="cursor-pointer w-[200px] md:w-[250px]"
           onClick={() => router.push("/")}
           src={Logo}
           alt="logo"
@@ -324,22 +324,35 @@ const Navbar = () => {
                   : "opacity-0 scale-95 invisible"
               }`}
             >
-              <Link
-                href="/delivery-signup"
-                className={`block px-4 py-2 ${
-                  pathname === "/delivery-signup"
-                    ? "bg-gray-100 text-blue-600"
-                    : "hover:bg-gray-100"
-                }`}
-              >
-                Become a Delivery Man
-              </Link>
-              <Link
-                href="/delivery-signin"
-                className="block px-4 py-2 hover:bg-gray-100"
-              >
-                Sign In
-              </Link>
+              {isLoggedIn && userData?.user?.role === "delivery" ? (
+                <>
+                  <Link
+                    href="/delivery-dashboard"
+                    className={`block px-4 py-2 ${
+                      pathname === "/delivery-dashboard"
+                        ? "bg-gray-100 text-blue-600"
+                        : "hover:bg-gray-100"
+                    }`}
+                  >
+                    Delivery Dashboard
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/delivery-signup"
+                    className="block px-4 py-2 hover:bg-gray-100"
+                  >
+                    Become a Delivery Man
+                  </Link>
+                  <Link
+                    href="/delivery-signin"
+                    className="block px-4 py-2 hover:bg-gray-100"
+                  >
+                    Delivery Man Login
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -442,26 +455,53 @@ const Navbar = () => {
             >
               {isLoggedIn ? (
                 <>
-                  <Link
-                    href="/dashboard"
-                    className={`block px-4 py-2 ${
-                      pathname === "/dashboard"
-                        ? "bg-gray-100 text-blue-600"
-                        : "hover:bg-gray-100"
-                    }`}
-                  >
-                    Dashboard
-                  </Link>
-                  <Link
-                    href="/my-orders"
-                    className={`block px-4 py-2 ${
-                      pathname === "/my-orders"
-                        ? "bg-gray-100 text-blue-600"
-                        : "hover:bg-gray-100"
-                    }`}
-                  >
-                    My Orders
-                  </Link>
+                  {userData?.user?.role === "delivery" ? (
+                    <>
+                      <Link
+                        href="/delivery-dashboard"
+                        className={`block px-4 py-2 ${
+                          pathname === "/delivery-dashboard"
+                            ? "bg-gray-100 text-blue-600"
+                            : "hover:bg-gray-100"
+                        }`}
+                      >
+                        Dashboard
+                      </Link>
+                      <Link
+                        href="/delivery-dashboard/withdraw"
+                        className={`block px-4 py-2 ${
+                          pathname === "/delivery-dashboard/withdraw"
+                            ? "bg-gray-100 text-blue-600"
+                            : "hover:bg-gray-100"
+                        }`}
+                      >
+                        Withdraw
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        href="/dashboard"
+                        className={`block px-4 py-2 ${
+                          pathname === "/dashboard"
+                            ? "bg-gray-100 text-blue-600"
+                            : "hover:bg-gray-100"
+                        }`}
+                      >
+                        Dashboard
+                      </Link>
+                      <Link
+                        href="/my-orders"
+                        className={`block px-4 py-2 ${
+                          pathname === "/my-orders"
+                            ? "bg-gray-100 text-blue-600"
+                            : "hover:bg-gray-100"
+                        }`}
+                      >
+                        My Orders
+                      </Link>
+                    </>
+                  )}
                   <button
                     onClick={() => {
                       logout();
@@ -646,21 +686,59 @@ const Navbar = () => {
                 >
                   Contact
                 </Link>
-                <Link
-                  href="/seller/signup"
-                  className="hover:text-gray-400 transition"
-                  onClick={handleCloseMenu}
-                >
-                  Become a Vendor
-                </Link>
-                <Link
-                  href="/seller/login"
-                  className="hover:text-gray-400 transition"
-                  onClick={handleCloseMenu}
-                >
-                  Vendor Login
-                </Link>
-                {isLoggedIn && (
+                {isLoggedIn && userData?.role === "vendor" ? (
+                  <Link
+                    href="/seller"
+                    className="hover:text-gray-400 transition"
+                    onClick={handleCloseMenu}
+                  >
+                    Add Products
+                  </Link>
+                ) : (
+                  <>
+                    <Link
+                      href="/vendor-signup"
+                      className="hover:text-gray-400 transition"
+                      onClick={handleCloseMenu}
+                    >
+                      Become a Vendor
+                    </Link>
+                    <Link
+                      href="/vendor-signin"
+                      className="hover:text-gray-400 transition"
+                      onClick={handleCloseMenu}
+                    >
+                      Vendor Login
+                    </Link>
+                  </>
+                )}
+                {isLoggedIn && userData?.user?.role === "delivery" ? (
+                  <Link
+                    href="/delivery-dashboard"
+                    className="hover:text-gray-400 transition"
+                    onClick={handleCloseMenu}
+                  >
+                    Delivery Dashboard
+                  </Link>
+                ) : (
+                  <>
+                    <Link
+                      href="/delivery-signup"
+                      className="hover:text-gray-400 transition"
+                      onClick={handleCloseMenu}
+                    >
+                      Become a Delivery Man
+                    </Link>
+                    <Link
+                      href="/delivery-signin"
+                      className="hover:text-gray-400 transition"
+                      onClick={handleCloseMenu}
+                    >
+                      Delivery Man Login
+                    </Link>
+                  </>
+                )}
+                {isLoggedIn && userData?.role === "user" && (
                   <Link
                     href="/dashboard"
                     className="hover:text-gray-400 transition"

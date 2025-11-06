@@ -25,7 +25,7 @@ const Sidebar = ({
       <div className="flex flex-col h-full">
         <div className="flex items-center justify-between p-4 border-b border-gray-700">
           <Link href={"/"}>
-            <Image className="w-40 mx-auto" src={Logo} alt="logo" />
+            <Image className="w-[12rem] mx-auto" src={Logo} alt="logo" />
           </Link>
           <button
             className="p-2 rounded-md hover:bg-gray-700 md:hidden"
