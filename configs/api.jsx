@@ -62,6 +62,8 @@ export const API_CONFIG = {
       UPDATE: "/delivery/delivery-man",
       CREATE_WALLET: "/wallet/create-wallet/",
       REQUEST_DELIVERY: "/delivery-request/create/",
+      GET_USER_REQUESTS: "/delivery-request/all-user-requests/", // append userId
+      PAY_DELIVERY: "/delivery-request/pay/",
     },
     DELIVERY_WITHDRAWAL: {
       CREATE: "/withdraw/",

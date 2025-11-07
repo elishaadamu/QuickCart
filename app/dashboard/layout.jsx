@@ -49,6 +49,7 @@ const DashboardLayout = ({ children }) => {
   const router = useRouter();
   const [openOrders, setOpenOrders] = useState(false);
   const [openMenu, setOpenMenu] = useState(false);
+  const [openDelivery, setOpenDelivery] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [userData, setUserData] = useState(null);
   const [hasWallet, setHasWallet] = useState(true);
@@ -112,6 +113,8 @@ const DashboardLayout = ({ children }) => {
         setOpenOrders={setOpenOrders}
         openMenu={openMenu}
         setOpenMenu={setOpenMenu}
+        openDelivery={openDelivery}
+        setOpenDelivery={setOpenDelivery}
       />
 
       <div className="md:pl-64 flex flex-col min-h-screen">
