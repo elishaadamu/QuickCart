@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { decryptData } from "@/lib/encryption";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import { apiUrl, API_CONFIG } from "@/configs/api";
 import PinInput from "@/components/PinInput";
 
@@ -157,7 +157,9 @@ const DeliveryPaymentPage = () => {
         ),
         payload
       );
-      toast.success("Payment successful");
+      toast.success(
+        `Payment of ₦${selectedRequest.approvedPrice.toLocaleString()} successful`
+      );
       closeModal();
       fetchRequests();
     } catch (error) {
@@ -173,6 +175,20 @@ const DeliveryPaymentPage = () => {
       <h1 className="text-2xl font-semibold mb-4">
         Delivery Requests / Payments
       </h1>
+
+      {/* Toast container for payment success/error messages */}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+      />
 
       {loading ? (
         <div className="p-8 text-center">Loading...</div>
@@ -199,6 +215,9 @@ const DeliveryPaymentPage = () => {
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Payment Status
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
@@ -236,6 +255,17 @@ const DeliveryPaymentPage = () => {
                       }`}
                     >
                       {r.status || "Processing"}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <span
+                      className={`p-2 inline-flex text-[16px] leading-5  rounded-[10px] ${
+                        r.isPaid
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {r.isPaid ? "Paid" : "Not Paid"}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

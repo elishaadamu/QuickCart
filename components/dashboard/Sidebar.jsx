@@ -262,16 +262,69 @@ const Sidebar = ({
                 >
                   Shipping Address
                 </Link>
-                <div className="border-t border-gray-700 my-1"></div>
-                <Link
-                  href="/dashboard/delete-account"
-                  className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-red-500`}
-                >
-                  Delete Account
-                </Link>
               </div>
             </div>
 
+            <div className="space-y-1">
+              <button
+                onClick={() => setOpenDelivery(!openDelivery)}
+                className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                <div className="flex items-center space-x-2">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"
+                    />
+                  </svg>
+                  <span>Delivery</span>
+                </div>
+                <svg
+                  className={`w-4 h-4 transition-transform duration-200 ${
+                    openDelivery ? "rotate-180" : ""
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+              <div className={`space-y-1 ${openDelivery ? "block" : "hidden"}`}>
+                <Link
+                  href="/dashboard/request-delivery"
+                  className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
+                    pathname === "/dashboard/request-delivery"
+                      ? "bg-gray-700"
+                      : ""
+                  }`}
+                >
+                  Delivery Request
+                </Link>
+                <Link
+                  href="/dashboard/delivery-payment"
+                  className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
+                    pathname === "/dashboard/delivery-payment"
+                      ? "bg-gray-700"
+                      : ""
+                  }`}
+                >
+                  Pay for Delivery
+                </Link>
+              </div>
+            </div>
             <Link
               href="/dashboard/inbox"
               className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors ${
@@ -359,67 +412,6 @@ const Sidebar = ({
               </svg>
               <span>Refer & Earn</span>
             </Link>
-
-            <div className="space-y-1">
-              <button
-                onClick={() => setOpenDelivery(!openDelivery)}
-                className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors"
-              >
-                <div className="flex items-center space-x-2">
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"
-                    />
-                  </svg>
-                  <span>Delivery</span>
-                </div>
-                <svg
-                  className={`w-4 h-4 transition-transform duration-200 ${
-                    openDelivery ? "rotate-180" : ""
-                  }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </button>
-              <div className={`space-y-1 ${openDelivery ? "block" : "hidden"}`}>
-                <Link
-                  href="/dashboard/request-delivery"
-                  className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
-                    pathname === "/dashboard/request-delivery"
-                      ? "bg-gray-700"
-                      : ""
-                  }`}
-                >
-                  Delivery Request
-                </Link>
-                <Link
-                  href="/dashboard/delivery-payment"
-                  className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
-                    pathname === "/dashboard/pay-for-delivery"
-                      ? "bg-gray-700"
-                      : ""
-                  }`}
-                >
-                  Pay for Delivery
-                </Link>
-              </div>
-            </div>
           </nav>
         </div>
 
