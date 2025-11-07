@@ -7,6 +7,7 @@ import { useAppContext } from "@/context/AppContext";
 import statesData from "@/lib/states.json";
 import lgasData from "@/lib/lgas.json";
 import { apiUrl, API_CONFIG } from "@/configs/api";
+import { useRouter } from "next/navigation";
 
 const FormField = ({
   label,
@@ -39,6 +40,7 @@ const FormField = ({
 
 const RequestDelivery = () => {
   const { userData } = useAppContext();
+  const router = useRouter();
   const [deliveryType, setDeliveryType] = useState(""); // 'inter-state' or 'intra-state'
   const [states] = useState(statesData.state);
   const [pickupLgas, setPickupLgas] = useState([]);
@@ -162,8 +164,12 @@ const RequestDelivery = () => {
         payload
       );
       console.log("Submitting payload:", payload);
-      toast.success("Delivery request created successfully!");
-      // Optionally reset form or redirect here
+      toast.success(
+        "Delivery request created successfully! Redirecting in 5 seconds..."
+      );
+      setTimeout(() => {
+        router.push("/dashboard/delivery-payment");
+      }, 5000);
     } catch (error) {
       console.error("Error creating delivery request:", error);
       toast.error(
