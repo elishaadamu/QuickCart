@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { decryptData } from "@/lib/encryption";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import { apiUrl, API_CONFIG } from "@/configs/api";
 import PinInput from "@/components/PinInput";
 
@@ -175,20 +175,6 @@ const DeliveryPaymentPage = () => {
       <h1 className="text-2xl font-semibold mb-4">
         Delivery Requests / Payments
       </h1>
-
-      {/* Toast container for payment success/error messages */}
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="colored"
-      />
 
       {loading ? (
         <div className="p-8 text-center">Loading...</div>

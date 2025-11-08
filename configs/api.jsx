@@ -66,8 +66,8 @@ export const API_CONFIG = {
       PAY_DELIVERY: "/delivery-request/pay/",
     },
     DELIVERY_WITHDRAWAL: {
-      CREATE: "/withdraw/",
-      GET_BY_USER: "/withdraw/user/", // append userId
+      CREATE: "/withdrawal", // POST with userId in payload
+      GET_BY_USER: "/withdrawal/", // append userId
     },
   },
 };
