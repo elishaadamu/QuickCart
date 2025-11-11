@@ -52,14 +52,9 @@ const page = () => {
       // Log the data we're about to save
       console.log("Data to be saved:", {
         rawData: response.data,
-        dataType: typeof response.data,
       });
 
       const encryptedUser = encryptData(response.data);
-      console.log("Encrypted data:", {
-        encrypted: encryptedUser,
-        length: encryptedUser?.length,
-      });
 
       if (!encryptedUser) {
         throw new Error("Failed to encrypt user data");
@@ -73,7 +68,16 @@ const page = () => {
       );
       fetchUserData(); // Call fetchUserData to update global state
       toast.success("Signin successful!");
-      router.push("/");
+
+      const userRole = response.data?.role;
+      if (userRole === "vendor") {
+        router.push("/vendor-dashboard");
+      } else if (userRole === "delivery") {
+        router.push("/delivery-dashboard");
+      } else {
+        // For 'user' and 'admin'
+        router.push("/");
+      }
     } catch (error) {
       console.error("Error signing in:", error);
       toast.error(

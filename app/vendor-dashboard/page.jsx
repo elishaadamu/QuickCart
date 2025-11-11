@@ -502,9 +502,12 @@ const DashboardHome = () => {
               </div>
             </div>
             <div className="mt-4">
-              <button className="text-sm text-blue-600 hover:text-blue-800">
+              <Link
+                href="/vendor-dashboard/referrals"
+                className="text-sm text-blue-600 hover:text-blue-800"
+              >
                 Get referral link →
-              </button>
+              </Link>
             </div>
           </div>
 

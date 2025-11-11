@@ -117,7 +117,10 @@ const ActionMenu = ({ product, onDelete, onEdit, categories, states }) => {
       {isEditModalOpen && (
         <Modal onClose={() => setIsEditModalOpen(false)}>
           <h2 className="text-2xl font-bold mb-4">Edit Product</h2>
-          <form onSubmit={handleEditSubmit}>
+          <form
+            onSubmit={handleEditSubmit}
+            className="max-h-[90vh] my-4 overflow-y-auto pr-4"
+          >
             <div className="mb-4">
               <label className="block text-gray-700">Product name</label>
               <input

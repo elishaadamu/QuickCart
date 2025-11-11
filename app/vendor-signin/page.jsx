@@ -45,7 +45,7 @@ const VendorSigninPage = () => {
       localStorage.setItem("user", encryptedUser);
       fetchUserData(); // Call fetchUserData to update global state
       toast.success("Vendor signin successful!"); // Changed toast message
-      router.push("/seller"); // Redirect to seller dashboard after signin
+      router.push("/vendor-dashboard"); // Redirect to seller dashboard after signin
     } catch (error) {
       console.error("Error signing in as vendor:", error); // Changed error message
       toast.error(

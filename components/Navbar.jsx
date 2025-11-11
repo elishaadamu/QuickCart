@@ -247,7 +247,7 @@ const Navbar = () => {
 
           {isLoggedIn && userData?.role === "vendor" ? (
             <Link
-              href="/seller"
+              href="/vendor-dashboard/add-products"
               className={`transition text-[18px] ${
                 pathname.startsWith("/seller")
                   ? "text-blue-600 font-medium"
@@ -455,7 +455,7 @@ const Navbar = () => {
             >
               {isLoggedIn ? (
                 <>
-                  {userData?.user?.role === "delivery" ? (
+                  {userData?.role === "delivery" ? (
                     <>
                       <Link
                         href="/delivery-dashboard"
@@ -478,17 +478,17 @@ const Navbar = () => {
                         Withdraw
                       </Link>
                     </>
-                  ) : (
+                  ) : userData?.role === "vendor" ? (
                     <>
                       <Link
-                        href="/dashboard"
+                        href="/vendor-dashboard"
                         className={`block px-4 py-2 ${
-                          pathname === "/dashboard"
+                          pathname === "/vendor-dashboard"
                             ? "bg-gray-100 text-blue-600"
                             : "hover:bg-gray-100"
                         }`}
                       >
-                        Dashboard
+                        Vendor Dashboard
                       </Link>
                       <Link
                         href="/my-orders"
@@ -499,6 +499,19 @@ const Navbar = () => {
                         }`}
                       >
                         My Orders
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        href="/dashboard"
+                        className={`block px-4 py-2 ${
+                          pathname === "/delivery-dashboard/withdraw"
+                            ? "bg-gray-100 text-blue-600"
+                            : "hover:bg-gray-100"
+                        }`}
+                      >
+                        Withdraw
                       </Link>
                     </>
                   )}

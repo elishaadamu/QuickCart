@@ -16,6 +16,8 @@ const Sidebar = ({
   setOpenMenu,
   openDelivery,
   setOpenDelivery,
+  openProducts,
+  setOpenProducts,
 }) => {
   const pathname = usePathname();
   const [userRole, setUserRole] = useState(null);
@@ -68,9 +70,9 @@ const Sidebar = ({
         <div className="flex-1 overflow-y-auto p-4">
           <nav className="space-y-2">
             <Link
-              href="/dashboard"
+              href="/vendor-dashboard"
               className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors ${
-                pathname === "/dashboard" ? "bg-gray-700" : ""
+                pathname === "/vendor-dashboard" ? "bg-gray-700" : ""
               }`}
             >
               <svg
@@ -129,9 +131,9 @@ const Sidebar = ({
 
               <div className={`space-y-1 ${openOrders ? "block" : "hidden"}`}>
                 <Link
-                  href="/dashboard/orders/pending"
+                  href="/vendor-dashboard/orders/pending"
                   className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
-                    pathname === "/dashboard/orders/pending"
+                    pathname === "/vendor-dashboard/orders/pending"
                       ? "bg-gray-700"
                       : ""
                   }`}
@@ -139,9 +141,9 @@ const Sidebar = ({
                   Pending
                 </Link>
                 <Link
-                  href="/dashboard/orders/approved"
+                  href="/vendor-dashboard/orders/approved"
                   className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
-                    pathname === "/dashboard/orders/approved"
+                    pathname === "/vendor-dashboard/orders/approved"
                       ? "bg-gray-700"
                       : ""
                   }`}
@@ -149,9 +151,9 @@ const Sidebar = ({
                   Approved
                 </Link>
                 <Link
-                  href="/dashboard/orders/on-delivery"
+                  href="/vendor-dashboard/orders/on-delivery"
                   className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
-                    pathname === "/dashboard/orders/on-delivery"
+                    pathname === "/vendor-dashboard/orders/on-delivery"
                       ? "bg-gray-700"
                       : ""
                   }`}
@@ -159,9 +161,9 @@ const Sidebar = ({
                   On Delivery
                 </Link>
                 <Link
-                  href="/dashboard/orders/delivered"
+                  href="/vendor-dashboard/orders/delivered"
                   className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
-                    pathname === "/dashboard/orders/delivered"
+                    pathname === "/vendor-dashboard/orders/delivered"
                       ? "bg-gray-700"
                       : ""
                   }`}
@@ -170,6 +172,92 @@ const Sidebar = ({
                 </Link>
               </div>
             </div>
+            <div className="space-y-1">
+              <button
+                onClick={() => setOpenProducts(!openProducts)}
+                className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                <div className="flex items-center space-x-2">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                    ></path>
+                  </svg>
+                  <span>Vendor Products</span>
+                </div>
+                <svg
+                  className={`w-4 h-4 transition-transform duration-200 ${
+                    openProducts ? "rotate-180" : ""
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+
+              <div className={`space-y-1 ${openProducts ? "block" : "hidden"}`}>
+                <Link
+                  href="/vendor-dashboard/add-products"
+                  className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
+                    pathname === "/vendor-dashboard/add-products"
+                      ? "bg-gray-700"
+                      : ""
+                  }`}
+                >
+                  Add Products
+                </Link>
+                <Link
+                  href="/vendor-dashboard/products-list"
+                  className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
+                    pathname === "/vendor-dashboard/products-list"
+                      ? "bg-gray-700"
+                      : ""
+                  }`}
+                >
+                  Products List
+                </Link>
+              </div>
+            </div>
+
+            <Link
+              href="/vendor-dashboard/withdrawal-request"
+              className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors ${
+                pathname === "/vendor-dashboard/withdrawal-request"
+                  ? "bg-gray-700"
+                  : ""
+              }`}
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
+              <span>Withdrawal Request</span>{" "}
+            </Link>
 
             <div className="space-y-1">
               <button
@@ -211,9 +299,9 @@ const Sidebar = ({
 
               <div className={`space-y-1 ${openMenu ? "block" : "hidden"}`}>
                 <Link
-                  href="/dashboard/personal-details"
+                  href="/vendor-dashboard/personal-details"
                   className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
-                    pathname === "/dashboard/personal-details"
+                    pathname === "/vendor-dashboard/personal-details"
                       ? "bg-gray-700"
                       : ""
                   }`}
@@ -221,17 +309,19 @@ const Sidebar = ({
                   Personal Details
                 </Link>
                 <Link
-                  href="/dashboard/update-images"
+                  href="/vendor-dashboard/update-images"
                   className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
-                    pathname === "/dashboard/update-images" ? "bg-gray-700" : ""
+                    pathname === "/vendor-dashboard/update-images"
+                      ? "bg-gray-700"
+                      : ""
                   }`}
                 >
                   Update Images
                 </Link>
                 <Link
-                  href="/dashboard/pin-management"
+                  href="/vendor-dashboard/pin-management"
                   className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
-                    pathname === "/dashboard/pin-management"
+                    pathname === "/vendor-dashboard/pin-management"
                       ? "bg-gray-700"
                       : ""
                   }`}
@@ -239,9 +329,9 @@ const Sidebar = ({
                   PIN Management
                 </Link>
                 <Link
-                  href="/dashboard/change-password"
+                  href="/vendor-dashboard/change-password"
                   className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
-                    pathname === "/dashboard/change-password"
+                    pathname === "/vendor-dashboard/change-password"
                       ? "bg-gray-700"
                       : ""
                   }`}
@@ -249,9 +339,11 @@ const Sidebar = ({
                   Change Password
                 </Link>
                 <Link
-                  href="/dashboard/shipping"
+                  href="/vendor-dashboard/shipping"
                   className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
-                    pathname === "/dashboard/shipping" ? "bg-gray-700" : ""
+                    pathname === "/vendor-dashboard/shipping"
+                      ? "bg-gray-700"
+                      : ""
                   }`}
                 >
                   Shipping Address
@@ -298,9 +390,9 @@ const Sidebar = ({
               </button>
               <div className={`space-y-1 ${openDelivery ? "block" : "hidden"}`}>
                 <Link
-                  href="/dashboard/request-delivery"
+                  href="/vendor-dashboard/request-delivery"
                   className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
-                    pathname === "/dashboard/request-delivery"
+                    pathname === "/vendor-dashboard/request-delivery"
                       ? "bg-gray-700"
                       : ""
                   }`}
@@ -308,9 +400,9 @@ const Sidebar = ({
                   Delivery Request
                 </Link>
                 <Link
-                  href="/dashboard/delivery-payment"
+                  href="/vendor-dashboard/delivery-payment"
                   className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
-                    pathname === "/dashboard/delivery-payment"
+                    pathname === "/vendor-dashboard/delivery-payment"
                       ? "bg-gray-700"
                       : ""
                   }`}
@@ -320,9 +412,9 @@ const Sidebar = ({
               </div>
             </div>
             <Link
-              href="/dashboard/inbox"
+              href="/vendor-dashboard/inbox"
               className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors ${
-                pathname === "/dashboard/inbox" ? "bg-gray-700" : ""
+                pathname === "/vendor-dashboard/inbox" ? "bg-gray-700" : ""
               }`}
             >
               <svg
@@ -342,9 +434,9 @@ const Sidebar = ({
             </Link>
 
             <Link
-              href="/dashboard/coupons"
+              href="/vendor-dashboard/coupons"
               className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors ${
-                pathname === "/dashboard/coupons" ? "bg-gray-700" : ""
+                pathname === "/vendor-dashboard/coupons" ? "bg-gray-700" : ""
               }`}
             >
               <svg
@@ -364,9 +456,11 @@ const Sidebar = ({
             </Link>
 
             <Link
-              href="/dashboard/support-ticket"
+              href="/vendor-dashboard/support-ticket"
               className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors ${
-                pathname === "/dashboard/support-ticket" ? "bg-gray-700" : ""
+                pathname === "/vendor-dashboard/support-ticket"
+                  ? "bg-gray-700"
+                  : ""
               }`}
             >
               <svg
@@ -385,10 +479,10 @@ const Sidebar = ({
               <span>Support</span>
             </Link>
 
-            {/* <Link
-              href="/dashboard/refer-earn"
+            <Link
+              href="/vendor-dashboard/referrals"
               className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors ${
-                pathname === "/dashboard/refer-earn" ? "bg-gray-700" : ""
+                pathname === "/vendor-dashboard/referrals" ? "bg-gray-700" : ""
               }`}
             >
               <svg
@@ -405,7 +499,7 @@ const Sidebar = ({
                 />
               </svg>
               <span>Refer & Earn</span>
-            </Link> */}
+            </Link>
           </nav>
         </div>
 
