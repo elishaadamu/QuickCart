@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import Logo from "@/assets/logo/logo.png";
+import { FaTruck } from "react-icons/fa";
 import { decryptData } from "@/lib/encryption";
 
 const Sidebar = ({
@@ -89,86 +90,17 @@ const Sidebar = ({
               <span>Home</span>
             </Link>
 
-            <div className="space-y-1">
-              <button
-                onClick={() => setOpenOrders(!openOrders)}
-                className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors"
-              >
-                <div className="flex items-center space-x-2">
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                    />
-                  </svg>
-                  <span>Orders</span>
+            <div className="">
+              <Link href="/dashboard/track-order">
+                <div
+                  className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors ${
+                    pathname === "/dashboard/track-order" ? "bg-gray-700" : ""
+                  }`}
+                >
+                  <FaTruck className="w-5 h-5" />
+                  <span>Track Order</span>
                 </div>
-                <svg
-                  className={`w-4 h-4 transition-transform duration-200 ${
-                    openOrders ? "rotate-180" : ""
-                  }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </button>
-
-              <div className={`space-y-1 ${openOrders ? "block" : "hidden"}`}>
-                <Link
-                  href="/dashboard/orders/pending"
-                  className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
-                    pathname === "/dashboard/orders/pending"
-                      ? "bg-gray-700"
-                      : ""
-                  }`}
-                >
-                  Pending
-                </Link>
-                <Link
-                  href="/dashboard/orders/approved"
-                  className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
-                    pathname === "/dashboard/orders/approved"
-                      ? "bg-gray-700"
-                      : ""
-                  }`}
-                >
-                  Approved
-                </Link>
-                <Link
-                  href="/dashboard/orders/on-delivery"
-                  className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
-                    pathname === "/dashboard/orders/on-delivery"
-                      ? "bg-gray-700"
-                      : ""
-                  }`}
-                >
-                  On Delivery
-                </Link>
-                <Link
-                  href="/dashboard/orders/delivered"
-                  className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
-                    pathname === "/dashboard/orders/delivered"
-                      ? "bg-gray-700"
-                      : ""
-                  }`}
-                >
-                  Delivered
-                </Link>
-              </div>
+              </Link>
             </div>
 
             <div className="space-y-1">
@@ -385,8 +317,8 @@ const Sidebar = ({
               <span>Support</span>
             </Link>
 
-            {/* <Link
-              href="/dashboard/refer-earn"
+            <Link
+              href="/dashboard/referrals"
               className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors ${
                 pathname === "/dashboard/refer-earn" ? "bg-gray-700" : ""
               }`}
@@ -405,7 +337,7 @@ const Sidebar = ({
                 />
               </svg>
               <span>Refer & Earn</span>
-            </Link> */}
+            </Link>
           </nav>
         </div>
 

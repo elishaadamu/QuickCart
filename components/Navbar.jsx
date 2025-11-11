@@ -511,7 +511,7 @@ const Navbar = () => {
                             : "hover:bg-gray-100"
                         }`}
                       >
-                        Withdraw
+                        Dashboard
                       </Link>
                     </>
                   )}

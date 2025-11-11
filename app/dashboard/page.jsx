@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import axios from "axios";
 import { decryptData } from "@/lib/encryption";
@@ -14,11 +14,38 @@ import {
   FaPlus,
   FaWallet,
   FaCreditCard,
+  FaShoppingCart,
   FaUniversity as FaBank,
   FaUserCircle,
 } from "react-icons/fa";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  TimeScale,
+} from "chart.js";
+import { Pie, Line } from "react-chartjs-2";
+import "chartjs-adapter-date-fns";
+import { startOfWeek, startOfMonth, format, subMonths } from "date-fns";
+
+ChartJS.register(
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  TimeScale
+);
 
 const DashboardHome = () => {
   const { userData: contextUserData, authLoading } = useAppContext();
@@ -26,7 +53,7 @@ const DashboardHome = () => {
   const [dashboardData, setDashboardData] = useState({
     userName: "",
     totalOrders: 0,
-    pendingOrders: 0,
+    orders: [],
     recentOrders: [],
     totalProducts: 0,
   });
@@ -37,6 +64,109 @@ const DashboardHome = () => {
   const [amount, setAmount] = useState("");
   const [nin, setNin] = useState("");
   const [showCreateAccount, setShowCreateAccount] = useState(false);
+  const [timePeriod, setTimePeriod] = useState("monthly"); // 'monthly' or 'weekly'
+
+  const orderStatusCounts = useMemo(() => {
+    return dashboardData.orders.reduce(
+      (acc, order) => {
+        acc[order.status] = (acc[order.status] || 0) + 1;
+        return acc;
+      },
+      {
+        pending: 0,
+        confirmed: 0,
+        processing: 0,
+        shipped: 0,
+        delivered: 0,
+        cancelled: 0,
+      }
+    );
+  }, [dashboardData.orders]);
+
+  const chartData = useMemo(() => {
+    const hasOrders = dashboardData.orders.length > 0;
+    const data = hasOrders
+      ? [
+          orderStatusCounts.pending + orderStatusCounts.confirmed,
+          orderStatusCounts.processing + orderStatusCounts.shipped,
+          orderStatusCounts.delivered,
+          orderStatusCounts.cancelled,
+        ]
+      : [5, 2, 8, 1]; // Demo data
+
+    return {
+      labels: ["Pending", "Shipped", "Delivered", "Cancelled"],
+      datasets: [
+        {
+          label: "Order Status",
+          data: data,
+          backgroundColor: ["#FBBF24", "#3B82F6", "#10B981", "#EF4444"],
+          borderColor: ["#F59E0B", "#2563EB", "#059669", "#DC2626"],
+          borderWidth: 1,
+        },
+      ],
+    };
+  }, [orderStatusCounts, dashboardData.orders]);
+
+  const lineChartData = useMemo(() => {
+    const hasOrders = dashboardData.orders.length > 0;
+    const now = new Date();
+    let labels = [];
+    let dataPoints = [];
+
+    if (timePeriod === "monthly") {
+      labels = Array.from({ length: 12 }, (_, i) =>
+        format(subMonths(now, 11 - i), "MMM yyyy")
+      );
+      if (hasOrders) {
+        const monthlyData = new Map(labels.map((label) => [label, 0]));
+        dashboardData.orders.forEach((order) => {
+          const orderMonth = format(new Date(order.createdAt), "MMM yyyy");
+          if (monthlyData.has(orderMonth)) {
+            monthlyData.set(orderMonth, monthlyData.get(orderMonth) + 1);
+          }
+        });
+        dataPoints = Array.from(monthlyData.values());
+      } else {
+        // Demo data for monthly view
+        dataPoints = [2, 5, 3, 6, 4, 8, 5, 9, 6, 10, 7, 12];
+      }
+    } else {
+      // Weekly
+      labels = Array.from({ length: 12 }, (_, i) =>
+        startOfWeek(subMonths(now, (11 - i) / 4))
+      ).map((date) => `W/C ${format(date, "MMM d")}`);
+      if (hasOrders) {
+        const weeklyData = new Map(labels.map((label) => [label, 0]));
+        dashboardData.orders.forEach((order) => {
+          const weekLabel = `W/C ${format(
+            startOfWeek(new Date(order.createdAt)),
+            "MMM d"
+          )}`;
+          if (weeklyData.has(weekLabel)) {
+            weeklyData.set(weekLabel, weeklyData.get(weekLabel) + 1);
+          }
+        });
+        dataPoints = Array.from(weeklyData.values());
+      } else {
+        // Demo data for weekly view
+        dataPoints = [1, 2, 1, 3, 2, 4, 2, 5, 3, 5, 4, 6];
+      }
+    }
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: "Number of Orders",
+          data: dataPoints,
+          borderColor: "rgb(59, 130, 246)",
+          backgroundColor: "rgba(59, 130, 246, 0.5)",
+          tension: 0.3,
+        },
+      ],
+    };
+  }, [dashboardData.orders, timePeriod]);
 
   const fetchAccountDetails = async () => {
     setLoading(true);
@@ -47,7 +177,6 @@ const DashboardHome = () => {
         const response = await axios.get(
           apiUrl(API_CONFIG.ENDPOINTS.ACCOUNT.GET + decryptedUserData.id)
         );
-        console.log("Account Details", response.data);
         setAccountDetails(response.data);
       }
     } catch (error) {
@@ -60,7 +189,7 @@ const DashboardHome = () => {
 
   useEffect(() => {
     fetchAccountDetails();
-  }, []); // Fixed: Added dependency array
+  }, []);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -75,32 +204,25 @@ const DashboardHome = () => {
             userName: decryptedUserData.firstName,
           }));
 
-          // Fetch seller-specific data
           const [ordersResponse, productsResponse] = await Promise.all([
             axios.get(
               apiUrl(
-                API_CONFIG.ENDPOINTS.ORDER.GET_SELLER_ORDERS +
+                API_CONFIG.ENDPOINTS.ORDER.GET_CUSTOMER_ORDERS +
                   "/" +
                   decryptedUserData.id
               )
             ),
-            axios.get(
-              apiUrl(
-                API_CONFIG.ENDPOINTS.PRODUCT.GET_SELLER_PRODUCTS +
-                  decryptedUserData.id
-              )
-            ),
+            // For customers, we don't need to fetch products.
+            // If you need other customer-specific data, add the call here.
+            Promise.resolve({ data: [] }), // Resolves immediately
           ]);
 
           if (ordersResponse.data.orders) {
             const orders = ordersResponse.data.orders;
             setDashboardData((prev) => ({
               ...prev,
-              totalOrders: orders.length,
-              pendingOrders: orders.filter(
-                (order) => order.status === "pending"
-              ).length,
-              recentOrders: orders.slice(0, 5), // Get last 5 orders
+              orders: orders,
+              recentOrders: orders.slice(0, 5),
             }));
           }
 
@@ -111,7 +233,6 @@ const DashboardHome = () => {
             }));
           }
 
-          // Fetch account details
           await fetchAccountDetails();
         }
       } catch (error) {
@@ -120,6 +241,8 @@ const DashboardHome = () => {
         setLoading(false);
       }
     };
+
+    fetchDashboardData();
   }, []);
 
   useEffect(() => {
@@ -156,7 +279,7 @@ const DashboardHome = () => {
     paystack.newTransaction({
       key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
       email: userData?.email,
-      amount: amount * 100, // Convert to kobo
+      amount: amount * 100,
       ref: new Date().getTime().toString(),
       onSuccess: (transaction) => {
         onSuccess(transaction);
@@ -182,7 +305,6 @@ const DashboardHome = () => {
       setAmount("");
       setShowFundModal(false);
 
-      // Refresh wallet balance
       const walletResponse = await axios.get(
         apiUrl(
           API_CONFIG.ENDPOINTS.ACCOUNT.walletBalance + userData.id + "/balance"
@@ -214,8 +336,6 @@ const DashboardHome = () => {
       );
       toast.success("Account created successfully!");
       setShowCreateAccount(false);
-
-      // Refresh account details
       await fetchAccountDetails();
     } catch (error) {
       console.error("Error creating account:", error);
@@ -226,64 +346,109 @@ const DashboardHome = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto pb-24 md:pb-0">
-      <ToastContainer />
+    <div className="max-w-6xl mx-auto pb-20 md:pb-0 px-4">
       {loading ? (
-        <div className="flex justify-center items-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        <div className="flex justify-center items-center min-h-64">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900"></div>
         </div>
       ) : (
         <>
-          {/* Welcome Section */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">
+          {/* Welcome Section - Compact */}
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-gray-900">
               Welcome back, {dashboardData.userName}!
             </h1>
-            <p className="mt-2 text-gray-600">
+            <p className="mt-1 text-gray-600 text-sm">
               Here's what's happening with your account today.
             </p>
           </div>
 
-          {/* Wallet & Account Section - Full Width */}
-          <div className="mb-8">
-            <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-2xl shadow-lg p-6 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full opacity-20 -mr-32 -mt-32"></div>
-              <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-400 rounded-full opacity-20 -ml-24 -mb-24"></div>
+          {/* Quick Actions */}
+          <div className="mb-6">
+            <h2 className="text-base font-semibold text-gray-800 mb-3">
+              Quick Actions
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <Link
+                href="/"
+                className="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow flex flex-col items-center justify-center text-center"
+              >
+                <FaShoppingCart className="w-6 h-6 text-blue-600 mb-2" />
+                <span className="text-sm font-medium text-gray-700">
+                  Shop Now
+                </span>
+              </Link>
+              <Link
+                href="/dashboard/track-order"
+                className="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow flex flex-col items-center justify-center text-center"
+              >
+                <FaTruck className="w-6 h-6 text-green-600 mb-2" />
+                <span className="text-sm font-medium text-gray-700">
+                  Track Order
+                </span>
+              </Link>
+              <Link
+                href="/dashboard/request-delivery"
+                className="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow flex flex-col items-center justify-center text-center"
+              >
+                <FaBoxOpen className="w-6 h-6 text-purple-600 mb-2" />
+                <span className="text-sm font-medium text-gray-700">
+                  Delivery
+                </span>
+              </Link>
+              <Link
+                href="/dashboard/inbox"
+                className="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow flex flex-col items-center justify-center text-center"
+              >
+                <FaCommentDots className="w-6 h-6 text-yellow-600 mb-2" />
+                <span className="text-sm font-medium text-gray-700">Chat</span>
+              </Link>
+              <Link
+                href="/dashboard/personal-details"
+                className="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow flex flex-col items-center justify-center text-center"
+              >
+                <FaUser className="w-6 h-6 text-red-600 mb-2" />
+                <span className="text-sm font-medium text-gray-700">Me</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* Wallet & Account Section - Compact */}
+          <div className="mb-6">
+            <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-xl shadow-lg p-4 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-40 h-40 bg-blue-500 rounded-full opacity-20 -mr-20 -mt-20"></div>
 
               <div className="relative z-10">
                 {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
-                  <div>
-                    <h2 className="text-2xl font-bold flex items-center gap-2">
-                      <FaWallet className="w-6 h-6" />
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
+                  <div className="mb-3 sm:mb-0">
+                    <h2 className="text-lg font-bold flex items-center gap-2">
+                      <FaWallet className="w-5 h-5" />
                       Your Wallet
                     </h2>
-                    <p className="text-blue-100 mt-1">
+                    <p className="text-blue-100 text-sm mt-1">
                       Manage your funds and account details
                     </p>
                   </div>
                   <button
                     onClick={() => setShowFundModal(true)}
-                    className="bg-white text-blue-600 px-6 py-3 rounded-lg font-medium hover:bg-blue-50 transition mt-4 md:mt-0"
+                    className="bg-white text-blue-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-50 transition"
                   >
                     Fund Wallet
                   </button>
                 </div>
 
                 {/* Balance Section */}
-                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-6 mb-6">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between">
+                <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4 mb-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between">
                     <div>
-                      <p className="text-blue-100 text-sm">Current Balance</p>
-                      <h1 className="text-4xl font-bold mt-1">
+                      <p className="text-blue-100 text-xs">Current Balance</p>
+                      <h1 className="text-2xl font-bold mt-1">
                         ₦{walletBalance?.balance?.toFixed(2) || "0.00"}
                       </h1>
                     </div>
-                    <div className="flex gap-3 mt-4 md:mt-0">
-                      <button className="bg-white/20 text-white px-4 py-2 rounded-lg text-sm hover:bg-white/30 transition">
-                        Withdraw
-                      </button>
-                      <button className="bg-white/20 text-white px-4 py-2 rounded-lg text-sm hover:bg-white/30 transition">
+                    <div className="flex gap-2 mt-3 sm:mt-0">
+                      <button className="bg-white/20 text-white px-3 py-1.5 rounded text-xs hover:bg-white/30 transition">
                         Transaction History
                       </button>
                     </div>
@@ -292,45 +457,45 @@ const DashboardHome = () => {
 
                 {/* Account Details Section */}
                 {accountDetails ? (
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
-                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                      <FaCreditCard className="w-5 h-5" />
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                    <h3 className="font-semibold mb-3 flex items-center gap-2 text-sm">
+                      <FaCreditCard className="w-4 h-4" />
                       Virtual Account Details
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div className="flex items-center gap-3">
-                        <div className="bg-white/20 p-3 rounded-lg">
-                          <FaUserCircle className="w-6 h-6 text-white" />
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="flex items-center gap-2">
+                        <div className="bg-white/20 p-2 rounded">
+                          <FaUserCircle className="w-4 h-4 text-white" />
                         </div>
                         <div>
-                          <p className="text-blue-100 text-sm">Account Name</p>
-                          <p className="text-white font-semibold">
+                          <p className="text-blue-100 text-xs">Account Name</p>
+                          <p className="text-white font-medium text-sm">
                             {accountDetails.accountName || "N/A"}
                           </p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        <div className="bg-white/20 p-3 rounded-lg">
-                          <FaCreditCard className="w-6 h-6 text-white" />
+                      <div className="flex items-center gap-2">
+                        <div className="bg-white/20 p-2 rounded">
+                          <FaCreditCard className="w-4 h-4 text-white" />
                         </div>
                         <div>
-                          <p className="text-blue-100 text-sm">
+                          <p className="text-blue-100 text-xs">
                             Account Number
                           </p>
-                          <p className="text-white font-semibold">
+                          <p className="text-white font-medium text-sm">
                             {accountDetails.accountNumber || "N/A"}
                           </p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        <div className="bg-white/20 p-3 rounded-lg">
-                          <FaBank className="w-6 h-6 text-white" />
+                      <div className="flex items-center gap-2">
+                        <div className="bg-white/20 p-2 rounded">
+                          <FaBank className="w-4 h-4 text-white" />
                         </div>
                         <div>
-                          <p className="text-blue-100 text-sm">Bank Name</p>
-                          <p className="text-white font-semibold">
+                          <p className="text-blue-100 text-xs">Bank Name</p>
+                          <p className="text-white font-medium text-sm">
                             {accountDetails.bankName || "N/A"}
                           </p>
                         </div>
@@ -338,21 +503,20 @@ const DashboardHome = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center">
-                    <FaCreditCard className="w-12 h-12 text-white/60 mx-auto mb-3" />
-                    <h3 className="text-lg font-semibold text-white mb-2">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
+                    <FaCreditCard className="w-8 h-8 text-white/60 mx-auto mb-2" />
+                    <h3 className="font-semibold text-white mb-1 text-sm">
                       No Virtual Account
                     </h3>
-                    <p className="text-blue-100 mb-4">
-                      Create a virtual account to easily receive payments and
-                      fund your wallet
+                    <p className="text-blue-100 text-xs mb-3">
+                      Create a virtual account to receive payments
                     </p>
                     <button
                       onClick={() => setShowCreateAccount(true)}
-                      className="bg-white text-blue-600 px-6 py-2 rounded-lg font-medium hover:bg-blue-50 transition inline-flex items-center gap-2"
+                      className="bg-white text-blue-600 px-4 py-1.5 rounded text-sm font-medium hover:bg-blue-50 transition inline-flex items-center gap-1"
                     >
-                      <FaPlus className="w-4 h-4" />
-                      Create Virtual Account
+                      <FaPlus className="w-3 h-3" />
+                      Create Account
                     </button>
                   </div>
                 )}
@@ -360,134 +524,99 @@ const DashboardHome = () => {
             </div>
           </div>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            {/* Products Stats */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">
-                    Total Products
-                  </p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {dashboardData.totalProducts}
-                  </p>
-                </div>
-                <div className="p-3 bg-gray-100 rounded-full">
-                  <svg
-                    className="w-6 h-6 text-gray-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                    ></path>
-                  </svg>
-                </div>
-              </div>
-              <div className="mt-4">
-                <Link
-                  href="/vendor-dashboard/products-list"
-                  className="text-sm text-gray-600 hover:text-gray-900"
-                >
-                  View all products →
-                </Link>
-              </div>
-            </div>
-
-            {/* Total Orders */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex items-center justify-between">
-                <div>
+          {/* Order Overview */}
+          <div className="mb-6">
+            <h2 className="text-base font-semibold text-gray-800 mb-3">
+              Orders Details
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Stats */}
+              <div className="md:col-span-1 bg-white p-4 rounded-lg shadow space-y-4">
+                <div className="flex items-center justify-between">
                   <p className="text-sm font-medium text-gray-600">
                     Total Orders
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {dashboardData.totalOrders}
+                    {dashboardData.orders.length}
                   </p>
                 </div>
-                <div className="p-3 bg-green-100 rounded-full">
-                  <svg
-                    className="w-6 h-6 text-green-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                    ></path>
-                  </svg>
-                </div>
-              </div>
-              <div className="mt-4">
-                <Link
-                  href="/vendor-dashboard/orders"
-                  className="text-sm text-gray-600 hover:text-gray-900"
-                >
-                  View all orders →
-                </Link>
-              </div>
-            </div>
-
-            {/* Pending Orders */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">
-                    Pending Orders
-                  </p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {dashboardData.pendingOrders}
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-yellow-600">Pending</p>
+                  <p className="text-lg font-semibold text-yellow-600">
+                    {orderStatusCounts.pending + orderStatusCounts.confirmed}
                   </p>
                 </div>
-                <div className="p-3 bg-yellow-100 rounded-full">
-                  <svg
-                    className="w-6 h-6 text-yellow-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    ></path>
-                  </svg>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-green-600">
+                    Delivered
+                  </p>
+                  <p className="text-lg font-semibold text-green-600">
+                    {orderStatusCounts.delivered}
+                  </p>
                 </div>
               </div>
-              <div className="mt-4">
-                <Link
-                  href="/vendor-dashboard/orders"
-                  className="text-sm text-gray-600 hover:text-gray-900"
-                >
-                  View pending orders →
-                </Link>
+              {/* Chart */}
+              <div className="md:col-span-2 bg-white p-4 rounded-lg shadow flex justify-center items-center">
+                <div className="w-full h-56">
+                  <Pie
+                    data={chartData}
+                    options={{ responsive: true, maintainAspectRatio: false }}
+                  />
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Refer and Earn */}
-          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          {/* Order Trend Chart */}
+          <div className="mb-6">
+            <div className="flex justify-between items-center mb-3">
+              <h2 className="text-base font-semibold text-gray-800">
+                Order Trend
+              </h2>
+              <select
+                value={timePeriod}
+                onChange={(e) => setTimePeriod(e.target.value)}
+                className="block px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+              >
+                <option value="monthly">Monthly</option>
+                <option value="weekly">Weekly</option>
+              </select>
+            </div>
+            <div className="bg-white p-4 rounded-lg shadow">
+              <div className="h-64">
+                <Line
+                  data={lineChartData}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        display: false,
+                      },
+                    },
+                    scales: {
+                      y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                    },
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Refer and Earn - Compact */}
+          <div className="bg-white rounded-lg shadow p-4 mb-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">
                   Refer & Earn
                 </p>
-                <p className="text-lg text-gray-500 mt-1">
+                <p className="text-gray-500 text-xs mt-1">
                   Invite friends and earn rewards!
                 </p>
               </div>
-              <div className="p-3 bg-green-100 rounded-full">
+              <div className="p-2 bg-green-100 rounded-full">
                 <svg
-                  className="w-6 h-6 text-green-600"
+                  className="w-4 h-4 text-green-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -501,33 +630,36 @@ const DashboardHome = () => {
                 </svg>
               </div>
             </div>
-            <div className="mt-4">
-              <button className="text-sm text-blue-600 hover:text-blue-800">
+            <div className="mt-3">
+              <Link
+                href="/dashboard/referrals"
+                className="text-xs text-blue-600 hover:text-blue-800"
+              >
                 Get referral link →
-              </button>
+              </Link>
             </div>
           </div>
 
-          {/* Recent Orders */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">
+          {/* Recent Orders - Compact */}
+          <div className="bg-white rounded-lg shadow p-4">
+            <h2 className="font-medium text-gray-900 mb-3 text-sm">
               Recent Orders
             </h2>
             {dashboardData.recentOrders.length > 0 ? (
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+                <table className="min-w-full divide-y divide-gray-200 text-xs text-left">
                   <thead>
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">
                         Order ID
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">
                         Date
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">
                         Status
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">
                         Total
                       </th>
                     </tr>
@@ -535,15 +667,15 @@ const DashboardHome = () => {
                   <tbody className="divide-y divide-gray-200">
                     {dashboardData.recentOrders.map((order) => (
                       <tr key={order._id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          #{order._id.slice(-6)}
+                        <td className="px-3 py-2 whitespace-nowrap font-medium text-gray-900">
+                          #{order._id.slice(-6).toUpperCase()}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-3 py-2 whitespace-nowrap text-gray-500">
                           {new Date(order.createdAt).toLocaleDateString()}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <td className="px-3 py-2 whitespace-nowrap">
                           <span
-                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                            className={`px-2 inline-flex text-xs leading-4 font-semibold rounded-full 
                             ${
                               order.status === "completed"
                                 ? "bg-green-100 text-green-800"
@@ -552,10 +684,11 @@ const DashboardHome = () => {
                                 : "bg-gray-100 text-gray-800"
                             }`}
                           >
-                            {order.status}
+                            {order.status.charAt(0).toUpperCase() +
+                              order.status.slice(1)}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-3 py-2 whitespace-nowrap text-gray-500">
                           ₦{order.totalAmount.toLocaleString()}
                         </td>
                       </tr>
@@ -564,14 +697,14 @@ const DashboardHome = () => {
                 </table>
               </div>
             ) : (
-              <p className="text-gray-500 text-center py-4">
+              <p className="text-gray-500 text-center py-3 text-sm">
                 No recent orders found
               </p>
             )}
-            <div className="mt-4">
+            <div className="mt-3">
               <Link
-                href="/vendor-dashboard/orders"
-                className="text-sm text-gray-600 hover:text-gray-900"
+                href="/dashboard/orders"
+                className="text-xs text-gray-600 hover:text-gray-900"
               >
                 View all orders →
               </Link>
@@ -580,34 +713,34 @@ const DashboardHome = () => {
         </>
       )}
 
-      {/* Fund Wallet Modal */}
+      {/* Fund Wallet Modal - Compact */}
       {showFundModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Fund Your Wallet</h3>
-            <div className="space-y-4">
-              <div className="flex flex-col gap-2">
-                <label className="text-gray-600">Amount (₦)</label>
+          <div className="bg-white rounded-lg p-5 w-full max-w-sm">
+            <h3 className="font-semibold mb-3">Fund Your Wallet</h3>
+            <div className="space-y-3">
+              <div className="flex flex-col gap-1">
+                <label className="text-gray-600 text-sm">Amount (₦)</label>
                 <input
                   type="number"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="border p-2 rounded-md"
+                  className="border p-2 rounded text-sm"
                   placeholder="Enter amount"
                   min="100"
                 />
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-2">
                 <button
                   onClick={handlePayment}
                   disabled={!amount || loading || !userData?.email}
-                  className="bg-blue-600 text-white p-3 rounded-md flex-1 hover:bg-blue-700 transition disabled:bg-blue-300"
+                  className="bg-blue-600 text-white p-2 rounded flex-1 text-sm hover:bg-blue-700 transition disabled:bg-blue-300"
                 >
                   {loading ? "Processing..." : "Pay with Paystack"}
                 </button>
                 <button
                   onClick={() => setShowFundModal(false)}
-                  className="bg-gray-300 text-gray-700 p-3 rounded-md flex-1 hover:bg-gray-400 transition"
+                  className="bg-gray-300 text-gray-700 p-2 rounded flex-1 text-sm hover:bg-gray-400 transition"
                 >
                   Cancel
                 </button>
@@ -617,43 +750,39 @@ const DashboardHome = () => {
         </div>
       )}
 
-      {/* Create Virtual Account Modal */}
+      {/* Create Virtual Account Modal - Compact */}
       {showCreateAccount && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">
-              Create Virtual Account
-            </h3>
-            <p className="mb-4 text-sm text-gray-600">
+          <div className="bg-white rounded-lg p-5 w-full max-w-sm">
+            <h3 className="font-semibold mb-3">Create Virtual Account</h3>
+            <p className="mb-3 text-gray-600 text-sm">
               Create a virtual account to easily fund your wallet and receive
               payments.
             </p>
             <form onSubmit={handleCreateAccount}>
-              <div className="flex flex-col gap-1 mb-4">
-                <label className="text-gray-600">
-                  NIN (National Identification Number)
-                </label>
+              <div className="flex flex-col gap-1 mb-3">
+                <label className="text-gray-600 text-sm">NIN</label>
                 <input
                   onChange={(e) => setNin(e.target.value)}
                   value={nin}
-                  className="border p-2 rounded-md"
+                  className="border p-2 rounded text-sm"
                   type="text"
                   placeholder="Enter your NIN"
                   required
                 />
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-2">
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-gray-800 text-white p-2 rounded-md flex items-center justify-center flex-1 hover:bg-gray-700 transition disabled:bg-gray-400"
+                  className="bg-gray-800 text-white p-2 rounded flex-1 text-sm hover:bg-gray-700 transition disabled:bg-gray-400"
                 >
                   {loading ? "Creating..." : "Create Account"}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowCreateAccount(false)}
-                  className="bg-gray-300 text-gray-700 p-2 rounded-md flex-1 hover:bg-gray-400 transition"
+                  className="bg-gray-300 text-gray-700 p-2 rounded flex-1 text-sm hover:bg-gray-400 transition"
                 >
                   Cancel
                 </button>
@@ -663,43 +792,43 @@ const DashboardHome = () => {
         </div>
       )}
 
-      {/* Bottom Navigation for Mobile */}
+      {/* Bottom Navigation for Mobile - Compact */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 md:hidden z-40">
-        <div className="flex justify-around items-center h-16">
+        <div className="flex justify-around items-center h-14">
           <Link
-            href="/vendor-dashboard"
-            className="flex flex-col items-center justify-center text-gray-600 hover:text-blue-600"
+            href="/dashboard"
+            className="flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 text-xs"
           >
-            <FaHome className="w-6 h-6 mb-1" />
-            <span className="text-xs">Home</span>
+            <FaHome className="w-5 h-5 mb-1" />
+            <span>Home</span>
           </Link>
           <Link
-            href="/vendor-dashboard/inbox"
-            className="flex flex-col items-center justify-center text-gray-600 hover:text-blue-600"
+            href="/dashboard/inbox"
+            className="flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 text-xs"
           >
-            <FaCommentDots className="w-6 h-6 mb-1" />
-            <span className="text-xs">Chat</span>
+            <FaCommentDots className="w-5 h-5 mb-1" />
+            <span>Chat</span>
           </Link>
           <Link
-            href="/vendor-dashboard/add-products"
-            className="flex flex-col items-center justify-center text-gray-600 hover:text-blue-600"
+            href="/dashboard/request-delivery"
+            className="flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 text-xs"
           >
-            <FaTruck className="w-6 h-6 mb-1" />
-            <span className="text-xs">Add Product</span>
+            <FaTruck className="w-5 h-5 mb-1" />
+            <span>Delivery</span>
           </Link>
           <Link
-            href="/vendor-dashboard/orders"
-            className="flex flex-col items-center justify-center text-gray-600 hover:text-blue-600"
+            href="/dashboard/orders"
+            className="flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 text-xs"
           >
-            <FaBoxOpen className="w-6 h-6 mb-1" />
-            <span className="text-xs">Orders</span>
+            <FaBoxOpen className="w-5 h-5 mb-1" />
+            <span>Orders</span>
           </Link>
           <Link
-            href="/vendor-dashboard/settings"
-            className="flex flex-col items-center justify-center text-gray-600 hover:text-blue-600"
+            href="/dashboard/personal-details"
+            className="flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 text-xs"
           >
-            <FaUser className="w-6 h-6 mb-1" />
-            <span className="text-xs">Me</span>
+            <FaUser className="w-5 h-5 mb-1" />
+            <span>Me</span>
           </Link>
         </div>
       </div>

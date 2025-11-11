@@ -47,7 +47,6 @@ const DashboardHome = () => {
         const response = await axios.get(
           apiUrl(API_CONFIG.ENDPOINTS.ACCOUNT.GET + decryptedUserData.id)
         );
-        console.log("Account Details", response.data);
         setAccountDetails(response.data);
       }
     } catch (error) {
@@ -60,7 +59,7 @@ const DashboardHome = () => {
 
   useEffect(() => {
     fetchAccountDetails();
-  }, []); // Fixed: Added dependency array
+  }, []);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -75,7 +74,6 @@ const DashboardHome = () => {
             userName: decryptedUserData.firstName,
           }));
 
-          // Fetch seller-specific data
           const [ordersResponse, productsResponse] = await Promise.all([
             axios.get(
               apiUrl(
@@ -100,7 +98,7 @@ const DashboardHome = () => {
               pendingOrders: orders.filter(
                 (order) => order.status === "pending"
               ).length,
-              recentOrders: orders.slice(0, 5), // Get last 5 orders
+              recentOrders: orders.slice(0, 5),
             }));
           }
 
@@ -111,7 +109,6 @@ const DashboardHome = () => {
             }));
           }
 
-          // Fetch account details
           await fetchAccountDetails();
         }
       } catch (error) {
@@ -120,6 +117,7 @@ const DashboardHome = () => {
         setLoading(false);
       }
     };
+    fetchDashboardData();
   }, []);
 
   useEffect(() => {
@@ -155,7 +153,7 @@ const DashboardHome = () => {
     const paystack = new PaystackPop();
     paystack.newTransaction({
       key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
-      email: userData?.email,
+      email: userData?.email, // Convert to kobo
       amount: amount * 100, // Convert to kobo
       ref: new Date().getTime().toString(),
       onSuccess: (transaction) => {
@@ -182,7 +180,6 @@ const DashboardHome = () => {
       setAmount("");
       setShowFundModal(false);
 
-      // Refresh wallet balance
       const walletResponse = await axios.get(
         apiUrl(
           API_CONFIG.ENDPOINTS.ACCOUNT.walletBalance + userData.id + "/balance"
@@ -214,8 +211,6 @@ const DashboardHome = () => {
       );
       toast.success("Account created successfully!");
       setShowCreateAccount(false);
-
-      // Refresh account details
       await fetchAccountDetails();
     } catch (error) {
       console.error("Error creating account:", error);
@@ -226,65 +221,67 @@ const DashboardHome = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto pb-24 md:pb-0">
+    <div className="max-w-6xl mx-auto pb-20 md:pb-0 px-4">
       <ToastContainer />
       {loading ? (
-        <div className="flex justify-center items-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        <div className="flex justify-center items-center min-h-64">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900"></div>
         </div>
       ) : (
         <>
-          {/* Welcome Section */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">
+          {/* Welcome Section - Compact */}
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-gray-900">
               Welcome back, {dashboardData.userName}!
             </h1>
-            <p className="mt-2 text-gray-600">
+            <p className="mt-1 text-gray-600 text-sm">
               Here's what's happening with your account today.
             </p>
           </div>
 
-          {/* Wallet & Account Section - Full Width */}
-          <div className="mb-8">
-            <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-2xl shadow-lg p-6 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full opacity-20 -mr-32 -mt-32"></div>
-              <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-400 rounded-full opacity-20 -ml-24 -mb-24"></div>
+          {/* Wallet & Account Section - Compact */}
+          <div className="mb-6">
+            <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-xl shadow-lg p-4 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-40 h-40 bg-blue-500 rounded-full opacity-20 -mr-20 -mt-20"></div>
 
               <div className="relative z-10">
                 {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
-                  <div>
-                    <h2 className="text-2xl font-bold flex items-center gap-2">
-                      <FaWallet className="w-6 h-6" />
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
+                  <div className="mb-3 sm:mb-0">
+                    <h2 className="text-lg font-bold flex items-center gap-2">
+                      <FaWallet className="w-5 h-5" />
                       Your Wallet
                     </h2>
-                    <p className="text-blue-100 mt-1">
+                    <p className="text-blue-100 text-sm mt-1">
                       Manage your funds and account details
                     </p>
                   </div>
                   <button
                     onClick={() => setShowFundModal(true)}
-                    className="bg-white text-blue-600 px-6 py-3 rounded-lg font-medium hover:bg-blue-50 transition mt-4 md:mt-0"
+                    className="bg-white text-blue-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-50 transition"
                   >
                     Fund Wallet
                   </button>
                 </div>
 
                 {/* Balance Section */}
-                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-6 mb-6">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between">
+                <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4 mb-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between">
                     <div>
-                      <p className="text-blue-100 text-sm">Current Balance</p>
-                      <h1 className="text-4xl font-bold mt-1">
+                      <p className="text-blue-100 text-xs">Current Balance</p>
+                      <h1 className="text-2xl font-bold mt-1">
                         ₦{walletBalance?.balance?.toFixed(2) || "0.00"}
                       </h1>
                     </div>
-                    <div className="flex gap-3 mt-4 md:mt-0">
-                      <button className="bg-white/20 text-white px-4 py-2 rounded-lg text-sm hover:bg-white/30 transition">
-                        Withdraw
-                      </button>
-                      <button className="bg-white/20 text-white px-4 py-2 rounded-lg text-sm hover:bg-white/30 transition">
-                        Transaction History
+                    <div className="flex gap-2 mt-3 sm:mt-0">
+                      <Link href="/vendor-dashboard/withdrawal-request">
+                        {" "}
+                        <button className="bg-white/20 text-white px-3 py-1.5 rounded text-xs hover:bg-white/30 transition">
+                          Withdraw funds
+                        </button>
+                      </Link>
+                      <button className="bg-white/20 text-white px-3 py-1.5 rounded text-xs hover:bg-white/30 transition">
+                        History
                       </button>
                     </div>
                   </div>
@@ -292,45 +289,45 @@ const DashboardHome = () => {
 
                 {/* Account Details Section */}
                 {accountDetails ? (
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
-                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                      <FaCreditCard className="w-5 h-5" />
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                    <h3 className="font-semibold mb-3 flex items-center gap-2 text-sm">
+                      <FaCreditCard className="w-4 h-4" />
                       Virtual Account Details
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div className="flex items-center gap-3">
-                        <div className="bg-white/20 p-3 rounded-lg">
-                          <FaUserCircle className="w-6 h-6 text-white" />
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="flex items-center gap-2">
+                        <div className="bg-white/20 p-2 rounded">
+                          <FaUserCircle className="w-4 h-4 text-white" />
                         </div>
                         <div>
-                          <p className="text-blue-100 text-sm">Account Name</p>
-                          <p className="text-white font-semibold">
+                          <p className="text-blue-100 text-xs">Account Name</p>
+                          <p className="text-white font-medium text-sm">
                             {accountDetails.accountName || "N/A"}
                           </p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        <div className="bg-white/20 p-3 rounded-lg">
-                          <FaCreditCard className="w-6 h-6 text-white" />
+                      <div className="flex items-center gap-2">
+                        <div className="bg-white/20 p-2 rounded">
+                          <FaCreditCard className="w-4 h-4 text-white" />
                         </div>
                         <div>
-                          <p className="text-blue-100 text-sm">
+                          <p className="text-blue-100 text-xs">
                             Account Number
                           </p>
-                          <p className="text-white font-semibold">
+                          <p className="text-white font-medium text-sm">
                             {accountDetails.accountNumber || "N/A"}
                           </p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        <div className="bg-white/20 p-3 rounded-lg">
-                          <FaBank className="w-6 h-6 text-white" />
+                      <div className="flex items-center gap-2">
+                        <div className="bg-white/20 p-2 rounded">
+                          <FaBank className="w-4 h-4 text-white" />
                         </div>
                         <div>
-                          <p className="text-blue-100 text-sm">Bank Name</p>
-                          <p className="text-white font-semibold">
+                          <p className="text-blue-100 text-xs">Bank Name</p>
+                          <p className="text-white font-medium text-sm">
                             {accountDetails.bankName || "N/A"}
                           </p>
                         </div>
@@ -338,21 +335,20 @@ const DashboardHome = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center">
-                    <FaCreditCard className="w-12 h-12 text-white/60 mx-auto mb-3" />
-                    <h3 className="text-lg font-semibold text-white mb-2">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
+                    <FaCreditCard className="w-8 h-8 text-white/60 mx-auto mb-2" />
+                    <h3 className="font-semibold text-white mb-1 text-sm">
                       No Virtual Account
                     </h3>
-                    <p className="text-blue-100 mb-4">
-                      Create a virtual account to easily receive payments and
-                      fund your wallet
+                    <p className="text-blue-100 text-xs mb-3">
+                      Create a virtual account to receive payments
                     </p>
                     <button
                       onClick={() => setShowCreateAccount(true)}
-                      className="bg-white text-blue-600 px-6 py-2 rounded-lg font-medium hover:bg-blue-50 transition inline-flex items-center gap-2"
+                      className="bg-white text-blue-600 px-4 py-1.5 rounded text-sm font-medium hover:bg-blue-50 transition inline-flex items-center gap-1"
                     >
-                      <FaPlus className="w-4 h-4" />
-                      Create Virtual Account
+                      <FaPlus className="w-3 h-3" />
+                      Create Account
                     </button>
                   </div>
                 )}
@@ -360,22 +356,22 @@ const DashboardHome = () => {
             </div>
           </div>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {/* Stats Grid - Compact */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
             {/* Products Stats */}
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="bg-white rounded-lg shadow p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-xs font-medium text-gray-600">
                     Total Products
                   </p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-xl font-bold text-gray-900">
                     {dashboardData.totalProducts}
                   </p>
                 </div>
-                <div className="p-3 bg-gray-100 rounded-full">
+                <div className="p-2 bg-gray-100 rounded-full">
                   <svg
-                    className="w-6 h-6 text-gray-600"
+                    className="w-4 h-4 text-gray-600"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -389,30 +385,30 @@ const DashboardHome = () => {
                   </svg>
                 </div>
               </div>
-              <div className="mt-4">
+              <div className="mt-3">
                 <Link
                   href="/vendor-dashboard/products-list"
-                  className="text-sm text-gray-600 hover:text-gray-900"
+                  className="text-xs text-gray-600 hover:text-gray-900"
                 >
-                  View all products →
+                  View products →
                 </Link>
               </div>
             </div>
 
             {/* Total Orders */}
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="bg-white rounded-lg shadow p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-xs font-medium text-gray-600">
                     Total Orders
                   </p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-xl font-bold text-gray-900">
                     {dashboardData.totalOrders}
                   </p>
                 </div>
-                <div className="p-3 bg-green-100 rounded-full">
+                <div className="p-2 bg-green-100 rounded-full">
                   <svg
-                    className="w-6 h-6 text-green-600"
+                    className="w-4 h-4 text-green-600"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -426,30 +422,30 @@ const DashboardHome = () => {
                   </svg>
                 </div>
               </div>
-              <div className="mt-4">
+              <div className="mt-3">
                 <Link
                   href="/vendor-dashboard/orders"
-                  className="text-sm text-gray-600 hover:text-gray-900"
+                  className="text-xs text-gray-600 hover:text-gray-900"
                 >
-                  View all orders →
+                  View orders →
                 </Link>
               </div>
             </div>
 
             {/* Pending Orders */}
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="bg-white rounded-lg shadow p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-xs font-medium text-gray-600">
                     Pending Orders
                   </p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-xl font-bold text-gray-900">
                     {dashboardData.pendingOrders}
                   </p>
                 </div>
-                <div className="p-3 bg-yellow-100 rounded-full">
+                <div className="p-2 bg-yellow-100 rounded-full">
                   <svg
-                    className="w-6 h-6 text-yellow-600"
+                    className="w-4 h-4 text-yellow-600"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -463,31 +459,31 @@ const DashboardHome = () => {
                   </svg>
                 </div>
               </div>
-              <div className="mt-4">
+              <div className="mt-3">
                 <Link
                   href="/vendor-dashboard/orders"
-                  className="text-sm text-gray-600 hover:text-gray-900"
+                  className="text-xs text-gray-600 hover:text-gray-900"
                 >
-                  View pending orders →
+                  View pending →
                 </Link>
               </div>
             </div>
           </div>
 
-          {/* Refer and Earn */}
-          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          {/* Refer and Earn - Compact */}
+          <div className="bg-white rounded-lg shadow p-4 mb-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">
                   Refer & Earn
                 </p>
-                <p className="text-lg text-gray-500 mt-1">
+                <p className="text-gray-500 text-xs mt-1">
                   Invite friends and earn rewards!
                 </p>
               </div>
-              <div className="p-3 bg-green-100 rounded-full">
+              <div className="p-2 bg-green-100 rounded-full">
                 <svg
-                  className="w-6 h-6 text-green-600"
+                  className="w-4 h-4 text-green-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -501,36 +497,36 @@ const DashboardHome = () => {
                 </svg>
               </div>
             </div>
-            <div className="mt-4">
+            <div className="mt-3">
               <Link
-                href="/vendor-dashboard/referrals"
-                className="text-sm text-blue-600 hover:text-blue-800"
+                href="/vendor-dashboard/referral"
+                className="text-xs text-blue-600 hover:text-blue-800"
               >
                 Get referral link →
               </Link>
             </div>
           </div>
 
-          {/* Recent Orders */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">
+          {/* Recent Orders - Compact */}
+          <div className="bg-white rounded-lg shadow p-4">
+            <h2 className="font-medium text-gray-900 mb-3 text-sm">
               Recent Orders
             </h2>
             {dashboardData.recentOrders.length > 0 ? (
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+                <table className="min-w-full divide-y divide-gray-200 text-xs">
                   <thead>
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">
                         Order ID
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">
                         Date
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">
                         Status
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">
                         Total
                       </th>
                     </tr>
@@ -538,15 +534,15 @@ const DashboardHome = () => {
                   <tbody className="divide-y divide-gray-200">
                     {dashboardData.recentOrders.map((order) => (
                       <tr key={order._id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td className="px-3 py-2 whitespace-nowrap font-medium text-gray-900">
                           #{order._id.slice(-6)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-3 py-2 whitespace-nowrap text-gray-500">
                           {new Date(order.createdAt).toLocaleDateString()}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <td className="px-3 py-2 whitespace-nowrap">
                           <span
-                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                            className={`px-2 inline-flex text-xs leading-4 font-semibold rounded-full 
                             ${
                               order.status === "completed"
                                 ? "bg-green-100 text-green-800"
@@ -558,7 +554,7 @@ const DashboardHome = () => {
                             {order.status}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-3 py-2 whitespace-nowrap text-gray-500">
                           ₦{order.totalAmount.toLocaleString()}
                         </td>
                       </tr>
@@ -567,14 +563,14 @@ const DashboardHome = () => {
                 </table>
               </div>
             ) : (
-              <p className="text-gray-500 text-center py-4">
+              <p className="text-gray-500 text-center py-3 text-sm">
                 No recent orders found
               </p>
             )}
-            <div className="mt-4">
+            <div className="mt-3">
               <Link
                 href="/vendor-dashboard/orders"
-                className="text-sm text-gray-600 hover:text-gray-900"
+                className="text-xs text-gray-600 hover:text-gray-900"
               >
                 View all orders →
               </Link>
@@ -583,34 +579,34 @@ const DashboardHome = () => {
         </>
       )}
 
-      {/* Fund Wallet Modal */}
+      {/* Fund Wallet Modal - Compact */}
       {showFundModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Fund Your Wallet</h3>
-            <div className="space-y-4">
-              <div className="flex flex-col gap-2">
-                <label className="text-gray-600">Amount (₦)</label>
+          <div className="bg-white rounded-lg p-5 w-full max-w-sm">
+            <h3 className="font-semibold mb-3">Fund Your Wallet</h3>
+            <div className="space-y-3">
+              <div className="flex flex-col gap-1">
+                <label className="text-gray-600 text-sm">Amount (₦)</label>
                 <input
                   type="number"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="border p-2 rounded-md"
+                  className="border p-2 rounded text-sm"
                   placeholder="Enter amount"
                   min="100"
                 />
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-2">
                 <button
                   onClick={handlePayment}
                   disabled={!amount || loading || !userData?.email}
-                  className="bg-blue-600 text-white p-3 rounded-md flex-1 hover:bg-blue-700 transition disabled:bg-blue-300"
+                  className="bg-blue-600 text-white p-2 rounded flex-1 text-sm hover:bg-blue-700 transition disabled:bg-blue-300"
                 >
                   {loading ? "Processing..." : "Pay with Paystack"}
                 </button>
                 <button
                   onClick={() => setShowFundModal(false)}
-                  className="bg-gray-300 text-gray-700 p-3 rounded-md flex-1 hover:bg-gray-400 transition"
+                  className="bg-gray-300 text-gray-700 p-2 rounded flex-1 text-sm hover:bg-gray-400 transition"
                 >
                   Cancel
                 </button>
@@ -620,43 +616,39 @@ const DashboardHome = () => {
         </div>
       )}
 
-      {/* Create Virtual Account Modal */}
+      {/* Create Virtual Account Modal - Compact */}
       {showCreateAccount && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">
-              Create Virtual Account
-            </h3>
-            <p className="mb-4 text-sm text-gray-600">
+          <div className="bg-white rounded-lg p-5 w-full max-w-sm">
+            <h3 className="font-semibold mb-3">Create Virtual Account</h3>
+            <p className="mb-3 text-gray-600 text-sm">
               Create a virtual account to easily fund your wallet and receive
               payments.
             </p>
             <form onSubmit={handleCreateAccount}>
-              <div className="flex flex-col gap-1 mb-4">
-                <label className="text-gray-600">
-                  NIN (National Identification Number)
-                </label>
+              <div className="flex flex-col gap-1 mb-3">
+                <label className="text-gray-600 text-sm">NIN</label>
                 <input
                   onChange={(e) => setNin(e.target.value)}
                   value={nin}
-                  className="border p-2 rounded-md"
+                  className="border p-2 rounded text-sm"
                   type="text"
                   placeholder="Enter your NIN"
                   required
                 />
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-2">
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-gray-800 text-white p-2 rounded-md flex items-center justify-center flex-1 hover:bg-gray-700 transition disabled:bg-gray-400"
+                  className="bg-gray-800 text-white p-2 rounded flex-1 text-sm hover:bg-gray-700 transition disabled:bg-gray-400"
                 >
                   {loading ? "Creating..." : "Create Account"}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowCreateAccount(false)}
-                  className="bg-gray-300 text-gray-700 p-2 rounded-md flex-1 hover:bg-gray-400 transition"
+                  className="bg-gray-300 text-gray-700 p-2 rounded flex-1 text-sm hover:bg-gray-400 transition"
                 >
                   Cancel
                 </button>
@@ -666,43 +658,43 @@ const DashboardHome = () => {
         </div>
       )}
 
-      {/* Bottom Navigation for Mobile */}
+      {/* Bottom Navigation for Mobile - Compact */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 md:hidden z-40">
-        <div className="flex justify-around items-center h-16">
+        <div className="flex justify-around items-center h-14">
           <Link
             href="/vendor-dashboard"
-            className="flex flex-col items-center justify-center text-gray-600 hover:text-blue-600"
+            className="flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 text-xs"
           >
-            <FaHome className="w-6 h-6 mb-1" />
-            <span className="text-xs">Home</span>
+            <FaHome className="w-5 h-5 mb-1" />
+            <span>Home</span>
           </Link>
           <Link
             href="/vendor-dashboard/inbox"
-            className="flex flex-col items-center justify-center text-gray-600 hover:text-blue-600"
+            className="flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 text-xs"
           >
-            <FaCommentDots className="w-6 h-6 mb-1" />
-            <span className="text-xs">Chat</span>
+            <FaCommentDots className="w-5 h-5 mb-1" />
+            <span>Chat</span>
           </Link>
           <Link
             href="/vendor-dashboard/add-products"
-            className="flex flex-col items-center justify-center text-gray-600 hover:text-blue-600"
+            className="flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 text-xs"
           >
-            <FaTruck className="w-6 h-6 mb-1" />
-            <span className="text-xs">Add Product</span>
+            <FaTruck className="w-5 h-5 mb-1" />
+            <span>Add</span>
           </Link>
           <Link
             href="/vendor-dashboard/orders"
-            className="flex flex-col items-center justify-center text-gray-600 hover:text-blue-600"
+            className="flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 text-xs"
           >
-            <FaBoxOpen className="w-6 h-6 mb-1" />
-            <span className="text-xs">Orders</span>
+            <FaBoxOpen className="w-5 h-5 mb-1" />
+            <span>Orders</span>
           </Link>
           <Link
             href="/vendor-dashboard/settings"
-            className="flex flex-col items-center justify-center text-gray-600 hover:text-blue-600"
+            className="flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 text-xs"
           >
-            <FaUser className="w-6 h-6 mb-1" />
-            <span className="text-xs">Me</span>
+            <FaUser className="w-5 h-5 mb-1" />
+            <span>Me</span>
           </Link>
         </div>
       </div>
