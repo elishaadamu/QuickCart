@@ -23,17 +23,24 @@ const page = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [referralCode, setReferralCode] = useState("");
+
+  useEffect(() => {
+    if (firstName.trim() && phone.length >= 3) {
+      const generatedCode = `${firstName.toUpperCase().trim()}${phone.slice(
+        -3
+      )}`;
+      setReferralCode(generatedCode);
+    } else {
+      setReferralCode("");
+    }
+  }, [firstName, phone]);
 
   useEffect(() => {
     if (localStorage.getItem("user")) {
       router.push("/");
     }
   }, [router]);
-
-  useEffect(() => {
-    const payload = { firstName, lastName, email, phone, password };
-    console.log(payload);
-  }, [firstName, lastName, email, phone, password]);
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -45,7 +52,16 @@ const page = () => {
       return;
     }
 
-    const payload = { firstName, lastName, email, phone, password };
+    const payload = {
+      firstName,
+      lastName,
+      email,
+      phone,
+      password,
+      referralCode,
+    };
+    console.log("Signup payload with referral code:", payload);
+
     try {
       const response = await axios.post(
         apiUrl(API_CONFIG.ENDPOINTS.AUTH.SIGNUP),
@@ -125,6 +141,17 @@ const page = () => {
             className="border p-2 rounded-md"
             type="tel"
             placeholder="Enter your phone number"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label>Your Referral Code (auto-generated)</label>
+          <input
+            value={referralCode}
+            className="border p-2 rounded-md bg-gray-100 cursor-not-allowed"
+            type="text"
+            placeholder="Generated referral code"
+            disabled
+            readOnly
           />
         </div>
         <div className="flex flex-col gap-1 relative">
