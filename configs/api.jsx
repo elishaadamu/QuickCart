@@ -64,6 +64,9 @@ export const API_CONFIG = {
       REQUEST_DELIVERY: "/delivery-request/create/",
       GET_USER_REQUESTS: "/delivery-request/all-user-requests/", // append userId
       PAY_DELIVERY: "/delivery-request/pay/",
+      GET_DELIVERY: "/delivery-request/my-requests/",
+      ACCEPT_DELIVERY: "/delivery-request/delivery-man-accept/",
+      REJECT_DELIVERY: "/delivery-request/delivery-man-reject/",
     },
     DELIVERY_WITHDRAWAL: {
       CREATE: "/withdrawal", // POST with userId in payload
