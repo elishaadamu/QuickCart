@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { useAppContext } from "@/context/AppContext";
 import {
   FaCopy,
   FaShareAlt,
@@ -9,6 +10,7 @@ import {
   FaUsers,
   FaCoins,
   FaGift,
+  FaUserCheck,
 } from "react-icons/fa";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -17,7 +19,7 @@ import { decryptData } from "@/lib/encryption";
 import { apiUrl, API_CONFIG } from "@/configs/api";
 
 const ReferralPage = () => {
-  const [userData, setUserData] = useState(null);
+  const { userData } = useAppContext();
   const [referralData, setReferralData] = useState({
     referralCode: "",
     referralLink: "",
@@ -30,115 +32,127 @@ const ReferralPage = () => {
       pending: 0,
     },
   });
+  const [referredUsers, setReferredUsers] = useState([]);
   const [userProfile, setUserProfile] = useState("");
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [origin, setOrigin] = useState("");
+  const [isClient, setIsClient] = useState(false);
+  const [referredNum, setReferredNum] = useState(0);
 
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient || !userData?.id) return;
+
     const fetchInitialData = async () => {
       setLoading(true);
       try {
-        const encryptedUser =
-          typeof window !== "undefined" ? localStorage.getItem("user") : null;
-        if (!encryptedUser) {
-          toast.error("User not found. Please log in again.");
-          setLoading(false);
-          return;
-        }
+        // Fetch profile, commissions, and progress concurrently
+        const [profileRes, commissionsRes, progressRes] = await Promise.all([
+          axios.get(
+            `${apiUrl(API_CONFIG.ENDPOINTS.PROFILE.GET)}/${userData.id}`
+          ),
+          axios.get(
+            `${apiUrl(API_CONFIG.ENDPOINTS.REFERRAL.GET_COMMISSIONS)}${
+              userData.id
+            }`
+          ),
+          axios.get(
+            `${apiUrl(API_CONFIG.ENDPOINTS.REFERRAL.GET_PROGRESS)}${
+              userData.id
+            }`
+          ),
+        ]);
 
-        const decryptedUserData = decryptData(encryptedUser);
-        setUserData(decryptedUserData);
+        // Log responses for debugging
+        console.log("Profile Response:", profileRes.data);
+        console.log("Commissions Response:", commissionsRes.data);
+        console.log("Progress Response:", progressRes.data);
 
-        // Fetch profile to get the referral code
-        const response = await axios.get(
-          `${apiUrl(API_CONFIG.ENDPOINTS.PROFILE.GET)}/${decryptedUserData.id}`
+        // Set user profile and referral code
+        const fetchedProfile = profileRes?.data?.user;
+        setUserProfile(fetchedProfile);
+
+        // Set referral stats
+        const commissionsData = commissionsRes?.data;
+        const progressData = progressRes?.data?.data;
+
+        setReferredNum(progressData || 0);
+
+        const totalEarned = (commissionsData?.commissions || []).reduce(
+          (sum, commission) => sum + commission.commissionAmount,
+          0
         );
 
-        const userProfile = response?.data?.user;
-
-        setUserProfile(userProfile);
+        setReferredUsers(progressData.referredPeople || []);
+        setReferralData((prev) => ({
+          ...prev,
+          earnedAmount: totalEarned || 0,
+          totalReferrals: progressData.numberOfPeopleReferred || 0,
+        }));
       } catch (error) {
         console.error("Error fetching referral data:", error);
         toast.error("Failed to load referral data. Using defaults.");
-        // Fallback to generating a code if APIs fail
-        generateFallbackReferralData();
+        // Fallback for API errors
+        setReferralData({
+          referralCode: "N/A",
+          referralLink: "",
+          totalReferrals: 0,
+          earnedAmount: 0,
+        });
+        setReferredUsers([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchInitialData();
-  }, []);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setOrigin(window.location.origin);
-    }
-  }, []);
-
-  const generateFallbackReferralData = () => {
-    // This function is now a fallback for API errors.
-    const referralCode = generateReferralCode();
-    if (referralCode) {
-      const referralLink = `${origin}/signup?ref=${referralCode}`;
-      setReferralData({
-        referralCode,
-        referralLink,
-        totalReferrals: 0,
-        earnedAmount: 0,
-        pendingAmount: 0,
-        referralStats: {
-          total: 0,
-          completed: 0,
-          pending: 0,
-        },
-      });
-    }
-  };
+  }, [isClient, userData]);
 
   const copyToClipboard = (text) => {
-    if (!text) {
+    if (!isClient || !text) {
       toast.warn("Nothing to copy.");
       return;
     }
-    if (typeof navigator !== "undefined" && navigator.clipboard) {
-      navigator.clipboard.writeText(text).then(
-        () => {
-          toast.success("Copied to clipboard!");
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
-        },
-        (err) => {
-          console.error("Failed to copy text: ", err);
-          toast.error("Failed to copy.");
-        }
-      );
-    }
+    navigator.clipboard.writeText(text).then(
+      () => {
+        toast.success("Copied to clipboard!");
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      },
+      (err) => {
+        console.error("Failed to copy text: ", err);
+        toast.error("Failed to copy.");
+      }
+    );
   };
 
   const shareOnWhatsApp = () => {
+    if (!isClient) return;
+
     const referralCode = userProfile?.referralCode;
     if (!referralCode) {
       toast.error("Referral code not available.");
       return;
     }
-    const referralLink = `${origin}/signup?ref=${referralCode}`;
+    const referralLink = `${window.location.origin}/signup?ref=${referralCode}`;
     const message = `Join me on Kasuwar Zamani! Use my referral code: ${referralCode}\n\nSign up here: ${referralLink}`;
     const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
-    if (typeof window !== "undefined") {
-      window.open(url, "_blank");
-    }
+    window.open(url, "_blank");
   };
 
   const shareViaSocialMedia = () => {
+    if (!isClient) return;
+
     const referralCode = userProfile?.referralCode;
     if (!referralCode) {
       toast.error("Referral code not available.");
       return;
     }
-    const referralLink = `${origin}/signup?ref=${referralCode}`;
-    if (typeof navigator !== "undefined" && navigator.share) {
+    const referralLink = `${window.location.origin}/signup?ref=${referralCode}`;
+    if (navigator.share) {
       navigator
         .share({
           title: "Join me on this amazing platform!",
@@ -150,6 +164,12 @@ const ReferralPage = () => {
     } else {
       copyToClipboard(referralLink);
     }
+  };
+
+  // Get origin safely for SSR
+  const getOrigin = () => {
+    if (!isClient) return "";
+    return window.location.origin;
   };
 
   return (
@@ -179,7 +199,7 @@ const ReferralPage = () => {
                   <FaUsers className="w-6 h-6 text-blue-600" />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-1">
-                  {referralData.totalReferrals}
+                  {referredNum.numberOfPeopleReferred}
                 </h3>
                 <p className="text-gray-600">Total Referrals</p>
               </div>
@@ -194,6 +214,74 @@ const ReferralPage = () => {
                 <p className="text-gray-600">Total Earned</p>
               </div>
             </div>
+            {/* Referred Users Table */}
+            <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                Your Referrals
+              </h2>
+              {referredUsers.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          Name
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          EMAIL
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          PHONE NUMBER
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          ROLE
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {referredUsers.map((user, index) => (
+                        <tr key={index}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {user.name}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {user.email}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {user.phone}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
+                            {user.role}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <FaUserCheck className="mx-auto w-12 h-12 text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900">
+                    No referrals yet
+                  </h3>
+                  <p className="text-gray-600">
+                    Share your code to get started!
+                  </p>
+                </div>
+              )}
+            </div>
 
             {/* Referral Code Section */}
             <div className="bg-white rounded-lg shadow-md p-6 mb-8">
@@ -204,13 +292,14 @@ const ReferralPage = () => {
                 <div className="flex-1">
                   <div className="bg-gray-50 border border-gray-300 rounded-lg p-4">
                     <code className="text-2xl font-mono font-bold text-gray-900">
-                      {userProfile.referralCode}
+                      {userProfile?.referralCode || "Loading..."}
                     </code>
                   </div>
                 </div>
                 <button
-                  onClick={() => copyToClipboard(userProfile.referralCode)}
-                  className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition flex items-center gap-2"
+                  onClick={() => copyToClipboard(userProfile?.referralCode)}
+                  disabled={!userProfile?.referralCode}
+                  className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition flex items-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                   <FaCopy className="w-4 h-4" />
                   {copied ? "Copied!" : "Copy Code"}
@@ -227,16 +316,24 @@ const ReferralPage = () => {
                 <div className="flex-1">
                   <div className="bg-gray-50 border border-gray-300 rounded-lg p-4 overflow-x-auto">
                     <code className="text-sm font-mono text-gray-900 break-all">
-                      {origin}/signup?ref={userProfile?.referralCode}
+                      {isClient && userProfile?.referralCode
+                        ? `${getOrigin()}/signup?ref=${
+                            userProfile.referralCode
+                          }`
+                        : "Loading..."}
                     </code>
                   </div>
                 </div>
                 <button
                   onClick={() => {
-                    const link = `${origin}/signup?ref=${userProfile?.referralCode}`;
+                    if (!isClient || !userProfile?.referralCode) return;
+                    const link = `${getOrigin()}/signup?ref=${
+                      userProfile.referralCode
+                    }`;
                     copyToClipboard(link);
                   }}
-                  className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition flex items-center gap-2"
+                  disabled={!isClient || !userProfile?.referralCode}
+                  className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition flex items-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                   <FaLink className="w-4 h-4" />
                   Copy Link
@@ -252,7 +349,8 @@ const ReferralPage = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <button
                   onClick={shareOnWhatsApp}
-                  className="bg-green-500 text-white p-4 rounded-lg hover:bg-green-600 transition flex items-center justify-center gap-2"
+                  disabled={!isClient || !userProfile?.referralCode}
+                  className="bg-green-500 text-white p-4 rounded-lg hover:bg-green-600 transition flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                   <FaWhatsapp className="w-5 h-5" />
                   WhatsApp
@@ -260,7 +358,8 @@ const ReferralPage = () => {
 
                 <button
                   onClick={shareViaSocialMedia}
-                  className="bg-purple-500 text-white p-4 rounded-lg hover:bg-purple-600 transition flex items-center justify-center gap-2"
+                  disabled={!isClient || !userProfile?.referralCode}
+                  className="bg-purple-500 text-white p-4 rounded-lg hover:bg-purple-600 transition flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                   <FaShareAlt className="w-5 h-5" />
                   Share
@@ -336,7 +435,5 @@ const ReferralPage = () => {
     </div>
   );
 };
-
-export const dynamic = "force-dynamic";
 
 export default ReferralPage;
