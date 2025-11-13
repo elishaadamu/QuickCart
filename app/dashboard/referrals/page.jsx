@@ -68,8 +68,11 @@ const ReferralPage = () => {
     };
 
     fetchInitialData();
-    setOrigin(window.location.origin);
   }, []);
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []); // This effect runs only on the client
 
   const generateFallbackReferralData = () => {
     // This function is now a fallback for API errors.
