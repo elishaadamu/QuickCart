@@ -86,6 +86,10 @@ export const API_CONFIG = {
     FUNDING_HISTORY: {
       GET: "/wallet/",
     },
+    REFERRAL: {
+      GET_COMMISSIONS: "/referral/commissions/", // append userId
+      GET_PROGRESS: "/referral/progress/", // append userId
+    },
   },
 };
 

@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { useAppContext } from "@/context/AppContext";
 import {
   FaCopy,
   FaShareAlt,
@@ -9,6 +10,7 @@ import {
   FaUsers,
   FaCoins,
   FaGift,
+  FaUserCheck,
 } from "react-icons/fa";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -17,7 +19,7 @@ import { decryptData } from "@/lib/encryption";
 import { apiUrl, API_CONFIG } from "@/configs/api";
 
 const ReferralPage = () => {
-  const [userData, setUserData] = useState(null);
+  const { userData } = useAppContext();
   const [referralData, setReferralData] = useState({
     referralCode: "",
     referralLink: "",
@@ -30,78 +32,84 @@ const ReferralPage = () => {
       pending: 0,
     },
   });
+  const [referredUsers, setReferredUsers] = useState([]);
   const [userProfile, setUserProfile] = useState("");
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [referredNum, setReferredNum] = useState(0);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
   useEffect(() => {
-    if (!isClient) return;
+    if (!isClient || !userData?.id) return;
 
     const fetchInitialData = async () => {
       setLoading(true);
       try {
-        const encryptedUser = localStorage.getItem("user");
-        if (!encryptedUser) {
-          toast.error("User not found. Please log in again.");
-          setLoading(false);
-          return;
-        }
+        // Fetch profile, commissions, and progress concurrently
+        const [profileRes, commissionsRes, progressRes] = await Promise.all([
+          axios.get(
+            `${apiUrl(API_CONFIG.ENDPOINTS.PROFILE.GET)}/${userData.id}`
+          ),
+          axios.get(
+            `${apiUrl(API_CONFIG.ENDPOINTS.REFERRAL.GET_COMMISSIONS)}${
+              userData.id
+            }`
+          ),
+          axios.get(
+            `${apiUrl(API_CONFIG.ENDPOINTS.REFERRAL.GET_PROGRESS)}${
+              userData.id
+            }`
+          ),
+        ]);
 
-        const decryptedUserData = decryptData(encryptedUser);
-        setUserData(decryptedUserData);
+        // Log responses for debugging
+        console.log("Profile Response:", profileRes.data);
+        console.log("Commissions Response:", commissionsRes.data);
+        console.log("Progress Response:", progressRes.data);
 
-        // Fetch profile to get the referral code
-        const response = await axios.get(
-          `${apiUrl(API_CONFIG.ENDPOINTS.PROFILE.GET)}/${decryptedUserData.id}`
+        // Set user profile and referral code
+        const fetchedProfile = profileRes?.data?.user;
+        setUserProfile(fetchedProfile);
+
+        // Set referral stats
+        const commissionsData = commissionsRes?.data;
+        const progressData = progressRes?.data?.data;
+
+        setReferredNum(progressData || 0);
+
+        const totalEarned = (commissionsData?.commissions || []).reduce(
+          (sum, commission) => sum + commission.commissionAmount,
+          0
         );
 
-        const userProfile = response?.data?.user;
-        setUserProfile(userProfile);
+        setReferredUsers(progressData.referredPeople || []);
+        setReferralData((prev) => ({
+          ...prev,
+          earnedAmount: totalEarned || 0,
+          totalReferrals: progressData.numberOfPeopleReferred || 0,
+        }));
       } catch (error) {
         console.error("Error fetching referral data:", error);
         toast.error("Failed to load referral data. Using defaults.");
-        // Fallback to generating a code if APIs fail
-        generateFallbackReferralData();
+        // Fallback for API errors
+        setReferralData({
+          referralCode: "N/A",
+          referralLink: "",
+          totalReferrals: 0,
+          earnedAmount: 0,
+        });
+        setReferredUsers([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchInitialData();
-  }, [isClient]);
-
-  const generateFallbackReferralData = () => {
-    if (!isClient) return;
-
-    // This function is now a fallback for API errors.
-    const referralCode = userProfile?.referralCode || generateReferralCode();
-    if (referralCode) {
-      const referralLink = `${window.location.origin}/signup?ref=${referralCode}`;
-      setReferralData({
-        referralCode,
-        referralLink,
-        totalReferrals: 0,
-        earnedAmount: 0,
-        pendingAmount: 0,
-        referralStats: {
-          total: 0,
-          completed: 0,
-          pending: 0,
-        },
-      });
-    }
-  };
-
-  const generateReferralCode = () => {
-    if (!isClient) return "";
-    // Simple fallback referral code generation
-    return `REF${Math.random().toString(36).substr(2, 8).toUpperCase()}`;
-  };
+  }, [isClient, userData]);
 
   const copyToClipboard = (text) => {
     if (!isClient || !text) {
@@ -191,7 +199,7 @@ const ReferralPage = () => {
                   <FaUsers className="w-6 h-6 text-blue-600" />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-1">
-                  {referralData.totalReferrals}
+                  {referredNum.numberOfPeopleReferred}
                 </h3>
                 <p className="text-gray-600">Total Referrals</p>
               </div>
@@ -205,6 +213,74 @@ const ReferralPage = () => {
                 </h3>
                 <p className="text-gray-600">Total Earned</p>
               </div>
+            </div>
+            {/* Referred Users Table */}
+            <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                Your Referrals
+              </h2>
+              {referredUsers.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          Name
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          EMAIL
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          PHONE NUMBER
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          ROLE
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {referredUsers.map((user, index) => (
+                        <tr key={index}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {user.name}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {user.email}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {user.phone}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
+                            {user.role}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <FaUserCheck className="mx-auto w-12 h-12 text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900">
+                    No referrals yet
+                  </h3>
+                  <p className="text-gray-600">
+                    Share your code to get started!
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Referral Code Section */}
