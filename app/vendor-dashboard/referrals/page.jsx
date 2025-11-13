@@ -33,8 +33,15 @@ const ReferralPage = () => {
   const [userProfile, setUserProfile] = useState("");
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
+
     const fetchInitialData = async () => {
       setLoading(true);
       try {
@@ -54,7 +61,6 @@ const ReferralPage = () => {
         );
 
         const userProfile = response?.data?.user;
-
         setUserProfile(userProfile);
       } catch (error) {
         console.error("Error fetching referral data:", error);
@@ -67,11 +73,13 @@ const ReferralPage = () => {
     };
 
     fetchInitialData();
-  }, []);
+  }, [isClient]);
 
   const generateFallbackReferralData = () => {
+    if (!isClient) return;
+
     // This function is now a fallback for API errors.
-    const referralCode = generateReferralCode();
+    const referralCode = userProfile?.referralCode || generateReferralCode();
     if (referralCode) {
       const referralLink = `${window.location.origin}/signup?ref=${referralCode}`;
       setReferralData({
@@ -89,8 +97,14 @@ const ReferralPage = () => {
     }
   };
 
+  const generateReferralCode = () => {
+    if (!isClient) return "";
+    // Simple fallback referral code generation
+    return `REF${Math.random().toString(36).substr(2, 8).toUpperCase()}`;
+  };
+
   const copyToClipboard = (text) => {
-    if (!text) {
+    if (!isClient || !text) {
       toast.warn("Nothing to copy.");
       return;
     }
@@ -98,7 +112,7 @@ const ReferralPage = () => {
       () => {
         toast.success("Copied to clipboard!");
         setCopied(true);
-        setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
+        setTimeout(() => setCopied(false), 2000);
       },
       (err) => {
         console.error("Failed to copy text: ", err);
@@ -108,6 +122,8 @@ const ReferralPage = () => {
   };
 
   const shareOnWhatsApp = () => {
+    if (!isClient) return;
+
     const referralCode = userProfile?.referralCode;
     if (!referralCode) {
       toast.error("Referral code not available.");
@@ -120,6 +136,8 @@ const ReferralPage = () => {
   };
 
   const shareViaSocialMedia = () => {
+    if (!isClient) return;
+
     const referralCode = userProfile?.referralCode;
     if (!referralCode) {
       toast.error("Referral code not available.");
@@ -138,6 +156,12 @@ const ReferralPage = () => {
     } else {
       copyToClipboard(referralLink);
     }
+  };
+
+  // Get origin safely for SSR
+  const getOrigin = () => {
+    if (!isClient) return "";
+    return window.location.origin;
   };
 
   return (
@@ -192,13 +216,14 @@ const ReferralPage = () => {
                 <div className="flex-1">
                   <div className="bg-gray-50 border border-gray-300 rounded-lg p-4">
                     <code className="text-2xl font-mono font-bold text-gray-900">
-                      {userProfile.referralCode}
+                      {userProfile?.referralCode || "Loading..."}
                     </code>
                   </div>
                 </div>
                 <button
-                  onClick={() => copyToClipboard(userProfile.referralCode)}
-                  className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition flex items-center gap-2"
+                  onClick={() => copyToClipboard(userProfile?.referralCode)}
+                  disabled={!userProfile?.referralCode}
+                  className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition flex items-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                   <FaCopy className="w-4 h-4" />
                   {copied ? "Copied!" : "Copy Code"}
@@ -215,17 +240,24 @@ const ReferralPage = () => {
                 <div className="flex-1">
                   <div className="bg-gray-50 border border-gray-300 rounded-lg p-4 overflow-x-auto">
                     <code className="text-sm font-mono text-gray-900 break-all">
-                      {window.location.origin}/signup?ref=
-                      {userProfile?.referralCode}
+                      {isClient && userProfile?.referralCode
+                        ? `${getOrigin()}/signup?ref=${
+                            userProfile.referralCode
+                          }`
+                        : "Loading..."}
                     </code>
                   </div>
                 </div>
                 <button
                   onClick={() => {
-                    const link = `${window.location.origin}/signup?ref=${userProfile?.referralCode}`;
+                    if (!isClient || !userProfile?.referralCode) return;
+                    const link = `${getOrigin()}/signup?ref=${
+                      userProfile.referralCode
+                    }`;
                     copyToClipboard(link);
                   }}
-                  className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition flex items-center gap-2"
+                  disabled={!isClient || !userProfile?.referralCode}
+                  className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition flex items-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                   <FaLink className="w-4 h-4" />
                   Copy Link
@@ -241,7 +273,8 @@ const ReferralPage = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <button
                   onClick={shareOnWhatsApp}
-                  className="bg-green-500 text-white p-4 rounded-lg hover:bg-green-600 transition flex items-center justify-center gap-2"
+                  disabled={!isClient || !userProfile?.referralCode}
+                  className="bg-green-500 text-white p-4 rounded-lg hover:bg-green-600 transition flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                   <FaWhatsapp className="w-5 h-5" />
                   WhatsApp
@@ -249,7 +282,8 @@ const ReferralPage = () => {
 
                 <button
                   onClick={shareViaSocialMedia}
-                  className="bg-purple-500 text-white p-4 rounded-lg hover:bg-purple-600 transition flex items-center justify-center gap-2"
+                  disabled={!isClient || !userProfile?.referralCode}
+                  className="bg-purple-500 text-white p-4 rounded-lg hover:bg-purple-600 transition flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                   <FaShareAlt className="w-5 h-5" />
                   Share
