@@ -15,7 +15,7 @@ import { useAppContext } from "@/context/AppContext";
 
 const page = () => {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  // const searchParams = useSearchParams(); // Removed direct call to avoid SSR issues
   const { fetchUserData } = useAppContext();
   const [formData, setFormData] = useState({
     firstName: "",
@@ -41,12 +41,19 @@ const page = () => {
   }, [formData.firstName, formData.phone]);
 
   useEffect(() => {
-    const refCodeFromUrl = searchParams.get("ref");
-    if (refCodeFromUrl) {
-      setFormData((prev) => ({ ...prev, appliedReferralCode: refCodeFromUrl }));
-      toast.info("Referral code applied!");
+    // Only access window.location.search on the client side
+    if (typeof window !== "undefined") {
+      const currentSearchParams = new URLSearchParams(window.location.search);
+      const refCodeFromUrl = currentSearchParams.get("ref");
+      if (refCodeFromUrl) {
+        setFormData((prev) => ({
+          ...prev,
+          appliedReferralCode: refCodeFromUrl,
+        }));
+        toast.info("Referral code applied!");
+      }
     }
-  }, [searchParams]);
+  }, []); // Empty dependency array to run once on mount
 
   useEffect(() => {
     if (localStorage.getItem("user")) {
