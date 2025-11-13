@@ -281,6 +281,9 @@ const DashboardHome = () => {
       email: userData?.email,
       amount: amount * 100,
       ref: new Date().getTime().toString(),
+      metadata: {
+        userId: userData?.id,
+      },
       onSuccess: (transaction) => {
         onSuccess(transaction);
       },
@@ -293,14 +296,6 @@ const DashboardHome = () => {
   const onSuccess = async (transaction) => {
     setLoading(true);
     try {
-      await axios.post(
-        apiUrl(API_CONFIG.ENDPOINTS.ACCOUNT.FUND + userData.id),
-        {
-          amount: amount,
-          reference: transaction.reference,
-        }
-      );
-
       toast.success("Wallet funded successfully!");
       setAmount("");
       setShowFundModal(false);
