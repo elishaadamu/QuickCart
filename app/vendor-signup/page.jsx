@@ -4,7 +4,7 @@ import Image from "next/image";
 import Logo from "@/assets/logo/logo.png";
 
 import Link from "next/link";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -13,7 +13,7 @@ import { encryptData } from "@/lib/encryption";
 import { apiUrl, API_CONFIG } from "@/configs/api";
 import { useAppContext } from "@/context/AppContext";
 
-const VendorSignupPage = () => {
+const VendorSignupForm = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { fetchUserData } = useAppContext();
@@ -231,6 +231,14 @@ const VendorSignupPage = () => {
         </p>
       </form>
     </div>
+  );
+};
+
+const VendorSignupPage = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <VendorSignupForm />
+    </Suspense>
   );
 };
 
