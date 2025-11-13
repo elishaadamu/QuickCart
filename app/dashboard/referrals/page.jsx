@@ -33,6 +33,7 @@ const ReferralPage = () => {
   const [userProfile, setUserProfile] = useState("");
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [origin, setOrigin] = useState("");
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -67,13 +68,14 @@ const ReferralPage = () => {
     };
 
     fetchInitialData();
+    setOrigin(window.location.origin);
   }, []);
 
   const generateFallbackReferralData = () => {
     // This function is now a fallback for API errors.
     const referralCode = generateReferralCode();
     if (referralCode) {
-      const referralLink = `${window.location.origin}/signup?ref=${referralCode}`;
+      const referralLink = `${origin}/signup?ref=${referralCode}`;
       setReferralData({
         referralCode,
         referralLink,
@@ -113,7 +115,7 @@ const ReferralPage = () => {
       toast.error("Referral code not available.");
       return;
     }
-    const referralLink = `${window.location.origin}/signup?ref=${referralCode}`;
+    const referralLink = `${origin}/signup?ref=${referralCode}`;
     const message = `Join me on Kasuwar Zamani! Use my referral code: ${referralCode}\n\nSign up here: ${referralLink}`;
     const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank");
@@ -125,7 +127,7 @@ const ReferralPage = () => {
       toast.error("Referral code not available.");
       return;
     }
-    const referralLink = `${window.location.origin}/signup?ref=${referralCode}`;
+    const referralLink = `${origin}/signup?ref=${referralCode}`;
     if (navigator.share) {
       navigator
         .share({
@@ -215,14 +217,13 @@ const ReferralPage = () => {
                 <div className="flex-1">
                   <div className="bg-gray-50 border border-gray-300 rounded-lg p-4 overflow-x-auto">
                     <code className="text-sm font-mono text-gray-900 break-all">
-                      {window.location.origin}/signup?ref=
-                      {userProfile?.referralCode}
+                      {origin}/signup?ref={userProfile?.referralCode}
                     </code>
                   </div>
                 </div>
                 <button
                   onClick={() => {
-                    const link = `${window.location.origin}/signup?ref=${userProfile?.referralCode}`;
+                    const link = `${origin}/signup?ref=${userProfile?.referralCode}`;
                     copyToClipboard(link);
                   }}
                   className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition flex items-center gap-2"
