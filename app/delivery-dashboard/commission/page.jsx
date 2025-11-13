@@ -14,7 +14,10 @@ const Commission = () => {
 
   const fetchCommissions = async () => {
     try {
-      const token = localStorage.getItem("deliveryToken");
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("deliveryToken")
+          : null;
       const response = await axios.get(
         apiUrl(API_CONFIG.ENDPOINTS.DELIVERY.COMMISSIONS),
         {

@@ -39,7 +39,8 @@ const ReferralPage = () => {
     const fetchInitialData = async () => {
       setLoading(true);
       try {
-        const encryptedUser = localStorage.getItem("user");
+        const encryptedUser =
+          typeof window !== "undefined" ? localStorage.getItem("user") : null;
         if (!encryptedUser) {
           toast.error("User not found. Please log in again.");
           setLoading(false);
@@ -71,8 +72,10 @@ const ReferralPage = () => {
   }, []);
 
   useEffect(() => {
-    setOrigin(window.location.origin);
-  }, []); // This effect runs only on the client
+    if (typeof window !== "undefined") {
+      setOrigin(window.location.origin);
+    }
+  }, []);
 
   const generateFallbackReferralData = () => {
     // This function is now a fallback for API errors.
@@ -99,17 +102,19 @@ const ReferralPage = () => {
       toast.warn("Nothing to copy.");
       return;
     }
-    navigator.clipboard.writeText(text).then(
-      () => {
-        toast.success("Copied to clipboard!");
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
-      },
-      (err) => {
-        console.error("Failed to copy text: ", err);
-        toast.error("Failed to copy.");
-      }
-    );
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(
+        () => {
+          toast.success("Copied to clipboard!");
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
+        },
+        (err) => {
+          console.error("Failed to copy text: ", err);
+          toast.error("Failed to copy.");
+        }
+      );
+    }
   };
 
   const shareOnWhatsApp = () => {
@@ -121,7 +126,9 @@ const ReferralPage = () => {
     const referralLink = `${origin}/signup?ref=${referralCode}`;
     const message = `Join me on Kasuwar Zamani! Use my referral code: ${referralCode}\n\nSign up here: ${referralLink}`;
     const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
-    window.open(url, "_blank");
+    if (typeof window !== "undefined") {
+      window.open(url, "_blank");
+    }
   };
 
   const shareViaSocialMedia = () => {
@@ -131,7 +138,7 @@ const ReferralPage = () => {
       return;
     }
     const referralLink = `${origin}/signup?ref=${referralCode}`;
-    if (navigator.share) {
+    if (typeof navigator !== "undefined" && navigator.share) {
       navigator
         .share({
           title: "Join me on this amazing platform!",
@@ -329,5 +336,7 @@ const ReferralPage = () => {
     </div>
   );
 };
+
+export const dynamic = "force-dynamic";
 
 export default ReferralPage;
