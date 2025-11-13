@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import axios from "axios";
 import { decryptData } from "@/lib/encryption";
@@ -14,11 +14,38 @@ import {
   FaPlus,
   FaWallet,
   FaCreditCard,
+  FaShoppingCart,
   FaUniversity as FaBank,
   FaUserCircle,
 } from "react-icons/fa";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  TimeScale,
+} from "chart.js";
+import { Pie, Line } from "react-chartjs-2";
+import "chartjs-adapter-date-fns";
+import { startOfWeek, startOfMonth, format, subMonths } from "date-fns";
+
+ChartJS.register(
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  TimeScale
+);
 
 const DashboardHome = () => {
   const { userData: contextUserData, authLoading } = useAppContext();
@@ -26,7 +53,7 @@ const DashboardHome = () => {
   const [dashboardData, setDashboardData] = useState({
     userName: "",
     totalOrders: 0,
-    pendingOrders: 0,
+    orders: [],
     recentOrders: [],
     totalProducts: 0,
   });
@@ -37,6 +64,109 @@ const DashboardHome = () => {
   const [amount, setAmount] = useState("");
   const [nin, setNin] = useState("");
   const [showCreateAccount, setShowCreateAccount] = useState(false);
+  const [timePeriod, setTimePeriod] = useState("monthly"); // 'monthly' or 'weekly'
+
+  const orderStatusCounts = useMemo(() => {
+    return dashboardData.orders.reduce(
+      (acc, order) => {
+        acc[order.status] = (acc[order.status] || 0) + 1;
+        return acc;
+      },
+      {
+        pending: 0,
+        confirmed: 0,
+        processing: 0,
+        shipped: 0,
+        delivered: 0,
+        cancelled: 0,
+      }
+    );
+  }, [dashboardData.orders]);
+
+  const chartData = useMemo(() => {
+    const hasOrders = dashboardData.orders.length > 0;
+    const data = hasOrders
+      ? [
+          orderStatusCounts.pending + orderStatusCounts.confirmed,
+          orderStatusCounts.processing + orderStatusCounts.shipped,
+          orderStatusCounts.delivered,
+          orderStatusCounts.cancelled,
+        ]
+      : [5, 2, 8, 1]; // Demo data
+
+    return {
+      labels: ["Pending", "Shipped", "Delivered", "Cancelled"],
+      datasets: [
+        {
+          label: "Order Status",
+          data: data,
+          backgroundColor: ["#FBBF24", "#3B82F6", "#10B981", "#EF4444"],
+          borderColor: ["#F59E0B", "#2563EB", "#059669", "#DC2626"],
+          borderWidth: 1,
+        },
+      ],
+    };
+  }, [orderStatusCounts, dashboardData.orders]);
+
+  const lineChartData = useMemo(() => {
+    const hasOrders = dashboardData.orders.length > 0;
+    const now = new Date();
+    let labels = [];
+    let dataPoints = [];
+
+    if (timePeriod === "monthly") {
+      labels = Array.from({ length: 12 }, (_, i) =>
+        format(subMonths(now, 11 - i), "MMM yyyy")
+      );
+      if (hasOrders) {
+        const monthlyData = new Map(labels.map((label) => [label, 0]));
+        dashboardData.orders.forEach((order) => {
+          const orderMonth = format(new Date(order.createdAt), "MMM yyyy");
+          if (monthlyData.has(orderMonth)) {
+            monthlyData.set(orderMonth, monthlyData.get(orderMonth) + 1);
+          }
+        });
+        dataPoints = Array.from(monthlyData.values());
+      } else {
+        // Demo data for monthly view
+        dataPoints = [2, 5, 3, 6, 4, 8, 5, 9, 6, 10, 7, 12];
+      }
+    } else {
+      // Weekly
+      labels = Array.from({ length: 12 }, (_, i) =>
+        startOfWeek(subMonths(now, (11 - i) / 4))
+      ).map((date) => `W/C ${format(date, "MMM d")}`);
+      if (hasOrders) {
+        const weeklyData = new Map(labels.map((label) => [label, 0]));
+        dashboardData.orders.forEach((order) => {
+          const weekLabel = `W/C ${format(
+            startOfWeek(new Date(order.createdAt)),
+            "MMM d"
+          )}`;
+          if (weeklyData.has(weekLabel)) {
+            weeklyData.set(weekLabel, weeklyData.get(weekLabel) + 1);
+          }
+        });
+        dataPoints = Array.from(weeklyData.values());
+      } else {
+        // Demo data for weekly view
+        dataPoints = [1, 2, 1, 3, 2, 4, 2, 5, 3, 5, 4, 6];
+      }
+    }
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: "Number of Orders",
+          data: dataPoints,
+          borderColor: "rgb(59, 130, 246)",
+          backgroundColor: "rgba(59, 130, 246, 0.5)",
+          tension: 0.3,
+        },
+      ],
+    };
+  }, [dashboardData.orders, timePeriod]);
 
   const fetchAccountDetails = async () => {
     setLoading(true);
@@ -51,7 +181,6 @@ const DashboardHome = () => {
       }
     } catch (error) {
       console.error("Error fetching account details:", error);
-      toast.error("Failed to fetch account details");
     } finally {
       setLoading(false);
     }
@@ -77,27 +206,21 @@ const DashboardHome = () => {
           const [ordersResponse, productsResponse] = await Promise.all([
             axios.get(
               apiUrl(
-                API_CONFIG.ENDPOINTS.ORDER.GET_SELLER_ORDERS +
+                API_CONFIG.ENDPOINTS.ORDER.GET_CUSTOMER_ORDERS +
                   "/" +
                   decryptedUserData.id
               )
             ),
-            axios.get(
-              apiUrl(
-                API_CONFIG.ENDPOINTS.PRODUCT.GET_SELLER_PRODUCTS +
-                  decryptedUserData.id
-              )
-            ),
+            // For customers, we don't need to fetch products.
+            // If you need other customer-specific data, add the call here.
+            Promise.resolve({ data: [] }), // Resolves immediately
           ]);
 
           if (ordersResponse.data.orders) {
             const orders = ordersResponse.data.orders;
             setDashboardData((prev) => ({
               ...prev,
-              totalOrders: orders.length,
-              pendingOrders: orders.filter(
-                (order) => order.status === "pending"
-              ).length,
+              orders: orders,
               recentOrders: orders.slice(0, 5),
             }));
           }
@@ -117,6 +240,7 @@ const DashboardHome = () => {
         setLoading(false);
       }
     };
+
     fetchDashboardData();
   }, []);
 
@@ -156,6 +280,9 @@ const DashboardHome = () => {
       email: userData?.email, // Convert to kobo
       amount: amount * 100, // Convert to kobo
       ref: new Date().getTime().toString(),
+      metadata: {
+        userId: userData?.id,
+      },
       onSuccess: (transaction) => {
         onSuccess(transaction);
       },
@@ -168,14 +295,6 @@ const DashboardHome = () => {
   const onSuccess = async (transaction) => {
     setLoading(true);
     try {
-      await axios.post(
-        apiUrl(API_CONFIG.ENDPOINTS.ACCOUNT.FUND + userData.id),
-        {
-          amount: amount,
-          reference: transaction.reference,
-        }
-      );
-
       toast.success("Wallet funded successfully!");
       setAmount("");
       setShowFundModal(false);
@@ -188,7 +307,6 @@ const DashboardHome = () => {
       setWalletBalance(walletResponse.data.data);
     } catch (error) {
       console.error("Error processing payment:", error);
-      toast.error("Failed to process payment. Please contact support.");
     } finally {
       setLoading(false);
     }
@@ -214,7 +332,6 @@ const DashboardHome = () => {
       await fetchAccountDetails();
     } catch (error) {
       console.error("Error creating account:", error);
-      toast.error(error.response?.data?.message || "Failed to create account.");
     } finally {
       setLoading(false);
     }
@@ -222,7 +339,6 @@ const DashboardHome = () => {
 
   return (
     <div className="max-w-6xl mx-auto pb-20 md:pb-0 px-4">
-      <ToastContainer />
       {loading ? (
         <div className="flex justify-center items-center min-h-64">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900"></div>
@@ -237,6 +353,56 @@ const DashboardHome = () => {
             <p className="mt-1 text-gray-600 text-sm">
               Here's what's happening with your account today.
             </p>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="mb-6">
+            <h2 className="text-base font-semibold text-gray-800 mb-3">
+              Quick Actions
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <Link
+                href="/"
+                className="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow flex flex-col items-center justify-center text-center"
+              >
+                <FaShoppingCart className="w-6 h-6 text-blue-600 mb-2" />
+                <span className="text-sm font-medium text-gray-700">
+                  Shop Now
+                </span>
+              </Link>
+              <Link
+                href="/vendor-dashboard/track-order"
+                className="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow flex flex-col items-center justify-center text-center"
+              >
+                <FaTruck className="w-6 h-6 text-green-600 mb-2" />
+                <span className="text-sm font-medium text-gray-700">
+                  Track Order
+                </span>
+              </Link>
+              <Link
+                href="/vendor-dashboard/request-delivery"
+                className="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow flex flex-col items-center justify-center text-center"
+              >
+                <FaBoxOpen className="w-6 h-6 text-purple-600 mb-2" />
+                <span className="text-sm font-medium text-gray-700">
+                  Delivery
+                </span>
+              </Link>
+              <Link
+                href="/vendor-dashboard/inbox"
+                className="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow flex flex-col items-center justify-center text-center"
+              >
+                <FaCommentDots className="w-6 h-6 text-yellow-600 mb-2" />
+                <span className="text-sm font-medium text-gray-700">Chat</span>
+              </Link>
+              <Link
+                href="/vendor-dashboard/personal-details"
+                className="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow flex flex-col items-center justify-center text-center"
+              >
+                <FaUser className="w-6 h-6 text-red-600 mb-2" />
+                <span className="text-sm font-medium text-gray-700">Me</span>
+              </Link>
+            </div>
           </div>
 
           {/* Wallet & Account Section - Compact */}
@@ -280,9 +446,12 @@ const DashboardHome = () => {
                           Withdraw funds
                         </button>
                       </Link>
-                      <button className="bg-white/20 text-white px-3 py-1.5 rounded text-xs hover:bg-white/30 transition">
-                        History
-                      </button>
+                      <Link href="/vendor-dashboard/funding-history">
+                        {" "}
+                        <button className="bg-white/20 text-white px-3 py-1.5 rounded text-xs hover:bg-white/30 transition">
+                          Funding History
+                        </button>
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -356,116 +525,81 @@ const DashboardHome = () => {
             </div>
           </div>
 
-          {/* Stats Grid - Compact */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-            {/* Products Stats */}
-            <div className="bg-white rounded-lg shadow p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-gray-600">
-                    Total Products
-                  </p>
-                  <p className="text-xl font-bold text-gray-900">
-                    {dashboardData.totalProducts}
-                  </p>
-                </div>
-                <div className="p-2 bg-gray-100 rounded-full">
-                  <svg
-                    className="w-4 h-4 text-gray-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                    ></path>
-                  </svg>
-                </div>
-              </div>
-              <div className="mt-3">
-                <Link
-                  href="/vendor-dashboard/products-list"
-                  className="text-xs text-gray-600 hover:text-gray-900"
-                >
-                  View products →
-                </Link>
-              </div>
-            </div>
-
-            {/* Total Orders */}
-            <div className="bg-white rounded-lg shadow p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-gray-600">
+          {/* Order Overview */}
+          <div className="mb-6">
+            <h2 className="text-base font-semibold text-gray-800 mb-3">
+              Orders Details
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Stats */}
+              <div className="md:col-span-1 bg-white p-4 rounded-lg shadow space-y-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-gray-600">
                     Total Orders
                   </p>
-                  <p className="text-xl font-bold text-gray-900">
-                    {dashboardData.totalOrders}
+                  <p className="text-2xl font-bold text-gray-900">
+                    {dashboardData.orders.length}
                   </p>
                 </div>
-                <div className="p-2 bg-green-100 rounded-full">
-                  <svg
-                    className="w-4 h-4 text-green-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                    ></path>
-                  </svg>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-yellow-600">Pending</p>
+                  <p className="text-lg font-semibold text-yellow-600">
+                    {orderStatusCounts.pending + orderStatusCounts.confirmed}
+                  </p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-green-600">
+                    Delivered
+                  </p>
+                  <p className="text-lg font-semibold text-green-600">
+                    {orderStatusCounts.delivered}
+                  </p>
                 </div>
               </div>
-              <div className="mt-3">
-                <Link
-                  href="/vendor-dashboard/orders"
-                  className="text-xs text-gray-600 hover:text-gray-900"
-                >
-                  View orders →
-                </Link>
+              {/* Chart */}
+              <div className="md:col-span-2 bg-white p-4 rounded-lg shadow flex justify-center items-center">
+                <div className="w-full h-56">
+                  <Pie
+                    data={chartData}
+                    options={{ responsive: true, maintainAspectRatio: false }}
+                  />
+                </div>
               </div>
             </div>
+          </div>
 
-            {/* Pending Orders */}
-            <div className="bg-white rounded-lg shadow p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-gray-600">
-                    Pending Orders
-                  </p>
-                  <p className="text-xl font-bold text-gray-900">
-                    {dashboardData.pendingOrders}
-                  </p>
-                </div>
-                <div className="p-2 bg-yellow-100 rounded-full">
-                  <svg
-                    className="w-4 h-4 text-yellow-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    ></path>
-                  </svg>
-                </div>
-              </div>
-              <div className="mt-3">
-                <Link
-                  href="/vendor-dashboard/orders"
-                  className="text-xs text-gray-600 hover:text-gray-900"
-                >
-                  View pending →
-                </Link>
+          {/* Order Trend Chart */}
+          <div className="mb-6">
+            <div className="flex justify-between items-center mb-3">
+              <h2 className="text-base font-semibold text-gray-800">
+                Order Trend
+              </h2>
+              <select
+                value={timePeriod}
+                onChange={(e) => setTimePeriod(e.target.value)}
+                className="block px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+              >
+                <option value="monthly">Monthly</option>
+                <option value="weekly">Weekly</option>
+              </select>
+            </div>
+            <div className="bg-white p-4 rounded-lg shadow">
+              <div className="h-64">
+                <Line
+                  data={lineChartData}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        display: false,
+                      },
+                    },
+                    scales: {
+                      y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                    },
+                  }}
+                />
               </div>
             </div>
           </div>
@@ -499,7 +633,7 @@ const DashboardHome = () => {
             </div>
             <div className="mt-3">
               <Link
-                href="/vendor-dashboard/referral"
+                href="/dashboard/referrals"
                 className="text-xs text-blue-600 hover:text-blue-800"
               >
                 Get referral link →
@@ -514,7 +648,7 @@ const DashboardHome = () => {
             </h2>
             {dashboardData.recentOrders.length > 0 ? (
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 text-xs">
+                <table className="min-w-full divide-y divide-gray-200 text-xs text-left">
                   <thead>
                     <tr>
                       <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">
@@ -535,7 +669,7 @@ const DashboardHome = () => {
                     {dashboardData.recentOrders.map((order) => (
                       <tr key={order._id}>
                         <td className="px-3 py-2 whitespace-nowrap font-medium text-gray-900">
-                          #{order._id.slice(-6)}
+                          #{order._id.slice(-6).toUpperCase()}
                         </td>
                         <td className="px-3 py-2 whitespace-nowrap text-gray-500">
                           {new Date(order.createdAt).toLocaleDateString()}
@@ -551,7 +685,8 @@ const DashboardHome = () => {
                                 : "bg-gray-100 text-gray-800"
                             }`}
                           >
-                            {order.status}
+                            {order.status.charAt(0).toUpperCase() +
+                              order.status.slice(1)}
                           </span>
                         </td>
                         <td className="px-3 py-2 whitespace-nowrap text-gray-500">
@@ -569,7 +704,7 @@ const DashboardHome = () => {
             )}
             <div className="mt-3">
               <Link
-                href="/vendor-dashboard/orders"
+                href="/dashboard/orders"
                 className="text-xs text-gray-600 hover:text-gray-900"
               >
                 View all orders →
@@ -662,35 +797,35 @@ const DashboardHome = () => {
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 md:hidden z-40">
         <div className="flex justify-around items-center h-14">
           <Link
-            href="/vendor-dashboard"
+            href="/dashboard"
             className="flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 text-xs"
           >
             <FaHome className="w-5 h-5 mb-1" />
             <span>Home</span>
           </Link>
           <Link
-            href="/vendor-dashboard/inbox"
+            href="/dashboard/inbox"
             className="flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 text-xs"
           >
             <FaCommentDots className="w-5 h-5 mb-1" />
             <span>Chat</span>
           </Link>
           <Link
-            href="/vendor-dashboard/add-products"
+            href="/dashboard/request-delivery"
             className="flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 text-xs"
           >
             <FaTruck className="w-5 h-5 mb-1" />
-            <span>Add</span>
+            <span>Delivery</span>
           </Link>
           <Link
-            href="/vendor-dashboard/orders"
+            href="/dashboard/orders"
             className="flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 text-xs"
           >
             <FaBoxOpen className="w-5 h-5 mb-1" />
             <span>Orders</span>
           </Link>
           <Link
-            href="/vendor-dashboard/settings"
+            href="/dashboard/personal-details"
             className="flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 text-xs"
           >
             <FaUser className="w-5 h-5 mb-1" />

@@ -8,50 +8,65 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { encryptData } from "@/lib/encryption";
 import { apiUrl, API_CONFIG } from "@/configs/api";
 import { useAppContext } from "@/context/AppContext";
 
 const VendorSignupPage = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { fetchUserData } = useAppContext();
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    password: "",
+    newUserReferralCode: "",
+    appliedReferralCode: "",
+  });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [referralCode, setReferralCode] = useState("");
 
   useEffect(() => {
-    if (firstName.trim() && phone.length >= 3) {
-      const generatedCode = `${firstName.toUpperCase().trim()}${phone.slice(
-        -3
-      )}`;
-      setReferralCode(generatedCode);
+    if (formData.firstName.trim() && formData.phone.length >= 3) {
+      const generatedCode = `${formData.firstName
+        .toUpperCase()
+        .trim()}${formData.phone.slice(-3)}`;
+      setFormData((prev) => ({ ...prev, newUserReferralCode: generatedCode }));
     } else {
-      setReferralCode("");
+      setFormData((prev) => ({ ...prev, newUserReferralCode: "" }));
     }
-  }, [firstName, phone]);
+  }, [formData.firstName, formData.phone]);
+
+  // Read referral code from URL on component mount
+  useEffect(() => {
+    const refCodeFromUrl = searchParams.get("ref");
+    if (refCodeFromUrl) {
+      setFormData((prev) => ({ ...prev, appliedReferralCode: refCodeFromUrl }));
+      toast.info("Referral code applied!");
+    }
+  }, [searchParams]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
   const handleSignup = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    if (password.length < 6) {
+    if (formData.password.length < 6) {
       toast.error("Password must be at least 6 characters long.");
       setLoading(false);
       return;
     }
 
     const payload = {
-      firstName,
-      lastName,
-      email,
-      phone,
-      password,
-      referralCode,
+      ...formData,
+      referralCode: formData.appliedReferralCode,
       role: "vendor",
     };
     console.log("Vendor signup payload with referral code:", payload);
@@ -69,7 +84,7 @@ const VendorSignupPage = () => {
 
       fetchUserData();
       toast.success("Vendor signup successful!");
-      router.push("/seller"); // Redirect to seller dashboard after signup
+      router.push("/vendor-dashboard"); // Redirect to seller dashboard after signup
     } catch (error) {
       console.error("Error signing up as vendor:", error);
       toast.error(
@@ -104,8 +119,9 @@ const VendorSignupPage = () => {
             <div className="flex flex-col gap-1 w-1/2">
               <label>First Name</label>
               <input
-                onChange={(e) => setFirstName(e.target.value)}
-                value={firstName}
+                name="firstName"
+                onChange={handleChange}
+                value={formData.firstName}
                 className="border p-2 rounded-md"
                 type="text"
                 placeholder="Enter your first name"
@@ -114,8 +130,9 @@ const VendorSignupPage = () => {
             <div className="flex flex-col gap-1 w-1/2">
               <label>Last Name</label>
               <input
-                onChange={(e) => setLastName(e.target.value)}
-                value={lastName}
+                name="lastName"
+                onChange={handleChange}
+                value={formData.lastName}
                 className="border p-2 rounded-md"
                 type="text"
                 placeholder="Enter your last name"
@@ -125,8 +142,9 @@ const VendorSignupPage = () => {
           <div className="flex flex-col gap-1">
             <label>Email</label>
             <input
-              onChange={(e) => setEmail(e.target.value)}
-              value={email}
+              name="email"
+              onChange={handleChange}
+              value={formData.email}
               className="border p-2 rounded-md"
               type="email"
               placeholder="Enter your email"
@@ -135,29 +153,32 @@ const VendorSignupPage = () => {
           <div className="flex flex-col gap-1">
             <label>Phone Number</label>
             <input
-              onChange={(e) => setPhone(e.target.value)}
-              value={phone}
+              name="phone"
+              onChange={handleChange}
+              value={formData.phone}
               className="border p-2 rounded-md"
               type="tel"
               placeholder="Enter your phone number"
             />
           </div>
+
           <div className="flex flex-col gap-1">
-            <label>Your Referral Code (auto-generated)</label>
+            <label>Referral Code (Optional)</label>
             <input
-              value={referralCode}
-              className="border p-2 rounded-md bg-gray-100 cursor-not-allowed"
+              name="appliedReferralCode"
+              onChange={handleChange}
+              value={formData.appliedReferralCode}
+              className="border p-2 rounded-md"
               type="text"
-              placeholder="Generated referral code"
-              disabled
-              readOnly
+              placeholder="Enter referral code if you have one"
             />
           </div>
           <div className="flex flex-col gap-1 relative">
             <label>Password</label>
             <input
-              onChange={(e) => setPassword(e.target.value)}
-              value={password}
+              name="password"
+              onChange={handleChange}
+              value={formData.password}
               className="border p-2 rounded-md pr-10"
               type={showPassword ? "text" : "password"}
               placeholder="Enter your password"

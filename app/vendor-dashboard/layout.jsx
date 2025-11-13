@@ -11,40 +11,6 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Sidebar from "@/components/vendor-dashboard/Sidebar";
 
-const WalletNotification = ({ onDismiss }) => (
-  <div className="fixed top-4 right-4 w-1/2 md:w-[350px] bg-yellow-200 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg shadow-lg z-50 flex justify-between items-center">
-    <div>
-      <p className="font-bold">Create Your Wallet!</p>
-      <p>
-        You need to create a wallet for transactions.{" "}
-        <Link href="/dashboard/wallet" className="font-bold underline">
-          Create Wallet
-        </Link>
-      </p>
-    </div>
-    {onDismiss && (
-      <button
-        onClick={onDismiss}
-        className="text-yellow-700 hover:text-yellow-900 ml-4"
-      >
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
-      </button>
-    )}
-  </div>
-);
-
 const DashboardLayout = ({ children }) => {
   const router = useRouter();
   const [openOrders, setOpenOrders] = useState(false);
@@ -54,7 +20,10 @@ const DashboardLayout = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [userData, setUserData] = useState(null);
   const [hasWallet, setHasWallet] = useState(true);
-  const [showWalletNotification, setShowWalletNotification] = useState(false);
+  const [showCreateAccount, setShowCreateAccount] = useState(false);
+  const [nin, setNin] = useState("");
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     const user = localStorage.getItem("user");
     if (!user) {
@@ -73,11 +42,11 @@ const DashboardLayout = ({ children }) => {
             apiUrl(API_CONFIG.ENDPOINTS.ACCOUNT.GET + userData.id)
           );
           setHasWallet(true);
-          setShowWalletNotification(false);
+          setShowCreateAccount(false);
         } catch (error) {
-          if (error.status === 404) {
+          if (error.response && error.response.status === 404) {
             setHasWallet(false);
-            setShowWalletNotification(true);
+            setShowCreateAccount(true);
           }
         }
       };
@@ -85,20 +54,76 @@ const DashboardLayout = ({ children }) => {
     }
   }, [userData]);
 
+  const handleCreateAccount = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await axios.post(apiUrl(API_CONFIG.ENDPOINTS.ACCOUNT.CREATE), {
+        userId: userData.id,
+        nin,
+      });
+      toast.success("Virtual account created successfully!");
+      setShowCreateAccount(false);
+      setHasWallet(true);
+      setNin("");
+    } catch (error) {
+      console.error("Failed to create virtual account:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to create virtual account."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("user");
     router.push("/");
   };
 
-  const handleDismissNotification = () => {
-    setShowWalletNotification(false);
-  };
-
   return (
     <div className="min-h-screen bg-gray-100">
       <ToastContainer />
-      {showWalletNotification && (
-        <WalletNotification onDismiss={handleDismissNotification} />
+      {/* Create Virtual Account Modal - Compact */}
+      {showCreateAccount && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
+          <div className="bg-white rounded-lg p-5 w-full max-w-sm">
+            <h3 className="font-semibold mb-3">Create Virtual Account</h3>
+            <p className="mb-3 text-gray-600 text-sm">
+              Create a virtual account to easily fund your wallet and receive
+              payments.
+            </p>
+            <form onSubmit={handleCreateAccount}>
+              <div className="flex flex-col gap-1 mb-3">
+                <label className="text-gray-600 text-sm">NIN</label>
+                <input
+                  onChange={(e) => setNin(e.target.value)}
+                  value={nin}
+                  className="border p-2 rounded text-sm"
+                  type="text"
+                  placeholder="Enter your NIN"
+                  required
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="bg-gray-800 text-white p-2 rounded flex-1 text-sm hover:bg-gray-700 transition disabled:bg-gray-400"
+                >
+                  {loading ? "Creating..." : "Create Account"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowCreateAccount(false)}
+                  className="bg-gray-300 text-gray-700 p-2 rounded flex-1 text-sm hover:bg-gray-400 transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
       {isSidebarOpen && (
         <div

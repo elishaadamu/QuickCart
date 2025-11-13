@@ -4,6 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import Logo from "@/assets/logo/logo.png";
+import { FaTruck } from "react-icons/fa";
+import { FaHistory } from "react-icons/fa";
 import { decryptData } from "@/lib/encryption";
 
 const Sidebar = ({
@@ -90,6 +92,20 @@ const Sidebar = ({
               </svg>
               <span>Home</span>
             </Link>
+            <div className="">
+              <Link href="/vendor-dashboard/track-order">
+                <div
+                  className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors ${
+                    pathname === "/vendor-dashboard/track-order"
+                      ? "bg-gray-700"
+                      : ""
+                  }`}
+                >
+                  <FaTruck className="w-5 h-5" />
+                  <span>Track Order</span>
+                </div>
+              </Link>
+            </div>
 
             <div className="space-y-1">
               <button
@@ -259,6 +275,18 @@ const Sidebar = ({
               <span>Withdrawal Request</span>{" "}
             </Link>
 
+            <Link
+              href="/vendor-dashboard/funding-history"
+              className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors ${
+                pathname === "/vendor-dashboard/funding-history"
+                  ? "bg-gray-700"
+                  : ""
+              }`}
+            >
+              <FaHistory className="w-5 h-5" />
+              <span>Funding History</span>
+            </Link>
+
             <div className="space-y-1">
               <button
                 onClick={() => setOpenMenu(!openMenu)}
@@ -412,9 +440,11 @@ const Sidebar = ({
               </div>
             </div>
             <Link
-              href="/vendor-dashboard/inbox"
+              href="/vendor-dashboard/inbox-support"
               className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors ${
-                pathname === "/vendor-dashboard/inbox" ? "bg-gray-700" : ""
+                pathname === "/vendor-dashboard/inbox-support"
+                  ? "bg-gray-700"
+                  : ""
               }`}
             >
               <svg
@@ -430,7 +460,7 @@ const Sidebar = ({
                   d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                 />
               </svg>
-              <span>Inbox</span>
+              <span>Inbox & Support</span>
             </Link>
 
             <Link
@@ -455,7 +485,7 @@ const Sidebar = ({
               <span>Coupons</span>
             </Link>
 
-            <Link
+            {/* <Link
               href="/vendor-dashboard/support-ticket"
               className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors ${
                 pathname === "/vendor-dashboard/support-ticket"
@@ -477,7 +507,7 @@ const Sidebar = ({
                 />
               </svg>
               <span>Support</span>
-            </Link>
+            </Link> */}
 
             <Link
               href="/vendor-dashboard/referrals"

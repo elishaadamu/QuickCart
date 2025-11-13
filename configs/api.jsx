@@ -72,6 +72,20 @@ export const API_CONFIG = {
       CREATE: "/withdrawal", // POST with userId in payload
       GET_BY_USER: "/withdrawal/", // append userId
     },
+    SUPPORT: {
+      CREATE_TICKET: "/support/tickets",
+      GET_TICKETS: "/support/tickets",
+      GET_TICKET: "/support/tickets/",
+    },
+    MESSAGES: {
+      GET_ALL: "/messages",
+      SEND: "/messages/send",
+      MARK_READ: "/messages/read/",
+      DELETE: "/messages/",
+    },
+    FUNDING_HISTORY: {
+      GET: "/wallet/",
+    },
   },
 };
 

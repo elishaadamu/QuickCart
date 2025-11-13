@@ -30,61 +30,50 @@ const ReferralPage = () => {
       pending: 0,
     },
   });
+  const [userProfile, setUserProfile] = useState("");
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchInitialData = async () => {
+      setLoading(true);
       try {
         const encryptedUser = localStorage.getItem("user");
-        if (encryptedUser) {
-          const decryptedUserData = decryptData(encryptedUser);
-          setUserData(decryptedUserData);
-          await fetchReferralData(decryptedUserData.id);
+        if (!encryptedUser) {
+          toast.error("User not found. Please log in again.");
+          setLoading(false);
+          return;
         }
+
+        const decryptedUserData = decryptData(encryptedUser);
+        setUserData(decryptedUserData);
+
+        // Fetch profile to get the referral code
+        const response = await axios.get(
+          `${apiUrl(API_CONFIG.ENDPOINTS.PROFILE.GET)}/${decryptedUserData.id}`
+        );
+
+        const userProfile = response?.data?.user;
+
+        setUserProfile(userProfile);
       } catch (error) {
-        console.error("Error fetching user data:", error);
-        toast.error("Failed to load user data");
+        console.error("Error fetching referral data:", error);
+        toast.error("Failed to load referral data. Using defaults.");
+        // Fallback to generating a code if APIs fail
+        generateFallbackReferralData();
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchUserData();
+    fetchInitialData();
   }, []);
 
-  const fetchReferralData = async (userId) => {
-    setLoading(true);
-    try {
-      // Fetch referral data from API
-      const response = await axios.get(
-        apiUrl(API_CONFIG.ENDPOINTS.REFERRAL.GET + userId)
-      );
-
-      if (response.data) {
-        setReferralData(response.data);
-      } else {
-        // Generate referral data if none exists
-        const referralCode = generateReferralCode();
-        const referralLink = `${window.location.origin}/signup?ref=${referralCode}`;
-
-        setReferralData({
-          referralCode,
-          referralLink,
-          totalReferrals: 0,
-          earnedAmount: 0,
-          pendingAmount: 0,
-          referralStats: {
-            total: 0,
-            completed: 0,
-            pending: 0,
-          },
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching referral data:", error);
-      // Generate default referral data if API fails
-      const referralCode = generateReferralCode();
+  const generateFallbackReferralData = () => {
+    // This function is now a fallback for API errors.
+    const referralCode = generateReferralCode();
+    if (referralCode) {
       const referralLink = `${window.location.origin}/signup?ref=${referralCode}`;
-
       setReferralData({
         referralCode,
         referralLink,
@@ -97,65 +86,57 @@ const ReferralPage = () => {
           pending: 0,
         },
       });
-    } finally {
-      setLoading(false);
     }
-  };
-
-  const generateReferralCode = () => {
-    if (userData) {
-      return `${userData.firstName?.slice(0, 3) || "REF"}${Math.random()
-        .toString(36)
-        .substr(2, 6)
-        .toUpperCase()}`;
-    }
-    return `REF${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
   };
 
   const copyToClipboard = (text) => {
-    navigator.clipboard
-      .writeText(text)
-      .then(() => {
-        setCopied(true);
+    if (!text) {
+      toast.warn("Nothing to copy.");
+      return;
+    }
+    navigator.clipboard.writeText(text).then(
+      () => {
         toast.success("Copied to clipboard!");
-        setTimeout(() => setCopied(false), 2000);
-      })
-      .catch(() => {
-        toast.error("Failed to copy to clipboard");
-      });
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
+      },
+      (err) => {
+        console.error("Failed to copy text: ", err);
+        toast.error("Failed to copy.");
+      }
+    );
   };
 
   const shareOnWhatsApp = () => {
-    const message = `Join me on this amazing platform! Use my referral code: ${referralData.referralCode}\n\nSign up here: ${referralData.referralLink}`;
+    const referralCode = userProfile?.referralCode;
+    if (!referralCode) {
+      toast.error("Referral code not available.");
+      return;
+    }
+    const referralLink = `${window.location.origin}/signup?ref=${referralCode}`;
+    const message = `Join me on Kasuwar Zamani! Use my referral code: ${referralCode}\n\nSign up here: ${referralLink}`;
     const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank");
   };
 
-  const shareViaEmail = () => {
-    const subject = "Join me on this amazing platform!";
-    const body = `Hi there!\n\nI thought you might be interested in joining this platform. Use my referral code when you sign up: ${
-      referralData.referralCode
-    }\n\nSign up here: ${referralData.referralLink}\n\nBest regards,\n${
-      userData?.firstName || "Your friend"
-    }`;
-    const url = `mailto:?subject=${encodeURIComponent(
-      subject
-    )}&body=${encodeURIComponent(body)}`;
-    window.location.href = url;
-  };
-
   const shareViaSocialMedia = () => {
+    const referralCode = userProfile?.referralCode;
+    if (!referralCode) {
+      toast.error("Referral code not available.");
+      return;
+    }
+    const referralLink = `${window.location.origin}/signup?ref=${referralCode}`;
     if (navigator.share) {
       navigator
         .share({
           title: "Join me on this amazing platform!",
-          text: `Use my referral code: ${referralData.referralCode}`,
-          url: referralData.referralLink,
+          text: `Use my referral code: ${referralCode}`,
+          url: referralLink,
         })
         .then(() => toast.success("Shared successfully!"))
         .catch(() => toast.error("Error sharing"));
     } else {
-      copyToClipboard(referralData.referralLink);
+      copyToClipboard(referralLink);
     }
   };
 
@@ -180,7 +161,7 @@ const ReferralPage = () => {
         ) : (
           <>
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <div className="bg-white rounded-lg shadow-md p-6 text-center">
                 <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mx-auto mb-4">
                   <FaUsers className="w-6 h-6 text-blue-600" />
@@ -200,16 +181,6 @@ const ReferralPage = () => {
                 </h3>
                 <p className="text-gray-600">Total Earned</p>
               </div>
-
-              <div className="bg-white rounded-lg shadow-md p-6 text-center">
-                <div className="flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-full mx-auto mb-4">
-                  <FaGift className="w-6 h-6 text-yellow-600" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-1">
-                  ₦{referralData.pendingAmount.toLocaleString()}
-                </h3>
-                <p className="text-gray-600">Pending Earnings</p>
-              </div>
             </div>
 
             {/* Referral Code Section */}
@@ -221,12 +192,12 @@ const ReferralPage = () => {
                 <div className="flex-1">
                   <div className="bg-gray-50 border border-gray-300 rounded-lg p-4">
                     <code className="text-2xl font-mono font-bold text-gray-900">
-                      {referralData.referralCode}
+                      {userProfile.referralCode}
                     </code>
                   </div>
                 </div>
                 <button
-                  onClick={() => copyToClipboard(referralData.referralCode)}
+                  onClick={() => copyToClipboard(userProfile.referralCode)}
                   className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition flex items-center gap-2"
                 >
                   <FaCopy className="w-4 h-4" />
@@ -244,12 +215,16 @@ const ReferralPage = () => {
                 <div className="flex-1">
                   <div className="bg-gray-50 border border-gray-300 rounded-lg p-4 overflow-x-auto">
                     <code className="text-sm font-mono text-gray-900 break-all">
-                      {referralData.referralLink}
+                      {window.location.origin}/signup?ref=
+                      {userProfile?.referralCode}
                     </code>
                   </div>
                 </div>
                 <button
-                  onClick={() => copyToClipboard(referralData.referralLink)}
+                  onClick={() => {
+                    const link = `${window.location.origin}/signup?ref=${userProfile?.referralCode}`;
+                    copyToClipboard(link);
+                  }}
                   className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition flex items-center gap-2"
                 >
                   <FaLink className="w-4 h-4" />
@@ -263,7 +238,7 @@ const ReferralPage = () => {
               <h2 className="text-xl font-semibold text-gray-900 mb-4">
                 Share Your Referral
               </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <button
                   onClick={shareOnWhatsApp}
                   className="bg-green-500 text-white p-4 rounded-lg hover:bg-green-600 transition flex items-center justify-center gap-2"
@@ -273,27 +248,11 @@ const ReferralPage = () => {
                 </button>
 
                 <button
-                  onClick={shareViaEmail}
-                  className="bg-blue-500 text-white p-4 rounded-lg hover:bg-blue-600 transition flex items-center justify-center gap-2"
-                >
-                  <FaEnvelope className="w-5 h-5" />
-                  Email
-                </button>
-
-                <button
                   onClick={shareViaSocialMedia}
                   className="bg-purple-500 text-white p-4 rounded-lg hover:bg-purple-600 transition flex items-center justify-center gap-2"
                 >
                   <FaShareAlt className="w-5 h-5" />
                   Share
-                </button>
-
-                <button
-                  onClick={() => copyToClipboard(referralData.referralLink)}
-                  className="bg-gray-600 text-white p-4 rounded-lg hover:bg-gray-700 transition flex items-center justify-center gap-2"
-                >
-                  <FaCopy className="w-5 h-5" />
-                  Copy All
                 </button>
               </div>
             </div>
@@ -336,7 +295,8 @@ const ReferralPage = () => {
                     You Earn Rewards
                   </h3>
                   <p className="text-gray-600">
-                    Earn commissions when your referrals make purchases
+                    Earn a 5% commission on every wallet funding your referral
+                    makes.
                   </p>
                 </div>
               </div>
@@ -349,16 +309,14 @@ const ReferralPage = () => {
               </h3>
               <ul className="text-yellow-700 list-disc list-inside space-y-1">
                 <li>
-                  You earn 10% commission on your referrals' first purchase
+                  You earn a 5% commission every time your referral funds their
+                  wallet.
                 </li>
                 <li>
-                  Referral bonuses are credited to your wallet immediately
+                  Each referral is valid for 200 days from the signup date.
                 </li>
-                <li>There's no limit to how many people you can refer</li>
-                <li>
-                  Referral rewards are subject to our terms and conditions
-                </li>
-                <li>Fraudulent referrals will result in account suspension</li>
+                <li>There's no limit to how many people you can refer.</li>
+                <li>Fraudulent referrals will result in account suspension.</li>
               </ul>
             </div>
           </>
