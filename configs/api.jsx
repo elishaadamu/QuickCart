@@ -90,6 +90,14 @@ export const API_CONFIG = {
       GET_COMMISSIONS: "/referral/commissions/", // append userId
       GET_PROGRESS: "/referral/progress/", // append userId
     },
+    SUBSCRIPTION: {
+      SUBSCRIBE: "/sub/subscribe", // POST with { vendorId, planId }
+      CHECK_STATUS: "/sub/check-status/", // append vendorId
+      GET_DETAILS: "/sub/vendor-subscription/", // append vendorId
+      GET_ALL: "/subscribe",
+      GET_SINGLE: "/subscribe/plan/", // /subscribe/plan/{planId}
+      GET_BY_PACKAGE: "/subscribe/plan-package/", // /subscribe/plan-package/{package}
+    },
   },
 };
 

@@ -11,6 +11,7 @@ import FeaturedProduct from "@/components/FeaturedProduct";
 import VendorSection from "@/components/VendorSection";
 import { FaArrowUp } from "react-icons/fa";
 import { useAppContext } from "@/context/AppContext";
+import SubscriptionPlans from "@/components/SubscriptionSection";
 
 const useIdleTimeout = (
   onIdle,
@@ -135,7 +136,9 @@ const HomeClient = () => {
       <div className="px-6  max-w-[1280px] mx-auto lg:px-32">
         <VendorSection />
         <HomeProducts />
+        <SubscriptionPlans />
         <FeaturedProduct />
+
         <Banner />
         <NewsLetter />
       </div>
