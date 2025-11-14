@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import { apiUrl } from "@/configs/api";
+import { apiUrl, API_CONFIG } from "@/configs/api";
 import { AppContext } from "@/context/AppContext";
 import {
   FaStar,
@@ -35,9 +35,23 @@ const MySubscriptionPage = () => {
       try {
         setLoading(true);
         setError(null);
-        // As per your request, using a hardcoded endpoint structure
+
+        // First, check if the vendor can post products.
+        // NOTE: Assuming an endpoint like 'SUBSCRIPTION.CHECK_STATUS' exists in your API_CONFIG.
+        const statusResponse = await axios.get(
+          apiUrl(API_CONFIG.ENDPOINTS.SUBSCRIPTION.CHECK_STATUS + userData.id)
+        );
+
+        // If canPostProduct is false, set an error and do not proceed.
+        if (statusResponse.data?.canPostProduct === false) {
+          setError("You do not have an active subscription.");
+          setLoading(false);
+          return;
+        }
+
+        // If the status check passes, fetch the full subscription details.
         const response = await axios.get(
-          apiUrl(`/sub/vendor-subscription/${userData._id}`)
+          apiUrl(API_CONFIG.ENDPOINTS.SUBSCRIPTION.GET_DETAILS + userData.id)
         );
 
         if (response.data.success && response.data.subscription) {
@@ -163,7 +177,7 @@ const MySubscriptionPage = () => {
 
         <div className="mt-8 text-center">
           <Link
-            href="/subscription"
+            href={`/subscription/payment?subscriptionId=${plan._id}`}
             className="w-full sm:w-auto bg-blue-600 text-white py-3 px-8 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-300"
           >
             Upgrade or Renew Plan

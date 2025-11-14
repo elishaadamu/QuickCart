@@ -13,7 +13,7 @@ import axios from "axios";
 
 const AddProduct = () => {
   const { router, userData } = useAppContext();
-  const userId = userData?._id;
+  const userId = userData?.id;
   const [images, setImages] = useState(new Array(4).fill(null));
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -24,12 +24,14 @@ const AddProduct = () => {
   const [condition, setCondition] = useState("NEW");
   const [stock, setStock] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(true);
   const [categories, setCategories] = useState([]);
   const [error, setError] = useState("");
   const [states] = useState(statesData.state);
 
   useEffect(() => {
     const fetchCategories = async () => {
+      // This will run after the status check passes
       try {
         const response = await axios.get(
           apiUrl(API_CONFIG.ENDPOINTS.CATEGORY.GET_ALL)
@@ -46,6 +48,36 @@ const AddProduct = () => {
     };
     fetchCategories();
   }, []);
+
+  useEffect(() => {
+    if (!userData?.id) {
+      // Wait for user data to be available
+      return;
+    }
+
+    const checkSubscriptionStatus = async () => {
+      setIsCheckingStatus(true);
+      try {
+        const response = await axios.get(
+          apiUrl(API_CONFIG.ENDPOINTS.SUBSCRIPTION.CHECK_STATUS + userData.id)
+        );
+
+        if (response.data?.canPostProduct === false) {
+          toast.error(
+            "You cannot add a product. Please renew your subscription."
+          );
+          router.push("/"); // Redirect to home page
+        } else {
+          setIsCheckingStatus(false); // Allow component to render
+        }
+      } catch (err) {
+        console.error("Error checking subscription status:", err);
+        toast.error("Failed to verify your subscription status.");
+      }
+    };
+
+    checkSubscriptionStatus();
+  }, [userData, router]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -129,7 +161,7 @@ const AddProduct = () => {
   return (
     <div className="flex-1 min-h-screen flex flex-col justify-between">
       <ToastContainer />
-      {loading ? (
+      {loading || isCheckingStatus ? (
         <Loading />
       ) : (
         <form

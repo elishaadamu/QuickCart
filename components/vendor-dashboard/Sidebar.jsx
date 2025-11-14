@@ -293,7 +293,7 @@ const Sidebar = ({
               }`}
             >
               <FaStar className="w-5 h-5" />
-              <span>Funding History</span>
+              <span>Subscription</span>
             </Link>
             <div className="space-y-1">
               <button
