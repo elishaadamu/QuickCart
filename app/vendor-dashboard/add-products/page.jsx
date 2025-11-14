@@ -9,6 +9,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { decryptData } from "@/lib/encryption";
 import statesData from "@/lib/states.json";
+import { FaTimesCircle } from "react-icons/fa";
 import axios from "axios";
 
 const AddProduct = () => {
@@ -27,6 +28,7 @@ const AddProduct = () => {
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
   const [categories, setCategories] = useState([]);
   const [error, setError] = useState("");
+  const [subscriptionInvalid, setSubscriptionInvalid] = useState(false);
   const [states] = useState(statesData.state);
 
   useEffect(() => {
@@ -63,16 +65,17 @@ const AddProduct = () => {
         );
 
         if (response.data?.canPostProduct === false) {
-          toast.error(
-            "You cannot add a product. Please renew your subscription."
-          );
-          router.push("/"); // Redirect to home page
+          setError("You cannot add a product. Please renew your subscription.");
+          setSubscriptionInvalid(true);
         } else {
-          setIsCheckingStatus(false); // Allow component to render
+          setSubscriptionInvalid(false);
         }
       } catch (err) {
         console.error("Error checking subscription status:", err);
-        toast.error("Failed to verify your subscription status.");
+        setError("Failed to verify your subscription status.");
+        setSubscriptionInvalid(true);
+      } finally {
+        setIsCheckingStatus(false);
       }
     };
 
@@ -161,7 +164,20 @@ const AddProduct = () => {
   return (
     <div className="flex-1 min-h-screen flex flex-col justify-between">
       <ToastContainer />
-      {loading || isCheckingStatus ? (
+      {isCheckingStatus ? (
+        <Loading />
+      ) : subscriptionInvalid ? (
+        <div className="flex flex-col items-center justify-center h-full text-center p-4">
+          <FaTimesCircle className="text-red-500 text-5xl mb-4" />
+          <p className="text-red-600 text-lg mb-4">{error}</p>
+          <button
+            onClick={() => router.push("/")}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            View Subscription Plans
+          </button>
+        </div>
+      ) : loading ? (
         <Loading />
       ) : (
         <form

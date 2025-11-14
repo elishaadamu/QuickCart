@@ -230,7 +230,7 @@ const SubscriptionPaymentContent = () => {
               below to proceed.
             </p>
 
-            <div className="mt-auto space-y-4">
+            <div className="mt-10 space-y-1">
               <button
                 type="button"
                 onClick={handlePayment}

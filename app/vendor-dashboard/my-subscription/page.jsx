@@ -95,7 +95,7 @@ const MySubscriptionPage = () => {
         <FaTimesCircle className="text-red-500 text-5xl mb-4" />
         <p className="text-red-600 text-lg mb-4">{error}</p>
         <Link
-          href="/subscription"
+          href="/"
           className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
         >
           View Subscription Plans
@@ -177,7 +177,7 @@ const MySubscriptionPage = () => {
 
         <div className="mt-8 text-center">
           <Link
-            href={`/subscription/payment?subscriptionId=${plan._id}`}
+            href="/"
             className="w-full sm:w-auto bg-blue-600 text-white py-3 px-8 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-300"
           >
             Upgrade or Renew Plan
