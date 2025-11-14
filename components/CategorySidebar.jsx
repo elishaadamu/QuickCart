@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   HiOutlineCpuChip,
   HiOutlineShoppingBag,
@@ -12,169 +12,92 @@ import {
   HiOutlineWrenchScrewdriver,
   HiOutlineComputerDesktop,
 } from "react-icons/hi2";
-import Link from "next/link"; // This was the line I added in the previous turn, but it seems it was missing from your file.
+import Link from "next/link";
+import axios from "axios";
+import { apiUrl, API_CONFIG } from "@/configs/api";
 
-export const categoriesData = [
-  {
-    name: "Electronics",
-    icon: <HiOutlineCpuChip className="w-5 h-5 mr-2 text-gray-500" />,
-    items: [
-      "Laptops & Computers",
-      "Phones & Tablets",
-      "TVs & Home Theater",
-      "Cameras & Drones",
-      "Headphones & Audio",
-    ],
-  },
-  {
-    name: "Fashion",
-    icon: <HiOutlineShoppingBag className="w-5 h-5 mr-2 text-gray-500" />,
-    items: [
-      "Men's Clothing",
-      "Women's Clothing",
-      "Shoes & Footwear",
-      "Bags & Accessories",
-      "Watches & Jewelry",
-    ],
-  },
-  {
-    name: "Foods and Drinks",
-    icon: <HiOutlineSparkles className="w-5 h-5 mr-2 text-gray-500" />,
-    items: ["Fresh Produce", "Packaged Foods", "Beverages", "Snacks", "Bakery"],
-  },
-  {
-    name: "Furnitures",
-    icon: <HiOutlineHome className="w-5 h-5 mr-2 text-gray-500" />,
-    items: [
-      "Living Room Furniture",
-      "Bedroom Furniture",
-      "Office Furniture",
-      "Kitchen & Dining",
-      "Outdoor Furniture",
-    ],
-  },
-  {
-    name: "Beauty & Health",
-    icon: <HiOutlineHeart className="w-5 h-5 mr-2 text-gray-500" />,
-    items: [
-      "Skincare",
-      "Makeup",
-      "Haircare",
-      "Fragrances",
-      "Health & Wellness",
-    ],
-  },
-  {
-    name: "Automobiles",
-    icon: <HiOutlineTruck className="w-5 h-5 mr-2 text-gray-500" />,
-    items: [
-      "Cars & Trucks",
-      "Motorcycles",
-      "Car Parts & Accessories",
-      "Tires & Wheels",
-      "Automotive Tools",
-    ],
-  },
-  {
-    name: "Property",
-    icon: <HiOutlineBuildingOffice2 className="w-5 h-5 mr-2 text-gray-500" />,
-    items: [
-      "For Sale: Houses & Apartments",
-      "For Rent: Houses & Apartments",
-      "Land & Plots",
-      "Commercial Property",
-    ],
-  },
-  {
-    name: "Kitchen Utensils",
-    icon: <HiOutlineArchiveBox className="w-5 h-5 mr-2 text-gray-500" />,
-    items: [
-      "Cookware",
-      "Bakeware",
-      "Cutlery & Knives",
-      "Small Appliances",
-      "Kitchen Storage",
-    ],
-  },
-  {
-    name: "Home appliance",
-    icon: <HiOutlineHome className="w-5 h-5 mr-2 text-gray-500" />,
-    items: [
-      "Refrigerators & Freezers",
-      "Washers & Dryers",
-      "Vacuums & Floor Care",
-      "Air Conditioners & Heaters",
-    ],
-  },
-  {
-    name: "Agriculture",
-    icon: <HiOutlineSparkles className="w-5 h-5 mr-2 text-gray-500" />,
-    items: ["Farm Machinery", "Seeds & Plants", "Fertilizers", "Livestock"],
-  },
-  {
-    name: "Industrial equipment",
-    icon: <HiOutlineWrenchScrewdriver className="w-5 h-5 mr-2 text-gray-500" />,
-    items: ["Heavy Machinery", "Power Tools", "Safety Equipment", "Generators"],
-  },
-  {
-    name: "Digital products",
-    icon: <HiOutlineComputerDesktop className="w-5 h-5 mr-2 text-gray-500" />,
-    items: ["Software", "E-books", "Online Courses", "Digital Art"],
-  },
-];
+// Icon mapping for dynamic categories
+const iconMap = {
+  Electronics: <HiOutlineCpuChip className="w-5 h-5 mr-2 text-gray-500" />,
+  Fashion: <HiOutlineShoppingBag className="w-5 h-5 mr-2 text-gray-500" />,
+  "Foods and Drinks": (
+    <HiOutlineSparkles className="w-5 h-5 mr-2 text-gray-500" />
+  ),
+  Furnitures: <HiOutlineHome className="w-5 h-5 mr-2 text-gray-500" />,
+  "Beauty & Health": <HiOutlineHeart className="w-5 h-5 mr-2 text-gray-500" />,
+  Automobiles: <HiOutlineTruck className="w-5 h-5 mr-2 text-gray-500" />,
+  Property: <HiOutlineBuildingOffice2 className="w-5 h-5 mr-2 text-gray-500" />,
+  "Kitchen Utensils": (
+    <HiOutlineArchiveBox className="w-5 h-5 mr-2 text-gray-500" />
+  ),
+  "Home appliance": <HiOutlineHome className="w-5 h-5 mr-2 text-gray-500" />,
+  Agriculture: <HiOutlineSparkles className="w-5 h-5 mr-2 text-gray-500" />,
+  "Industrial equipment": (
+    <HiOutlineWrenchScrewdriver className="w-5 h-5 mr-2 text-gray-500" />
+  ),
+  "Digital products": (
+    <HiOutlineComputerDesktop className="w-5 h-5 mr-2 text-gray-500" />
+  ),
+  default: <HiOutlineArchiveBox className="w-5 h-5 mr-2 text-gray-500" />,
+};
+
+const getCategoryIcon = (categoryName) => {
+  return iconMap[categoryName] || iconMap.default;
+};
 
 const CategorySidebar = () => {
-  const [hoveredCategory, setHoveredCategory] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(
+          apiUrl(API_CONFIG.ENDPOINTS.CATEGORY.GET_ALL)
+        );
+
+        setCategories(response.data.categories);
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+        // You could set an error state here to show a message in the UI
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   return (
     <div className="w-full h-[400px] overflow-y-auto mt-6 md:flex-[20%] bg-white hidden md:block shadow-lg rounded-lg z-10 p-4  border border-gray-200 top-20 ">
       <h3 className="text-lg font-semibold mb-4 text-gray-800">Categories</h3>
-      <ul className="space-y-2">
-        {categoriesData.map((category) => (
-          <li
-            key={category.name}
-            className="relative"
-            onMouseEnter={() => setHoveredCategory(category.name)}
-            onMouseLeave={() => setHoveredCategory(null)}
-          >
-            <Link
-              href={`/category/${category.name
-                .toLowerCase()
-                .replace(/ & /g, "-")
-                .replace(/ /g, "-")}`}
-              className="flex items-center p-2 rounded-md text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200"
-            >
-              {category.icon}
-              {category.name}
-            </Link>
-            {hoveredCategory === category.name && (
-              <div className="absolute left-full top-0 ml-2 w-60 bg-white shadow-xl rounded-lg p-3 z-10 border border-gray-200">
-                <h4 className="font-medium text-blue-600 mb-2 border-b pb-1 border-gray-200">
-                  {category.name}
-                </h4>
-                <ul className="space-y-1 text-sm">
-                  {category.items.map((item) => (
-                    <li key={item}>
-                      <Link
-                        href={`/category/${category.name
-                          .toLowerCase()
-                          .replace(/ & /g, "-")
-                          .replace(/ /g, "-")}/${item
-                          .toLowerCase()
-                          .replace(/ & /g, "-")
-                          .replace(/ /g, "-")}`}
-                        className="block p-1 rounded text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150"
-                      >
-                        {item}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </li>
-        ))}
-      </ul>
+      {loading ? (
+        <div className="space-y-2">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="flex items-center p-2">
+              <div className="w-5 h-5 mr-2 bg-gray-200 rounded"></div>
+              <div className="w-3/4 h-5 bg-gray-200 rounded"></div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <ul className="space-y-2">
+          {categories.map((category) => (
+            <li key={category._id}>
+              <Link
+                href={`/category/${category.name
+                  .toLowerCase()
+                  .replace(/ & /g, "-")
+                  .replace(/ /g, "-")}`}
+                className="flex items-center p-2 rounded-md text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200"
+              >
+                {getCategoryIcon(category.name)}
+                {category.name}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };

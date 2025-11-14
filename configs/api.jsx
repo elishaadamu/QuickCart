@@ -101,6 +101,9 @@ export const API_CONFIG = {
     BANNERS: {
       GET_ALL: "/banner",
     },
+    CATEGORY: {
+      GET: "/category/",
+    },
   },
 };
 
