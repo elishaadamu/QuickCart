@@ -18,7 +18,7 @@ const HeaderSlider = () => {
         setLoading(true);
         // Assuming the endpoint is configured in API_CONFIG
         const response = await axios.get(
-          apiUrl(API_CONFIG.ENDPOINTS.BANNER.GET_ALL)
+          apiUrl(API_CONFIG.ENDPOINTS.BANNERS.GET_ALL)
         );
         console.log(response.data);
         setBanners(response.data.banners);
