@@ -167,15 +167,17 @@ const AddProduct = () => {
       {isCheckingStatus ? (
         <Loading />
       ) : subscriptionInvalid ? (
-        <div className="flex flex-col items-center justify-center h-full text-center p-4">
-          <FaTimesCircle className="text-red-500 text-5xl mb-4" />
-          <p className="text-red-600 text-lg mb-4">{error}</p>
-          <button
-            onClick={() => router.push("/")}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            View Subscription Plans
-          </button>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="flex flex-col items-center justify-center text-center p-4">
+            <FaTimesCircle className="text-red-500 text-5xl mb-4" />
+            <p className="text-red-600 text-lg mb-4">{error}</p>
+            <button
+              onClick={() => router.push("/")}
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              View Subscription Plans
+            </button>
+          </div>
         </div>
       ) : loading ? (
         <Loading />

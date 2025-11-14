@@ -91,15 +91,17 @@ const MySubscriptionPage = () => {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-center">
-        <FaTimesCircle className="text-red-500 text-5xl mb-4" />
-        <p className="text-red-600 text-lg mb-4">{error}</p>
-        <Link
-          href="/"
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          View Subscription Plans
-        </Link>
+      <div className="flex-1 flex items-center justify-center p-4">
+        <div className="flex flex-col items-center justify-center text-center">
+          <FaTimesCircle className="text-red-500 text-5xl mb-4" />
+          <p className="text-red-600 text-lg mb-4">{error}</p>
+          <Link
+            href="/"
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            View Subscription Plans
+          </Link>
+        </div>
       </div>
     );
   }
