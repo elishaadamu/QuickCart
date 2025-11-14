@@ -85,7 +85,7 @@ const HeaderSlider = () => {
                 </div>
                 <div className="flex items-center flex-1 justify-center">
                   <Image
-                    className="md:w-72 w-48 object-contain"
+                    className="md:w-[90%] w-48 object-contain"
                     src={banner.image.url}
                     alt={banner.title}
                     width={288}
