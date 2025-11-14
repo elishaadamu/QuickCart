@@ -56,7 +56,7 @@ const CategorySidebar = () => {
         const response = await axios.get(
           apiUrl(API_CONFIG.ENDPOINTS.CATEGORY.GET_ALL)
         );
-
+        console.log(response.data);
         setCategories(response.data.categories);
       } catch (error) {
         console.error("Failed to fetch categories:", error);

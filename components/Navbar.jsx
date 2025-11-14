@@ -174,7 +174,7 @@ const Navbar = () => {
               }`}
             >
               <div className="p-2 max-h-96 overflow-y-auto">
-                {categoriesData.map((category) => (
+                {categoriesData?.map((category) => (
                   <Link
                     key={category.name}
                     href={`/category/${category.name
