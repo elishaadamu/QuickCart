@@ -77,7 +77,7 @@ const SubscriptionPaymentContent = () => {
 
     try {
       const payload = {
-        vendorId: userData?._id,
+        vendorId: userData?.id,
         planId: planId,
       };
       console.log("Payment payload:", payload);
@@ -230,7 +230,7 @@ const SubscriptionPaymentContent = () => {
               below to proceed.
             </p>
 
-            <div className="mt-auto space-y-4">
+            <div className="">
               <button
                 type="button"
                 onClick={handlePayment}

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import Logo from "@/assets/logo/logo.png";
 import { FaTruck } from "react-icons/fa";
 import { FaHistory } from "react-icons/fa";
+import { FaStar } from "react-icons/fa";
 import { decryptData } from "@/lib/encryption";
 
 const Sidebar = ({
@@ -106,7 +107,6 @@ const Sidebar = ({
                 </div>
               </Link>
             </div>
-
             <div className="space-y-1">
               <button
                 onClick={() => setOpenOrders(!openOrders)}
@@ -250,7 +250,6 @@ const Sidebar = ({
                 </Link>
               </div>
             </div>
-
             <Link
               href="/vendor-dashboard/withdrawal-request"
               className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors ${
@@ -274,7 +273,6 @@ const Sidebar = ({
               </svg>
               <span>Withdrawal Request</span>{" "}
             </Link>
-
             <Link
               href="/vendor-dashboard/funding-history"
               className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors ${
@@ -285,8 +283,18 @@ const Sidebar = ({
             >
               <FaHistory className="w-5 h-5" />
               <span>Funding History</span>
+            </Link>{" "}
+            <Link
+              href="/vendor-dashboard/my-subscription"
+              className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors ${
+                pathname === "/vendor-dashboard/my-subscription"
+                  ? "bg-gray-700"
+                  : ""
+              }`}
+            >
+              <FaStar className="w-5 h-5" />
+              <span>Funding History</span>
             </Link>
-
             <div className="space-y-1">
               <button
                 onClick={() => setOpenMenu(!openMenu)}
@@ -378,7 +386,6 @@ const Sidebar = ({
                 </Link>
               </div>
             </div>
-
             <div className="space-y-1">
               <button
                 onClick={() => setOpenDelivery(!openDelivery)}
@@ -462,7 +469,6 @@ const Sidebar = ({
               </svg>
               <span>Inbox & Support</span>
             </Link>
-
             <Link
               href="/vendor-dashboard/coupons"
               className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors ${
@@ -484,7 +490,6 @@ const Sidebar = ({
               </svg>
               <span>Coupons</span>
             </Link>
-
             {/* <Link
               href="/vendor-dashboard/support-ticket"
               className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors ${
@@ -508,7 +513,6 @@ const Sidebar = ({
               </svg>
               <span>Support</span>
             </Link> */}
-
             <Link
               href="/vendor-dashboard/referrals"
               className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors ${
