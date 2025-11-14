@@ -21,7 +21,6 @@ const SubscriptionPlans = () => {
         apiUrl(API_CONFIG.ENDPOINTS.SUBSCRIPTION.GET_ALL)
       );
 
-      console.log("Subscription Plans Response:", response.data);
       setPlans(response.data.plans);
     } catch (err) {
       setError(err.response?.data?.message || err.message);

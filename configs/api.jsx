@@ -98,6 +98,9 @@ export const API_CONFIG = {
       GET_SINGLE: "/subscribe/plan/", // /subscribe/plan/{planId}
       GET_BY_PACKAGE: "/subscribe/plan-package/", // /subscribe/plan-package/{package}
     },
+    BANNERS: {
+      GET_ALL: "/banner",
+    },
   },
 };
 
