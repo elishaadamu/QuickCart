@@ -102,7 +102,7 @@ export const API_CONFIG = {
       GET_ALL: "/banner",
     },
     CATEGORY: {
-      GET: "/category/",
+      GET_ALL: "/category/",
     },
   },
 };

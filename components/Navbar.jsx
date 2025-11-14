@@ -10,6 +10,18 @@ import { apiUrl, API_CONFIG } from "@/configs/api";
 import axios from "axios";
 import { categoriesData } from "@/components/CategorySidebar";
 import { usePathname } from "next/navigation";
+import {
+  HiOutlineCpuChip,
+  HiOutlineShoppingBag,
+  HiOutlineSparkles,
+  HiOutlineHome,
+  HiOutlineHeart,
+  HiOutlineTruck,
+  HiOutlineBuildingOffice2,
+  HiOutlineArchiveBox,
+  HiOutlineWrenchScrewdriver,
+  HiOutlineComputerDesktop,
+} from "react-icons/hi2";
 
 const Navbar = () => {
   const {
@@ -37,6 +49,61 @@ const Navbar = () => {
   const [walletBalance, setWalletBalance] = useState(0);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
+
+  // Icon mapping for dynamic categories
+  const iconMap = {
+    Electronics: <HiOutlineCpuChip className="w-5 h-5 mr-2 text-gray-500" />,
+    Fashion: <HiOutlineShoppingBag className="w-5 h-5 mr-2 text-gray-500" />,
+    "Foods and Drinks": (
+      <HiOutlineSparkles className="w-5 h-5 mr-2 text-gray-500" />
+    ),
+    Furnitures: <HiOutlineHome className="w-5 h-5 mr-2 text-gray-500" />,
+    "Beauty & Health": (
+      <HiOutlineHeart className="w-5 h-5 mr-2 text-gray-500" />
+    ),
+    Automobiles: <HiOutlineTruck className="w-5 h-5 mr-2 text-gray-500" />,
+    Property: (
+      <HiOutlineBuildingOffice2 className="w-5 h-5 mr-2 text-gray-500" />
+    ),
+    "Kitchen Utensils": (
+      <HiOutlineArchiveBox className="w-5 h-5 mr-2 text-gray-500" />
+    ),
+    "Home appliance": <HiOutlineHome className="w-5 h-5 mr-2 text-gray-500" />,
+    Agriculture: <HiOutlineSparkles className="w-5 h-5 mr-2 text-gray-500" />,
+    "Industrial equipment": (
+      <HiOutlineWrenchScrewdriver className="w-5 h-5 mr-2 text-gray-500" />
+    ),
+    "Digital products": (
+      <HiOutlineComputerDesktop className="w-5 h-5 mr-2 text-gray-500" />
+    ),
+    default: <HiOutlineArchiveBox className="w-5 h-5 mr-2 text-gray-500" />,
+  };
+
+  const getCategoryIcon = (categoryName) => {
+    return iconMap[categoryName] || iconMap.default;
+  };
+
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(
+          apiUrl(API_CONFIG.ENDPOINTS.CATEGORY.GET_ALL)
+        );
+        console.log(response.data);
+        setCategories(response.data.categories);
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+        // You could set an error state here to show a message in the UI
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     if (searchQuery.trim() !== "") {
@@ -174,16 +241,16 @@ const Navbar = () => {
               }`}
             >
               <div className="p-2 max-h-96 overflow-y-auto">
-                {categoriesData?.map((category) => (
+                {categories?.map((category) => (
                   <Link
-                    key={category.name}
+                    key={category._id}
                     href={`/category/${category.name
                       .toLowerCase()
                       .replace(/ & /g, "-")
                       .replace(/ /g, "-")}`}
                     className="flex items-center p-2 rounded-md text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200"
                   >
-                    {category.icon}
+                    {getCategoryIcon(category.name)}
                     <span className="text-sm">{category.name}</span>
                   </Link>
                 ))}
@@ -609,7 +676,7 @@ const Navbar = () => {
                       <div>
                         <p className="font-medium">{product.name}</p>
                         <p className="text-sm text-gray-600">
-                          ₦{product.offerPrice}
+                          ₦{product.price}
                         </p>
                       </div>
                     </div>
