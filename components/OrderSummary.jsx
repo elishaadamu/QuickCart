@@ -103,6 +103,13 @@ const OrderSummary = () => {
       return;
     }
 
+    const subtotal = getCartAmount();
+    const tax = Math.floor(subtotal * 0.02);
+    const totalAmount =
+      finalAmount !== null
+        ? finalAmount
+        : subtotal + shippingFee + tax - couponDiscount;
+
     const vendorId = orderProducts[0]?.vendorId;
     const payload = {
       userId: userData?.id,
@@ -114,11 +121,13 @@ const OrderSummary = () => {
       state: deliveryState,
       zipcode: addresses.zipCode,
       shippingFee: shippingFee,
-      tax: Math.floor(getCartAmount() * 0.02),
+      tax: tax,
       phone: userData?.phone,
       pin,
+      totalAmount: totalAmount,
+      couponCode: couponDiscount > 0 ? couponCode : null,
     };
-
+    console.log(payload);
     if (!payload.vendorId) {
       Swal.fire({
         icon: "error",
@@ -129,7 +138,6 @@ const OrderSummary = () => {
       return;
     }
 
-    console.log("Order payload:", payload);
     try {
       const response = await axios.post(
         apiUrl(API_CONFIG.ENDPOINTS.ORDER.CREATE),
@@ -164,7 +172,7 @@ const OrderSummary = () => {
       const response = await axios.get(
         `${apiUrl(API_CONFIG.ENDPOINTS.PROFILE.GET)}/${userData.id}`
       );
-      console.log("response", response.data.user);
+
       setAddresses(response.data.user || []);
     } catch (error) {
       console.error("Error fetching addresses:", error);
@@ -193,12 +201,12 @@ const OrderSummary = () => {
       const tax = Math.floor(subtotal * 0.02);
       const totalOrderAmount = subtotal + shippingFee + tax;
       const payload = { code: couponCode, orderAmount: totalOrderAmount };
-      console.log("Coupon validation payload:", payload);
+
       const response = await axios.post(
         apiUrl(API_CONFIG.ENDPOINTS.COUPON.VALIDATE),
         payload
       );
-      console.log("Coupon validation response:", response.data);
+
       const { discountAmount, finalAmount: apiFinalAmount } =
         response.data.coupon;
       setCouponDiscount(discountAmount || 0);
