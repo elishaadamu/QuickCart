@@ -30,6 +30,11 @@ const OrderSummary = () => {
   const [isInterState, setIsInterState] = useState(false);
   const [interStateAddress, setInterStateAddress] = useState("");
 
+  // New states for coupon logic
+  const [couponCode, setCouponCode] = useState("");
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponLoading, setCouponLoading] = useState(false);
+
   const createOrder = async () => {
     if (!pin || pin.length !== 4) {
       toast.error("Please enter your 4-digit transaction PIN.");
@@ -83,6 +88,7 @@ const OrderSummary = () => {
       shippingFee: shippingFee,
       tax: Math.floor(getCartAmount() * 0.02), // You might want to tax the total amount including shipping
       phone: userData?.phone,
+      couponCode: couponDiscount > 0 ? couponCode : undefined,
       pin,
     };
 
@@ -125,6 +131,37 @@ const OrderSummary = () => {
       setPageLoading(false);
     }
   };
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode) {
+      toast.error("Please enter a coupon code.");
+      return;
+    }
+    setCouponLoading(true);
+    try {
+      const orderAmount = getCartAmount();
+      const payload = { code: couponCode, orderAmount };
+      console.log("Coupon validation payload:", payload);
+      const response = await axios.post(
+        apiUrl(API_CONFIG.ENDPOINTS.COUPON.VALIDATE),
+        payload
+      );
+      console.log("Coupon validation response:", response.data);
+      const { discountAmount } = response.data;
+      setCouponDiscount(discountAmount);
+      toast.success("Coupon applied successfully!");
+    } catch (error) {
+      console.error("Error validating coupon:", error);
+      const errorMessage =
+        error.response?.data?.message || "Invalid or expired coupon code.";
+      toast.error(errorMessage);
+      setCouponDiscount(0);
+      setCouponCode("");
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (userData) {
       fetchAddresses();
@@ -295,6 +332,15 @@ const OrderSummary = () => {
               {Math.floor(getCartAmount() * 0.02).toFixed(2)}
             </p>
           </div>
+          {couponDiscount > 0 && (
+            <div className="flex justify-between text-green-600">
+              <p>Discount</p>
+              <p className="font-medium">
+                -{currency}
+                {couponDiscount.toFixed(2)}
+              </p>
+            </div>
+          )}
         </div>
         <div className="flex justify-between text-lg font-bold text-slate-800 border-t border-slate-200 pt-4 mt-4">
           <p>Order Total</p>
@@ -303,13 +349,42 @@ const OrderSummary = () => {
             {(
               getCartAmount() +
               shippingFee +
-              Math.floor(getCartAmount() * 0.02)
+              Math.floor(getCartAmount() * 0.02) -
+              couponDiscount
             ).toFixed(2)}
           </p>
         </div>
       </fieldset>
 
       <hr className="border-slate-200 my-6" />
+
+      {/* Coupon Section */}
+      <fieldset className="space-y-2">
+        <label
+          htmlFor="coupon-code"
+          className="text-base font-medium uppercase text-gray-600 block"
+        >
+          Have a coupon?
+        </label>
+        <div className="flex space-x-2">
+          <input
+            id="coupon-code"
+            type="text"
+            value={couponCode}
+            onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+            placeholder="Enter coupon code"
+            className="w-full outline-none p-2.5 text-gray-600 border rounded-md focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+            disabled={couponDiscount > 0}
+          />
+          <button
+            onClick={handleApplyCoupon}
+            disabled={couponLoading || !couponCode || couponDiscount > 0}
+            className="bg-gray-800 text-white font-bold py-2 px-4 rounded-md hover:bg-gray-900 disabled:bg-gray-400 disabled:cursor-not-allowed whitespace-nowrap"
+          >
+            {couponLoading ? "Applying..." : "Apply"}
+          </button>
+        </div>
+      </fieldset>
 
       {/* Payment Section */}
       <fieldset>
