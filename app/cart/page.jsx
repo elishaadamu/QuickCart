@@ -118,15 +118,10 @@ const Cart = () => {
                     -
                   </button>
                   <input
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      // Prevent removal when input is cleared to type a new number
-                      const newQuantity = value === "" ? null : Number(value);
-                      updateCartQuantity(product._id, newQuantity);
-                    }}
+                    readOnly
                     type="number"
                     value={product.quantity}
-                    className="w-12 border-l border-r text-center appearance-none outline-none"
+                    className="w-12 border-l border-r text-center appearance-none outline-none bg-transparent cursor-default"
                     aria-label="Product quantity"
                   />
                   <button

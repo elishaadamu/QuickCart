@@ -5,7 +5,14 @@ import axios from "axios";
 import { apiUrl, API_CONFIG } from "@/configs/api";
 import PinInput from "./PinInput";
 import Swal from "sweetalert2";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
+import {
+  FaEye,
+  FaEyeSlash,
+  FaMapMarkerAlt,
+  FaShippingFast,
+  FaTag,
+  FaLock,
+} from "react-icons/fa";
 
 const OrderSummary = () => {
   const {
@@ -15,9 +22,10 @@ const OrderSummary = () => {
     getCartAmount,
     userData,
     cartItems,
-    products, // All products
-    states, // All states from context
+    products,
+    states,
   } = useAppContext();
+
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [, setPageLoading] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -25,14 +33,14 @@ const OrderSummary = () => {
   const [pin, setPin] = useState("");
   const [showPin, setShowPin] = useState(false);
 
-  // New states for delivery logic
+  // Delivery logic states
   const [deliveryState, setDeliveryState] = useState("");
   const [shippingFee, setShippingFee] = useState(0);
   const [shippingPercentage, setShippingPercentage] = useState(0);
   const [isInterState, setIsInterState] = useState(false);
   const [interStateAddress, setInterStateAddress] = useState("");
 
-  // New states for coupon logic
+  // Coupon logic states
   const [couponCode, setCouponCode] = useState("");
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [couponLoading, setCouponLoading] = useState(false);
@@ -68,6 +76,7 @@ const OrderSummary = () => {
       setLoading(false);
       return;
     }
+
     const orderProducts = Object.keys(cartItems)
       .map((itemId) => {
         const product = products.find((p) => p._id === itemId);
@@ -105,9 +114,8 @@ const OrderSummary = () => {
       state: deliveryState,
       zipcode: addresses.zipCode,
       shippingFee: shippingFee,
-      tax: Math.floor(getCartAmount() * 0.02), // You might want to tax the total amount including shipping
+      tax: Math.floor(getCartAmount() * 0.02),
       phone: userData?.phone,
-
       pin,
     };
 
@@ -120,6 +128,7 @@ const OrderSummary = () => {
       setLoading(false);
       return;
     }
+
     console.log("Order payload:", payload);
     try {
       const response = await axios.post(
@@ -178,7 +187,6 @@ const OrderSummary = () => {
     try {
       const subtotal = getCartAmount();
       const tax = Math.floor(subtotal * 0.02);
-      // Calculate the total order amount including shipping and tax
       const totalOrderAmount = subtotal + shippingFee + tax;
       const payload = { code: couponCode, orderAmount: totalOrderAmount };
       console.log("Coupon validation payload:", payload);
@@ -190,7 +198,6 @@ const OrderSummary = () => {
       const { discountAmount, finalAmount: apiFinalAmount } =
         response.data.coupon;
       setCouponDiscount(discountAmount || 0);
-      // Use the final amount from the API if available
       setFinalAmount(apiFinalAmount || null);
       Swal.fire({
         icon: "success",
@@ -223,17 +230,14 @@ const OrderSummary = () => {
     }
   }, []);
 
-  // Effect to calculate shipping fee based on delivery state
   useEffect(() => {
     const cartAmount = getCartAmount();
     if (deliveryState && addresses.shippingState) {
       if (deliveryState === addresses.shippingState) {
-        // Intra-state: 5% shipping fee
         setShippingPercentage(5);
         setShippingFee(Math.floor(cartAmount * 0.05));
         setIsInterState(false);
       } else {
-        // Inter-state: 10% shipping fee
         setShippingPercentage(10);
         setShippingFee(Math.floor(cartAmount * 0.1));
         setIsInterState(true);
@@ -246,34 +250,53 @@ const OrderSummary = () => {
   }, [deliveryState, addresses.shippingState, getCartAmount]);
 
   return (
-    <div className="w-full md:w-full bg-slate-50 p-6 rounded-xl shadow-lg">
-      <h2 className="text-2xl font-semibold text-slate-800">Order Summary</h2>
-      <hr className="border-slate-200 my-6" />
+    <div className="w-full bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-6">
+        <div className="p-2 bg-blue-100 rounded-lg">
+          <FaShippingFast className="text-blue-600 text-xl" />
+        </div>
+        <h2 className="text-2xl font-bold text-gray-800">Order Summary</h2>
+      </div>
+
+      <hr className="border-gray-200 my-6" />
 
       {/* Shipping Information Section */}
       <fieldset className="space-y-6">
-        <legend className="text-lg font-semibold text-gray-800 mb-4">
-          Shipping
+        <legend className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <FaMapMarkerAlt className="text-red-500" />
+          Shipping Information
         </legend>
+
         <div className="space-y-4">
+          {/* Shipping From */}
           <div>
-            <label className="text-base font-medium uppercase text-gray-600 block">
+            <label className="text-sm font-medium text-gray-700 block mb-2">
               Shipping From
             </label>
-            <div className="relative inline-block w-full text-sm border rounded-md">
+            <div className="relative inline-block w-full">
               <div
-                className="peer w-full text-left px-4 pr-2 py-2.5 bg-white text-gray-700 rounded-md flex justify-between items-center cursor-pointer"
+                className="peer w-full text-left px-4 pr-3 py-3 bg-gray-50 text-gray-700 rounded-lg border border-gray-300 flex justify-between items-center cursor-pointer transition-all hover:border-gray-400"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               >
-                <span>{addresses.shippingAddress || "Select Address"}</span>
+                <div className="flex-1">
+                  <span className="block text-gray-900 font-medium">
+                    {addresses.shippingAddress || "Select Address"}
+                  </span>
+                  {addresses.shippingState && (
+                    <span className="text-sm text-gray-500">
+                      {addresses.shippingState} State • {addresses.zipCode}
+                    </span>
+                  )}
+                </div>
                 <svg
-                  className={`w-5 h-5 inline float-right transition-transform duration-200 ${
-                    isDropdownOpen ? "rotate-0" : "-rotate-90"
+                  className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${
+                    isDropdownOpen ? "rotate-180" : "rotate-0"
                   }`}
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
-                  stroke="#6B7280"
+                  stroke="currentColor"
                 >
                   <path
                     strokeLinecap="round"
@@ -285,27 +308,25 @@ const OrderSummary = () => {
               </div>
 
               {isDropdownOpen && (
-                <ul className="absolute w-full bg-white border shadow-md mt-1 z-10 py-1.5 rounded-md">
-                  <li className="px-4 py-2 hover:bg-gray-500/10 cursor-pointer">
-                    <span className="text-xs text-gray-500">
-                      First Name: {userData.firstName}
-                    </span>
-                    <br />
-                    {addresses.shippingAddress}
-                    <br />
-                    {addresses.shippingState} {"State"}
-                    <br />
-                    {addresses.zipCode}
-                    <br />
-                  </li>
-
-                  <li
+                <div className="absolute w-full bg-white border border-gray-300 shadow-lg mt-2 z-10 rounded-lg overflow-hidden">
+                  <div className="p-4 border-b border-gray-200">
+                    <div className="text-sm text-gray-600 space-y-1">
+                      <div className="font-medium text-gray-900">
+                        {userData.firstName} {userData.lastName}
+                      </div>
+                      <div>{addresses.shippingAddress}</div>
+                      <div>
+                        {addresses.shippingState} State • {addresses.zipCode}
+                      </div>
+                    </div>
+                  </div>
+                  <div
                     onClick={() => router.push("/dashboard/shipping")}
-                    className="px-4 py-2 hover:bg-gray-500/10 cursor-pointer text-center border-t"
+                    className="px-4 py-3 bg-gray-50 hover:bg-gray-100 cursor-pointer text-center text-blue-600 font-medium transition-colors"
                   >
                     Edit Shipping Address
-                  </li>
-                </ul>
+                  </div>
+                </div>
               )}
             </div>
           </div>
@@ -314,7 +335,7 @@ const OrderSummary = () => {
           <div>
             <label
               htmlFor="delivery-state"
-              className="text-base font-medium uppercase text-gray-600 block mb-2"
+              className="text-sm font-medium text-gray-700 block mb-2"
             >
               Delivery To <span className="text-red-500">*</span>
             </label>
@@ -322,14 +343,14 @@ const OrderSummary = () => {
               id="delivery-state"
               value={deliveryState}
               onChange={(e) => setDeliveryState(e.target.value)}
-              className="w-full outline-none p-2.5 text-gray-600 border rounded-md focus:ring-2 focus:ring-blue-500"
+              className="w-full outline-none p-3 text-gray-700 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-gray-50"
               required
             >
-              <option value="" disabled>
+              <option value="" disabled className="text-gray-400">
                 Select delivery state
               </option>
               {states.map((s) => (
-                <option key={s} value={s}>
+                <option key={s} value={s} className="text-gray-700">
                   {s}
                 </option>
               ))}
@@ -338,16 +359,16 @@ const OrderSummary = () => {
 
           {/* Inter-state Address Form */}
           {isInterState && (
-            <div>
-              <label className="text-base font-medium uppercase text-gray-600 block mb-2">
+            <div className="animate-fadeIn">
+              <label className="text-sm font-medium text-gray-700 block mb-2">
                 Inter-State Delivery Address{" "}
                 <span className="text-red-500">*</span>
               </label>
               <textarea
                 value={interStateAddress}
                 onChange={(e) => setInterStateAddress(e.target.value)}
-                placeholder="Enter the full delivery address for the selected state"
-                className="w-full outline-none p-2.5 text-gray-600 border resize-none rounded-md focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter the full delivery address for the selected state..."
+                className="w-full outline-none p-3 text-gray-700 border border-gray-300 resize-none rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-gray-50"
                 rows="3"
               />
             </div>
@@ -355,51 +376,51 @@ const OrderSummary = () => {
         </div>
       </fieldset>
 
-      <hr className="border-slate-200 my-6" />
+      <hr className="border-gray-200 my-6" />
 
       {/* Cost Breakdown Section */}
       <fieldset className="space-y-4">
-        <legend className="text-lg font-semibold text-gray-800 mb-2">
-          Summary
+        <legend className="text-lg font-semibold text-gray-800 mb-4">
+          Cost Breakdown
         </legend>
-        <div className="space-y-3 text-sm">
-          <div className="flex justify-between">
-            <p className="text-slate-500">Items ({getCartCount()})</p>
-            <p className="font-medium text-slate-700">
+        <div className="space-y-3 text-sm bg-gray-50 p-4 rounded-lg">
+          <div className="flex justify-between items-center py-2">
+            <p className="text-gray-600">Items ({getCartCount()})</p>
+            <p className="font-medium text-gray-800">
               {currency}
               {getCartAmount().toFixed(2)}
             </p>
           </div>
-          <div className="flex justify-between">
-            <p className="text-slate-500">
+          <div className="flex justify-between items-center py-2">
+            <p className="text-gray-600">
               Shipping Fee
               {shippingPercentage > 0 && ` (${shippingPercentage}%)`}
             </p>
-            <p className="font-medium text-slate-700">
+            <p className="font-medium text-gray-800">
               {currency}
               {shippingFee.toFixed(2)}
             </p>
           </div>
-          <div className="flex justify-between">
-            <p className="text-slate-500">Tax (2%)</p>
-            <p className="font-medium text-slate-700">
+          <div className="flex justify-between items-center py-2">
+            <p className="text-gray-600">Tax (2%)</p>
+            <p className="font-medium text-gray-800">
               {currency}
               {Math.floor(getCartAmount() * 0.02).toFixed(2)}
             </p>
           </div>
           {couponDiscount > 0 && (
-            <div className="flex justify-between text-green-600">
-              <p>Discount</p>
-              <p className="font-medium">
+            <div className="flex justify-between items-center py-2 text-green-600 bg-green-50 -mx-4 px-4 border-y border-green-100">
+              <p className="font-medium">Discount Applied</p>
+              <p className="font-bold">
                 -{currency}
                 {couponDiscount.toFixed(2)}
               </p>
             </div>
           )}
         </div>
-        <div className="flex justify-between text-lg font-bold text-slate-800 border-t border-slate-200 pt-4 mt-4">
+        <div className="flex justify-between items-center text-lg font-bold text-gray-900 border-t border-gray-300 pt-4 mt-2">
           <p>Order Total</p>
-          <p className="text-blue-600">
+          <p className="text-blue-600 text-xl">
             {currency}
             {(finalAmount !== null
               ? finalAmount
@@ -412,66 +433,105 @@ const OrderSummary = () => {
         </div>
       </fieldset>
 
-      <hr className="border-slate-200 my-6" />
+      <hr className="border-gray-200 my-6" />
 
       {/* Coupon Section */}
-      <fieldset className="space-y-2">
-        <label
-          htmlFor="coupon-code"
-          className="text-base font-medium uppercase text-gray-600 block"
-        >
+      <fieldset className="space-y-3">
+        <label className="text-sm font-medium text-gray-700 block flex items-center gap-2">
+          <FaTag className="text-green-500" />
           Have a coupon?
         </label>
-        <div className="flex space-x-2">
+        <div className="flex gap-2">
           <input
-            id="coupon-code"
             type="text"
             value={couponCode}
             onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
             placeholder="Enter coupon code"
-            className="w-full outline-none p-2.5 text-gray-600 border rounded-md focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+            className="flex-1 outline-none p-3 text-gray-700 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
             disabled={couponDiscount > 0}
           />
           <button
             onClick={handleApplyCoupon}
             disabled={couponLoading || !couponCode || couponDiscount > 0}
-            className="bg-gray-800 text-white font-bold py-2 px-4 rounded-md hover:bg-gray-900 disabled:bg-gray-400 disabled:cursor-not-allowed whitespace-nowrap"
+            className="bg-green-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all whitespace-nowrap min-w-[100px]"
           >
-            {couponLoading ? "Applying..." : "Apply"}
+            {couponLoading ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Applying
+              </div>
+            ) : (
+              "Apply"
+            )}
           </button>
         </div>
+        {couponDiscount > 0 && (
+          <p className="text-green-600 text-sm font-medium flex items-center gap-1">
+            ✓ Coupon applied successfully! You saved {currency}
+            {couponDiscount.toFixed(2)}
+          </p>
+        )}
       </fieldset>
 
+      <hr className="border-gray-200 my-6" />
+
       {/* Payment Section */}
-      <fieldset>
-        <label
-          htmlFor="pin"
-          className="text-base font-medium uppercase text-gray-600 block mb-2"
-        >
+      <fieldset className="space-y-3">
+        <label className="text-sm font-medium text-gray-700 block flex items-center gap-2">
+          <FaLock className="text-red-500" />
           Transaction PIN <span className="text-red-500">*</span>
         </label>
+
         <div className="relative">
-          <PinInput
-            length={4}
-            onChange={setPin}
-            type={showPin ? "text" : "password"}
-          />
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-300">
+            <PinInput
+              length={4}
+              onChange={setPin}
+              inputType={showPin ? "text" : "password"}
+              className="justify-center"
+            />
+          </div>
+
+          {/* Enhanced Toggle Button */}
           <button
             type="button"
             onClick={() => setShowPin(!showPin)}
-            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
+            className="absolute top-1/2 right-4 transform -translate-y-1/2 p-2 text-gray-500 hover:text-gray-700 transition-colors bg-white rounded-full border border-gray-300 shadow-sm hover:shadow-md"
+            title={showPin ? "Hide PIN" : "Show PIN"}
           >
-            {showPin ? <FaEyeSlash /> : <FaEye />}
+            {showPin ? (
+              <FaEyeSlash className="w-4 h-4" />
+            ) : (
+              <FaEye className="w-4 h-4" />
+            )}
           </button>
         </div>
+
+        <p className="text-xs text-gray-500 mt-2">
+          Enter your 4-digit transaction PIN to complete the order
+        </p>
       </fieldset>
 
+      {/* Place Order Button */}
       <button
         onClick={createOrder}
-        disabled={loading}
-        className="w-full bg-blue-600 text-white font-bold py-3 mt-6 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-50"
+        disabled={loading || !pin || pin.length !== 4}
+        className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold py-4 mt-6 rounded-lg hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-[1.02] focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-offset-2 shadow-lg"
       >
-        {loading ? "Placing Order..." : "Place Order"}
+        {loading ? (
+          <div className="flex items-center justify-center gap-2">
+            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            Placing Order...
+          </div>
+        ) : (
+          `Place Order • ${currency}${(finalAmount !== null
+            ? finalAmount
+            : getCartAmount() +
+              shippingFee +
+              Math.floor(getCartAmount() * 0.02) -
+              couponDiscount
+          ).toFixed(2)}`
+        )}
       </button>
     </div>
   );
