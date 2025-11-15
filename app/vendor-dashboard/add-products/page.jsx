@@ -127,7 +127,7 @@ const AddProduct = () => {
       );
 
       toast.success("Product added successfully!");
-      router.push("/seller/product-list");
+      router.push("/vendor-dashboard/products-list");
     } catch (err) {
       console.error("Error adding product:", err);
       toast.error(

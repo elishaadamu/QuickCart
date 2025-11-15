@@ -34,6 +34,7 @@ const OrderSummary = () => {
   const [couponCode, setCouponCode] = useState("");
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [couponLoading, setCouponLoading] = useState(false);
+  const [finalAmount, setFinalAmount] = useState(null);
 
   const createOrder = async () => {
     if (!pin || pin.length !== 4) {
@@ -139,16 +140,22 @@ const OrderSummary = () => {
     }
     setCouponLoading(true);
     try {
-      const orderAmount = getCartAmount();
-      const payload = { code: couponCode, orderAmount };
+      const subtotal = getCartAmount();
+      const tax = Math.floor(subtotal * 0.02);
+      // Calculate the total order amount including shipping and tax
+      const totalOrderAmount = subtotal + shippingFee + tax;
+      const payload = { code: couponCode, orderAmount: totalOrderAmount };
       console.log("Coupon validation payload:", payload);
       const response = await axios.post(
         apiUrl(API_CONFIG.ENDPOINTS.COUPON.VALIDATE),
         payload
       );
       console.log("Coupon validation response:", response.data);
-      const { discountAmount } = response.data;
-      setCouponDiscount(discountAmount);
+      const { discountAmount, finalAmount: apiFinalAmount } =
+        response.data.coupon;
+      setCouponDiscount(discountAmount || 0);
+      // Use the final amount from the API if available
+      setFinalAmount(apiFinalAmount || null);
       toast.success("Coupon applied successfully!");
     } catch (error) {
       console.error("Error validating coupon:", error);
@@ -157,6 +164,7 @@ const OrderSummary = () => {
       toast.error(errorMessage);
       setCouponDiscount(0);
       setCouponCode("");
+      setFinalAmount(null);
     } finally {
       setCouponLoading(false);
     }
@@ -346,11 +354,12 @@ const OrderSummary = () => {
           <p>Order Total</p>
           <p className="text-blue-600">
             {currency}
-            {(
-              getCartAmount() +
-              shippingFee +
-              Math.floor(getCartAmount() * 0.02) -
-              couponDiscount
+            {(finalAmount !== null
+              ? finalAmount
+              : getCartAmount() +
+                shippingFee +
+                Math.floor(getCartAmount() * 0.02) -
+                couponDiscount
             ).toFixed(2)}
           </p>
         </div>
