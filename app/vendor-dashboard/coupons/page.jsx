@@ -17,7 +17,7 @@ import {
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
-import { decryptData } from "@/lib/encryption";
+import Swal from "sweetalert2";
 import { useAppContext } from "@/context/AppContext";
 import { apiUrl, API_CONFIG } from "@/configs/api";
 
@@ -70,9 +70,9 @@ const CouponPage = () => {
       const response = await axios.get(
         apiUrl(API_CONFIG.ENDPOINTS.COUPON.GET_ALL + userData.id)
       );
-
+      console.log(response.data);
       // Map API response to frontend state structure
-      const fetchedCoupons = response.data.map((coupon) => ({
+      const fetchedCoupons = response.data.coupons.map((coupon) => ({
         id: coupon._id,
         ...coupon,
         discountValue: coupon.discountAmount,
@@ -81,7 +81,6 @@ const CouponPage = () => {
       }));
 
       setCoupons(fetchedCoupons);
-      toast.success("Coupons loaded successfully.");
     } catch (error) {
       console.error("Error fetching coupons:", error);
       toast.error("Failed to load coupons.");
@@ -156,6 +155,15 @@ const CouponPage = () => {
     e.preventDefault();
     setLoading(true);
     try {
+      // Validate dates
+      if (
+        new Date(selectedCoupon.validUntil) < new Date(selectedCoupon.validFrom)
+      ) {
+        toast.error("Valid until date must be after valid from date.");
+        setLoading(false);
+        return;
+      }
+
       const payload = {
         discountAmount: selectedCoupon.discountValue,
         minimumOrderAmount: selectedCoupon.minOrderAmount,
@@ -184,21 +192,31 @@ const CouponPage = () => {
   };
 
   const handleDeleteCoupon = async (couponId) => {
-    if (window.confirm("Are you sure you want to delete this coupon?")) {
-      setLoading(true);
-      try {
-        await axios.delete(
-          apiUrl(API_CONFIG.ENDPOINTS.COUPON.DELETE + couponId)
-        );
-        fetchCoupons(userData.id); // Refetch to update the list
-        toast.success("Coupon deleted successfully!");
-      } catch (error) {
-        console.error("Error deleting coupon:", error);
-        toast.error("Failed to delete coupon.");
-      } finally {
-        setLoading(false);
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        setLoading(true);
+        try {
+          await axios.delete(
+            apiUrl(API_CONFIG.ENDPOINTS.COUPON.DELETE + couponId)
+          );
+          fetchCoupons(userData.id); // Refetch to update the list
+          toast.success("Coupon deleted successfully!");
+        } catch (error) {
+          console.error("Error deleting coupon:", error);
+          toast.error("Failed to delete coupon.");
+        } finally {
+          setLoading(false);
+        }
       }
-    }
+    });
   };
 
   const toggleCouponStatus = async (couponId) => {
@@ -244,7 +262,11 @@ const CouponPage = () => {
   };
 
   const openEditModal = (coupon) => {
-    setSelectedCoupon({ ...coupon });
+    setSelectedCoupon({
+      ...coupon,
+      validFrom: coupon.validFrom ? coupon.validFrom.split("T")[0] : "",
+      validUntil: coupon.validUntil ? coupon.validUntil.split("T")[0] : "",
+    });
     setShowEditModal(true);
   };
 
@@ -550,38 +572,6 @@ const CouponPage = () => {
               <form onSubmit={handleCreateCoupon} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Coupon Code
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={newCoupon.code}
-                      onChange={(e) =>
-                        setNewCoupon((prev) => ({
-                          ...prev,
-                          code: e.target.value.toUpperCase(),
-                        }))
-                      }
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setNewCoupon((prev) => ({
-                          ...prev,
-                          code: generateCouponCode(),
-                        }))
-                      }
-                      className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
-                    >
-                      Generate
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Discount Amount (₦)
                   </label>
                   <input
@@ -706,46 +696,7 @@ const CouponPage = () => {
               <form onSubmit={handleEditCoupon} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Coupon Code
-                  </label>
-                  <input
-                    type="text"
-                    value={selectedCoupon.code}
-                    onChange={(e) =>
-                      setSelectedCoupon((prev) => ({
-                        ...prev,
-                        code: e.target.value.toUpperCase(),
-                      }))
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Discount Type
-                  </label>
-                  <select
-                    value={selectedCoupon.discountType}
-                    onChange={(e) =>
-                      setSelectedCoupon((prev) => ({
-                        ...prev,
-                        discountType: e.target.value,
-                      }))
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="percentage">Percentage</option>
-                    <option value="fixed">Fixed Amount</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {selectedCoupon.discountType === "percentage"
-                      ? "Discount Percentage"
-                      : "Discount Amount"}
+                    Discount Amount
                   </label>
                   <input
                     type="number"
@@ -778,25 +729,6 @@ const CouponPage = () => {
                     required
                   />
                 </div>
-
-                {selectedCoupon.discountType === "percentage" && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Maximum Discount Amount (₦)
-                    </label>
-                    <input
-                      type="number"
-                      value={selectedCoupon.maxDiscountAmount}
-                      onChange={(e) =>
-                        setSelectedCoupon((prev) => ({
-                          ...prev,
-                          maxDiscountAmount: e.target.value,
-                        }))
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                )}
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -850,23 +782,6 @@ const CouponPage = () => {
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Description
-                  </label>
-                  <textarea
-                    value={selectedCoupon.description}
-                    onChange={(e) =>
-                      setSelectedCoupon((prev) => ({
-                        ...prev,
-                        description: e.target.value,
-                      }))
-                    }
-                    rows="3"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
 
