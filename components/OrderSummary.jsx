@@ -2,9 +2,10 @@ import { addressDummyData } from "@/assets/assets";
 import { useAppContext } from "@/context/AppContext";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { toast } from "react-toastify";
 import { apiUrl, API_CONFIG } from "@/configs/api";
 import PinInput from "./PinInput";
+import Swal from "sweetalert2";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const OrderSummary = () => {
   const {
@@ -22,6 +23,7 @@ const OrderSummary = () => {
   const [loading, setLoading] = useState(false);
   const [addresses, setAddresses] = useState("");
   const [pin, setPin] = useState("");
+  const [showPin, setShowPin] = useState(false);
 
   // New states for delivery logic
   const [deliveryState, setDeliveryState] = useState("");
@@ -38,19 +40,31 @@ const OrderSummary = () => {
 
   const createOrder = async () => {
     if (!pin || pin.length !== 4) {
-      toast.error("Please enter your 4-digit transaction PIN.");
+      Swal.fire({
+        icon: "error",
+        title: "Validation Error",
+        text: "Please enter your 4-digit transaction PIN.",
+      });
       return;
     }
     setLoading(true);
 
     if (!deliveryState) {
-      toast.error("Please select a delivery state.");
+      Swal.fire({
+        icon: "error",
+        title: "Validation Error",
+        text: "Please select a delivery state.",
+      });
       setLoading(false);
       return;
     }
 
     if (isInterState && !interStateAddress) {
-      toast.error("Please enter the inter-state delivery address.");
+      Swal.fire({
+        icon: "error",
+        title: "Validation Error",
+        text: "Please enter the inter-state delivery address.",
+      });
       setLoading(false);
       return;
     }
@@ -71,7 +85,11 @@ const OrderSummary = () => {
       .filter(Boolean);
 
     if (orderProducts.length === 0) {
-      toast.error("Your cart is empty.");
+      Swal.fire({
+        icon: "error",
+        title: "Empty Cart",
+        text: "Your cart is empty.",
+      });
       setLoading(false);
       return;
     }
@@ -89,12 +107,16 @@ const OrderSummary = () => {
       shippingFee: shippingFee,
       tax: Math.floor(getCartAmount() * 0.02), // You might want to tax the total amount including shipping
       phone: userData?.phone,
-      couponCode: couponDiscount > 0 ? couponCode : undefined,
+
       pin,
     };
 
     if (!payload.vendorId) {
-      toast.error("Could not determine vendor for this order.");
+      Swal.fire({
+        icon: "error",
+        title: "Order Error",
+        text: "Could not determine vendor for this order.",
+      });
       setLoading(false);
       return;
     }
@@ -104,14 +126,20 @@ const OrderSummary = () => {
         apiUrl(API_CONFIG.ENDPOINTS.ORDER.CREATE),
         payload
       );
-      toast.success("Order placed successfully!");
+      Swal.fire({
+        icon: "success",
+        title: "Success!",
+        text: "Order placed successfully!",
+        timer: 2000,
+        showConfirmButton: false,
+      });
       router.push("dashboard/orders");
     } catch (error) {
       console.error("Error creating order:", error);
       const errorMessage =
         error.response?.data?.message ||
         "Failed to place order. Please try again.";
-      toast.error(errorMessage);
+      Swal.fire({ icon: "error", title: "Order Failed", text: errorMessage });
     } finally {
       setLoading(false);
     }
@@ -127,7 +155,11 @@ const OrderSummary = () => {
       setAddresses(response.data.user || []);
     } catch (error) {
       console.error("Error fetching addresses:", error);
-      toast.error("Failed to fetch shipping addresses.");
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Failed to fetch shipping addresses.",
+      });
     } finally {
       setPageLoading(false);
     }
@@ -135,7 +167,11 @@ const OrderSummary = () => {
 
   const handleApplyCoupon = async () => {
     if (!couponCode) {
-      toast.error("Please enter a coupon code.");
+      Swal.fire({
+        icon: "error",
+        title: "Input Required",
+        text: "Please enter a coupon code.",
+      });
       return;
     }
     setCouponLoading(true);
@@ -156,12 +192,23 @@ const OrderSummary = () => {
       setCouponDiscount(discountAmount || 0);
       // Use the final amount from the API if available
       setFinalAmount(apiFinalAmount || null);
-      toast.success("Coupon applied successfully!");
+      Swal.fire({
+        icon: "success",
+        title: "Success!",
+        text: "Coupon applied successfully!",
+        timer: 2000,
+        showConfirmButton: false,
+      });
     } catch (error) {
       console.error("Error validating coupon:", error);
       const errorMessage =
-        error.response?.data?.message || "Invalid or expired coupon code.";
-      toast.error(errorMessage);
+        error.response?.data?.message ||
+        "Failed to validate coupon. Please try again.";
+      Swal.fire({
+        icon: "error",
+        title: "Coupon Error",
+        text: errorMessage,
+      });
       setCouponDiscount(0);
       setCouponCode("");
       setFinalAmount(null);
@@ -403,7 +450,20 @@ const OrderSummary = () => {
         >
           Transaction PIN <span className="text-red-500">*</span>
         </label>
-        <PinInput length={4} onChange={setPin} />
+        <div className="relative">
+          <PinInput
+            length={4}
+            onChange={setPin}
+            type={showPin ? "text" : "password"}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPin(!showPin)}
+            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
+          >
+            {showPin ? <FaEyeSlash /> : <FaEye />}
+          </button>
+        </div>
       </fieldset>
 
       <button

@@ -118,9 +118,12 @@ const Cart = () => {
                     -
                   </button>
                   <input
-                    onChange={(e) =>
-                      updateCartQuantity(product._id, Number(e.target.value))
-                    }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Prevent removal when input is cleared to type a new number
+                      const newQuantity = value === "" ? null : Number(value);
+                      updateCartQuantity(product._id, newQuantity);
+                    }}
                     type="number"
                     value={product.quantity}
                     className="w-12 border-l border-r text-center appearance-none outline-none"
