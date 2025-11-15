@@ -18,10 +18,11 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import { decryptData } from "@/lib/encryption";
+import { useAppContext } from "@/context/AppContext";
 import { apiUrl, API_CONFIG } from "@/configs/api";
 
 const CouponPage = () => {
-  const [userData, setUserData] = useState(null);
+  const { userData } = useAppContext();
   const [coupons, setCoupons] = useState([]);
   const [filteredCoupons, setFilteredCoupons] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -36,15 +37,11 @@ const CouponPage = () => {
   // New coupon form state
   const [newCoupon, setNewCoupon] = useState({
     code: "",
-    discountType: "percentage",
     discountValue: "",
     minOrderAmount: "",
-    maxDiscountAmount: "",
     validFrom: "",
     validUntil: "",
     usageLimit: "",
-    description: "",
-    isActive: true,
   });
 
   useEffect(() => {
@@ -52,78 +49,39 @@ const CouponPage = () => {
   }, []);
 
   useEffect(() => {
-    if (isClient) {
-      fetchCoupons();
+    if (userData?.id) {
+      fetchCoupons(userData.id);
     }
-  }, [isClient]);
+  }, [userData]);
 
   useEffect(() => {
     filterCoupons();
   }, [coupons, searchTerm, filterStatus]);
 
-  const fetchCoupons = async () => {
+  const fetchCoupons = async (creatorId) => {
     setLoading(true);
     try {
-      const encryptedUser = localStorage.getItem("user");
-      if (!encryptedUser) {
-        toast.error("User not found. Please log in again.");
+      if (!creatorId) {
+        toast.error("Could not identify user. Please log in again.");
         setLoading(false);
         return;
       }
 
-      const decryptedUserData = decryptData(encryptedUser);
-      setUserData(decryptedUserData);
+      const response = await axios.get(
+        apiUrl(API_CONFIG.ENDPOINTS.COUPON.GET_ALL + userData.id)
+      );
 
-      // Simulated API call - replace with your actual API
-      const mockCoupons = [
-        {
-          id: 1,
-          code: "WELCOME20",
-          discountType: "percentage",
-          discountValue: 20,
-          minOrderAmount: 1000,
-          maxDiscountAmount: 500,
-          validFrom: "2024-01-01",
-          validUntil: "2024-12-31",
-          usageLimit: 100,
-          usedCount: 45,
-          description: "Welcome discount for new customers",
-          isActive: true,
-          createdAt: "2024-01-01",
-        },
-        {
-          id: 2,
-          code: "FREESHIP",
-          discountType: "fixed",
-          discountValue: 300,
-          minOrderAmount: 2000,
-          maxDiscountAmount: 300,
-          validFrom: "2024-01-01",
-          validUntil: "2024-06-30",
-          usageLimit: 50,
-          usedCount: 50,
-          description: "Free shipping on orders above ₦2000",
-          isActive: false,
-          createdAt: "2024-01-01",
-        },
-        {
-          id: 3,
-          code: "SUMMER25",
-          discountType: "percentage",
-          discountValue: 25,
-          minOrderAmount: 1500,
-          maxDiscountAmount: 1000,
-          validFrom: "2024-06-01",
-          validUntil: "2024-08-31",
-          usageLimit: 200,
-          usedCount: 78,
-          description: "Summer special discount",
-          isActive: true,
-          createdAt: "2024-05-15",
-        },
-      ];
+      // Map API response to frontend state structure
+      const fetchedCoupons = response.data.map((coupon) => ({
+        id: coupon._id,
+        ...coupon,
+        discountValue: coupon.discountAmount,
+        minOrderAmount: coupon.minimumOrderAmount,
+        usedCount: coupon.usageCount || 0, // Assuming usageCount from backend
+      }));
 
-      setCoupons(mockCoupons);
+      setCoupons(fetchedCoupons);
+      toast.success("Coupons loaded successfully.");
     } catch (error) {
       console.error("Error fetching coupons:", error);
       toast.error("Failed to load coupons.");
@@ -165,22 +123,26 @@ const CouponPage = () => {
 
   const handleCreateCoupon = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       // Validate dates
       if (new Date(newCoupon.validUntil) < new Date(newCoupon.validFrom)) {
         toast.error("Valid until date must be after valid from date.");
+        setLoading(false);
         return;
       }
 
-      // Simulate API call
-      const couponToCreate = {
-        ...newCoupon,
-        id: coupons.length + 1,
-        usedCount: 0,
-        createdAt: new Date().toISOString().split("T")[0],
+      const payload = {
+        discountAmount: newCoupon.discountValue,
+        minimumOrderAmount: newCoupon.minOrderAmount,
+        validFrom: newCoupon.validFrom,
+        validUntil: newCoupon.validUntil,
+        usageLimit: newCoupon.usageLimit,
+        createdBy: userData.id,
       };
-
-      setCoupons((prev) => [couponToCreate, ...prev]);
+      console.log(payload);
+      await axios.post(apiUrl(API_CONFIG.ENDPOINTS.COUPON.CREATE), payload);
+      fetchCoupons(userData.id); // Refetch to get the latest list
       toast.success("Coupon created successfully!");
       setShowCreateModal(false);
       resetNewCouponForm();
@@ -192,42 +154,63 @@ const CouponPage = () => {
 
   const handleEditCoupon = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
-      setCoupons((prev) =>
-        prev.map((coupon) =>
-          coupon.id === selectedCoupon.id ? selectedCoupon : coupon
-        )
+      const payload = {
+        discountAmount: selectedCoupon.discountValue,
+        minimumOrderAmount: selectedCoupon.minOrderAmount,
+        validFrom: selectedCoupon.validFrom,
+        validUntil: selectedCoupon.validUntil,
+        usageLimit: selectedCoupon.usageLimit,
+        isActive: selectedCoupon.isActive,
+        createdBy: userData.id,
+      };
+
+      await axios.put(
+        apiUrl(API_CONFIG.ENDPOINTS.COUPON.UPDATE + selectedCoupon.id),
+        payload
       );
+
+      fetchCoupons(userData.id); // Refetch to update the list
       toast.success("Coupon updated successfully!");
       setShowEditModal(false);
       setSelectedCoupon(null);
     } catch (error) {
       console.error("Error updating coupon:", error);
       toast.error("Failed to update coupon.");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDeleteCoupon = async (couponId) => {
     if (window.confirm("Are you sure you want to delete this coupon?")) {
+      setLoading(true);
       try {
-        setCoupons((prev) => prev.filter((coupon) => coupon.id !== couponId));
+        await axios.delete(
+          apiUrl(API_CONFIG.ENDPOINTS.COUPON.DELETE + couponId)
+        );
+        fetchCoupons(userData.id); // Refetch to update the list
         toast.success("Coupon deleted successfully!");
       } catch (error) {
         console.error("Error deleting coupon:", error);
         toast.error("Failed to delete coupon.");
+      } finally {
+        setLoading(false);
       }
     }
   };
 
   const toggleCouponStatus = async (couponId) => {
+    const coupon = coupons.find((c) => c.id === couponId);
+    if (!coupon) return;
+
     try {
-      setCoupons((prev) =>
-        prev.map((coupon) =>
-          coupon.id === couponId
-            ? { ...coupon, isActive: !coupon.isActive }
-            : coupon
-        )
-      );
+      await axios.put(apiUrl(API_CONFIG.ENDPOINTS.COUPON.UPDATE + couponId), {
+        isActive: !coupon.isActive,
+        createdBy: userData.id,
+      });
+      fetchCoupons(userData.id); // Refetch to update the list
       toast.success("Coupon status updated!");
     } catch (error) {
       console.error("Error updating coupon status:", error);
@@ -252,15 +235,11 @@ const CouponPage = () => {
   const resetNewCouponForm = () => {
     setNewCoupon({
       code: generateCouponCode(),
-      discountType: "percentage",
       discountValue: "",
       minOrderAmount: "",
-      maxDiscountAmount: "",
       validFrom: "",
       validUntil: "",
       usageLimit: "",
-      description: "",
-      isActive: true,
     });
   };
 
@@ -603,28 +582,7 @@ const CouponPage = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Discount Type
-                  </label>
-                  <select
-                    value={newCoupon.discountType}
-                    onChange={(e) =>
-                      setNewCoupon((prev) => ({
-                        ...prev,
-                        discountType: e.target.value,
-                      }))
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="percentage">Percentage</option>
-                    <option value="fixed">Fixed Amount</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {newCoupon.discountType === "percentage"
-                      ? "Discount Percentage"
-                      : "Discount Amount"}
+                    Discount Amount (₦)
                   </label>
                   <input
                     type="number"
@@ -638,11 +596,6 @@ const CouponPage = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     required
                     min="1"
-                    max={
-                      newCoupon.discountType === "percentage"
-                        ? "100"
-                        : undefined
-                    }
                   />
                 </div>
 
@@ -664,26 +617,6 @@ const CouponPage = () => {
                     min="0"
                   />
                 </div>
-
-                {newCoupon.discountType === "percentage" && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Maximum Discount Amount (₦)
-                    </label>
-                    <input
-                      type="number"
-                      value={newCoupon.maxDiscountAmount}
-                      onChange={(e) =>
-                        setNewCoupon((prev) => ({
-                          ...prev,
-                          maxDiscountAmount: e.target.value,
-                        }))
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      min="0"
-                    />
-                  </div>
-                )}
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -739,40 +672,6 @@ const CouponPage = () => {
                     required
                     min="1"
                   />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Description
-                  </label>
-                  <textarea
-                    value={newCoupon.description}
-                    onChange={(e) =>
-                      setNewCoupon((prev) => ({
-                        ...prev,
-                        description: e.target.value,
-                      }))
-                    }
-                    rows="3"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={newCoupon.isActive}
-                    onChange={(e) =>
-                      setNewCoupon((prev) => ({
-                        ...prev,
-                        isActive: e.target.checked,
-                      }))
-                    }
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <label className="ml-2 text-sm text-gray-700">
-                    Active Coupon
-                  </label>
                 </div>
 
                 <div className="flex gap-3 pt-4">

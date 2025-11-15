@@ -104,6 +104,13 @@ export const API_CONFIG = {
     CATEGORY: {
       GET_ALL: "/category/",
     },
+    COUPON: {
+      CREATE: "/coupons/create",
+      GET_ALL: "/coupons/", // append creatorId
+      UPDATE: "/coupons/", // append couponId
+      DELETE: "/coupons/", // append couponId
+      VALIDATE: "/coupons/validate",
+    },
   },
 };
 
