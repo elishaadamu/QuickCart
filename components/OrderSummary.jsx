@@ -142,7 +142,11 @@ const OrderSummary = () => {
         timer: 2000,
         showConfirmButton: false,
       });
-      router.push("dashboard/orders");
+      if (userData.id === "vendor") {
+        router.push("vendor-dashboard/orders/pending");
+      } else {
+        router.push("dashboard/orders/pending");
+      }
     } catch (error) {
       console.error("Error creating order:", error);
       const errorMessage =
