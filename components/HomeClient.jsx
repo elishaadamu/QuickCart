@@ -134,10 +134,10 @@ const HomeClient = () => {
         <HeaderSlider />
       </div>
       <div className="px-6  max-w-[1280px] mx-auto lg:px-32">
-        <VendorSection />
         <HomeProducts />
-        <SubscriptionPlans />
+        <VendorSection />
         <FeaturedProduct />
+        <SubscriptionPlans />
 
         <Banner />
         <NewsLetter />
