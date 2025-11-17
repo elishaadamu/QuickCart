@@ -39,7 +39,7 @@ const VendorSection = () => {
       {loading ? (
         <Loading />
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 px-4 sm:px-0">
           {vendors.slice(0, 4).map((vendor) => (
             <VendorCard key={vendor._id} {...vendor} />
           ))}

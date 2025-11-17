@@ -55,7 +55,7 @@ const ProductCard = ({ product }) => {
           alt={product.name}
           width={400}
           height={400}
-          className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-110"
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
         {hasOffer && (
           <span className="absolute top-2 left-2 rounded-full bg-red-600 px-2.5 py-0.5 text-xs font-semibold text-white shadow">

@@ -31,13 +31,13 @@ const FeaturedProduct = () => {
         <div className="w-28 h-0.5 bg-blue-600 mt-2"></div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-14 mt-12 md:px-14 px-4">
+      <div className="grid grid-cols-1 md:grid-cols-1  lg:grid-cols-3 gap-8 mt-12 md:px-14 px-4">
         {products.map(({ id, image, title, description }) => (
           <div key={id} className="relative group">
             <Image
               src={image}
               alt={title}
-              className="group-hover:brightness-75 transition duration-300 w-full h-auto object-cover"
+              className="group-hover:brightness-75 transition duration-300 w-full  h-auto object-cover"
             />
             <div className="group-hover:-translate-y-4 transition duration-300 absolute bottom-8 left-8 text-white space-y-2">
               <p className="font-medium text-xl lg:text-2xl">{title}</p>

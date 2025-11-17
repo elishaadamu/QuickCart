@@ -195,7 +195,7 @@ const Product = () => {
             </p>
             <div className="w-28 h-0.5 bg-blue-600 mt-2"></div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mt-6 pb-14 w-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6 mt-6 pb-14 w-full">
             {products.slice(0, 5).map((product, index) => (
               <ProductCard key={index} product={product} />
             ))}
