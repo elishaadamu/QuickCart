@@ -46,7 +46,7 @@ const ProductCard = ({ product }) => {
         router.push(`/product/${product._id}`);
         scrollTo(0, 0);
       }}
-      className="group relative flex w-full max-w-xs cursor-pointer flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-lg"
+      className="group relative flex w-full  max-w-xs cursor-pointer flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-lg"
     >
       {/* Product Image */}
       <div className="relative h-32 overflow-hidden rounded-t-2xl bg-gray-50">
