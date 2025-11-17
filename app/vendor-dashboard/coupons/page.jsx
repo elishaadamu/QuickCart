@@ -77,7 +77,6 @@ const CouponPage = () => {
         ...coupon,
         discountValue: coupon.discountAmount,
         minOrderAmount: coupon.minimumOrderAmount,
-        usedCount: coupon.usageCount || 0, // Assuming usageCount from backend
       }));
 
       setCoupons(fetchedCoupons);
