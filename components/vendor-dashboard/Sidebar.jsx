@@ -147,44 +147,14 @@ const Sidebar = ({
 
               <div className={`space-y-1 ${openOrders ? "block" : "hidden"}`}>
                 <Link
-                  href="/vendor-dashboard/orders/pending"
+                  href="/vendor-dashboard/all-orders"
                   className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
-                    pathname === "/vendor-dashboard/orders/pending"
+                    pathname === "/vendor-dashboard/all-orders"
                       ? "bg-gray-700"
                       : ""
                   }`}
                 >
-                  Pending
-                </Link>
-                <Link
-                  href="/vendor-dashboard/orders/approved"
-                  className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
-                    pathname === "/vendor-dashboard/orders/approved"
-                      ? "bg-gray-700"
-                      : ""
-                  }`}
-                >
-                  Approved
-                </Link>
-                <Link
-                  href="/vendor-dashboard/orders/on-delivery"
-                  className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
-                    pathname === "/vendor-dashboard/orders/on-delivery"
-                      ? "bg-gray-700"
-                      : ""
-                  }`}
-                >
-                  On Delivery
-                </Link>
-                <Link
-                  href="/vendor-dashboard/orders/delivered"
-                  className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
-                    pathname === "/vendor-dashboard/orders/delivered"
-                      ? "bg-gray-700"
-                      : ""
-                  }`}
-                >
-                  Delivered
+                  All Orders
                 </Link>
               </div>
             </div>
