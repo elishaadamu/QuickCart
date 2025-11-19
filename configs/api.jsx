@@ -112,6 +112,9 @@ export const API_CONFIG = {
       VALIDATE: "/coupons/validate",
     },
   },
+  SHIPPING_FEE: {
+    GET_ALL: "/shipping-fee/all",
+  },
 };
 
 export const apiUrl = (endpoint) => `${API_CONFIG.BASE_URL}${endpoint}`;
