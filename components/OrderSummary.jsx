@@ -151,9 +151,9 @@ const OrderSummary = () => {
         showConfirmButton: false,
       });
       if (userData.id === "vendor") {
-        router.push("vendor-dashboard/orders/pending");
+        router.push("vendor-dashboard/all-orders");
       } else {
-        router.push("dashboard/orders/pending");
+        router.push("dashboard/all-orders");
       }
     } catch (error) {
       console.error("Error creating order:", error);
@@ -449,11 +449,11 @@ const OrderSummary = () => {
 
       {/* Coupon Section */}
       <fieldset className="space-y-3">
-        <label className="text-sm font-medium text-gray-700 block flex items-center gap-2">
+        <label className="text-sm font-medium text-gray-700  flex items-center gap-2">
           <FaTag className="text-green-500" />
           Have a coupon?
         </label>
-        <div className="flex gap-2">
+        <div className="flex gap-2 w-[100%] sm:w-full flex-col sm:flex-row">
           <input
             type="text"
             value={couponCode}

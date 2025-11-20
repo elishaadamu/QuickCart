@@ -3,17 +3,22 @@
 @tailwind utilities;
 
 * {
-    scroll-behavior: smooth;
+  scroll-behavior: smooth;
 }
 
 @layer base {
-    input[type="number"]::-webkit-inner-spin-button,
-    input[type="number"]::-webkit-outer-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
   }
+}
 
 ::-webkit-scrollbar {
   display: none;
+}
+@media screen and (max-width: 360px) {
+  .hpme-products {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  }
 }

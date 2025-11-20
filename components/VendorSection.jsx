@@ -3,12 +3,43 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import VendorCard from "./VendorCard";
 import axios from "axios";
+import Slider from "react-slick";
 import { apiUrl, API_CONFIG } from "@/configs/api";
 import Loading from "./Loading";
+
+// Import slick-carousel styles
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 
 const VendorSection = () => {
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const sliderSettings = {
+    dots: true,
+    infinite: false,
+    speed: 500,
+    slidesToShow: 3,
+    slidesToScroll: 1,
+    arrows: true,
+    responsive: [
+      {
+        breakpoint: 768,
+        settings: {
+          slidesToShow: 2,
+          slidesToScroll: 1,
+        },
+      },
+      {
+        breakpoint: 640,
+        settings: {
+          slidesToShow: 1,
+          slidesToScroll: 1,
+          arrows: false,
+        },
+      },
+    ],
+  };
 
   useEffect(() => {
     const fetchVendors = async () => {
@@ -29,10 +60,38 @@ const VendorSection = () => {
     fetchVendors();
   }, []);
   return (
+    // my-16 was a bit large for mobile, reducing it on smaller screens
     <div className="my-16">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h2 className="text-xl md:text-2xl font-bold text-gray-800">
+      <style jsx global>{`
+        @media screen and (max-width: 360px) {
+          .home-products {
+            grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+          }
+          .button-see_more {
+            display: flex;
+            flex-direction: column;
+            justify-content: start;
+            align-items: baseline;
+            gap: 10px;
+          }
+        }
+        /* Custom styles for slick-dots */
+        .slick-dots li button:before {
+          font-size: 10px;
+          color: #9ca3af; /* gray-400 */
+        }
+        .slick-dots li.slick-active button:before {
+          color: #3b82f6; /* blue-500 */
+        }
+        /* Custom styles for slick arrows */
+        .slick-prev:before,
+        .slick-next:before {
+          color: #3b82f6; /* blue-500 */
+        }
+      `}</style>
+      <div className="flex  button-see_more justify-between items-center mb-8">
+        <div className="">
+          <h2 className=" text-xl md:text-2xl font-bold text-gray-800">
             Our Top Vendors
           </h2>
           <p className="text-gray-500 text-sm text-[18px] mt-2">
@@ -49,11 +108,13 @@ const VendorSection = () => {
       {loading ? (
         <Loading />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6 px-4 sm:px-0">
+        <Slider {...sliderSettings}>
           {vendors.slice(0, 4).map((vendor) => (
-            <VendorCard key={vendor._id} {...vendor} />
+            <div key={vendor._id} className="px-2 py-2">
+              <VendorCard {...vendor} />
+            </div>
           ))}
-        </div>
+        </Slider>
       )}
     </div>
   );

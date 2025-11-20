@@ -51,9 +51,6 @@ export const AppContextProvider = (props) => {
       }
 
       const decryptedUser = decryptData(encryptedUser);
-      console.log("Decryption result:", {
-        decryptedUser,
-      });
 
       if (decryptedUser) {
         setUserData(decryptedUser);

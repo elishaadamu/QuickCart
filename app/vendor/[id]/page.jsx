@@ -189,6 +189,19 @@ const VendorPage = () => {
 
   return (
     <div className="px-6 md:px-16 lg:px-32 py-12">
+      <style jsx global>{`
+        @media screen and (max-width: 360px) {
+          .home-products {
+            grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+          }
+          .button-see_more {
+            flex-direction: column;
+            justify-content: start;
+            align-items: baseline;
+            gap: 10px;
+          }
+        }
+      `}</style>
       <div className="bg-white rounded-lg shadow-md mb-12 overflow-hidden">
         <div className="relative">
           <Image
@@ -210,7 +223,7 @@ const VendorPage = () => {
           </div>
         </div>
         <div className="pt-24 pb-8 px-8 text-center md:text-left">
-          <h1 className="text-4xl font-bold text-gray-800">
+          <h1 className="text-3xl md:text-[32px] font-bold text-gray-800">
             {vendor.businessName}
           </h1>
           <div className="flex items-center justify-center md:justify-start mt-2 space-x-6">
@@ -230,11 +243,11 @@ const VendorPage = () => {
 
       {/* Products Section */}
       <div className="mb-12">
-        <h2 className="text-3xl font-bold text-gray-800 mb-6">
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-6">
           Products from {vendor.businessName}
         </h2>
         {vendorProducts.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+          <div className="grid home-products grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
             {vendorProducts.map((product) => (
               <ProductCard key={product._id} product={product} />
             ))}

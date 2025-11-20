@@ -64,22 +64,22 @@ const SubscriptionPlans = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl">
+        <div className="text-center mb-10 sm:mb-12">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 lg:text-5xl">
             Choose Your Subscription Plan
           </h1>
-          <p className="mt-4 text-lg text-gray-600">
+          <p className="mt-3 sm:mt-4 text-base sm:text-lg text-gray-600">
             Select the plan that best fits your business needs.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 items-center">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 items-center">
           {plans.map((plan, index) => {
             const isPopular = index === 1; // Highlight the second plan
             return (
               <div
                 key={plan._id}
-                className={`relative rounded-2xl p-8 shadow-lg transition-transform duration-300 ${
+                className={`relative rounded-2xl p-6 sm:p-8 shadow-lg transition-transform duration-300 ${
                   isPopular
                     ? "bg-blue-600 text-white scale-105"
                     : "bg-white text-gray-900 hover:scale-105"
@@ -93,7 +93,7 @@ const SubscriptionPlans = () => {
                   </div>
                 )}
 
-                <h3 className="text-2xl font-bold text-center">
+                <h3 className="text-xl sm:text-2xl font-bold text-center">
                   {plan.package}
                 </h3>
                 <p
@@ -105,9 +105,11 @@ const SubscriptionPlans = () => {
                 </p>
 
                 <div className="mt-8 text-center">
-                  <span className="text-5xl font-extrabold">₦{plan.price}</span>
+                  <span className="text-4xl sm:text-5xl font-extrabold">
+                    ₦{plan.price}
+                  </span>
                   <span
-                    className={`text-lg ml-1 ${
+                    className={`text-base sm:text-lg ml-1 ${
                       isPopular ? "text-blue-200" : "text-gray-500"
                     }`}
                   >
@@ -115,7 +117,7 @@ const SubscriptionPlans = () => {
                   </span>
                 </div>
 
-                <ul className="mt-8 space-y-4">
+                <ul className="mt-6 sm:mt-8 space-y-4 text-sm sm:text-base">
                   <li className="flex items-center">
                     <span className="font-semibold">Products Limit:</span>
                     <span className="ml-auto">

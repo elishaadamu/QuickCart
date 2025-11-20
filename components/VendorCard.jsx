@@ -60,15 +60,19 @@ const VendorCard = ({
         </div>
 
         {/* Reviews + Products Row */}
-        <div className="flex justify-center items-center gap-10 mt-4 text-center">
-          <div className="text-blue-800 bg-gray-100 w-30 rounded-lg flex flex-row gap-3 items-center px-4 py-2">
-            <p className="text-xl font-semibold">{totalReviews || 0}</p>
-            <p className="text-gray-500 text-sm mt-0">Reviews</p>
+        <div className="flex justify-center items-center gap-4 sm:gap-6 mt-4 text-center">
+          <div className="text-blue-800 bg-gray-100 rounded-lg flex flex-row gap-2 items-center px-3 py-2">
+            <p className="text-lg sm:text-xl font-semibold">
+              {totalReviews || 0}
+            </p>
+            <p className="text-gray-500 text-xs sm:text-sm mt-0">Reviews</p>
           </div>
 
-          <div className="text-blue-800 bg-gray-100  rounded-lg flex flex-row gap-3 items-center px-2 py-2">
-            <p className="text-xl font-semibold">{productCount || 0}</p>
-            <p className="text-gray-500 text-sm mt-0">Products</p>
+          <div className="text-blue-800 bg-gray-100 rounded-lg flex flex-row gap-2 items-center px-3 py-2">
+            <p className="text-lg sm:text-xl font-semibold">
+              {productCount || 0}
+            </p>
+            <p className="text-gray-500 text-xs sm:text-sm mt-0">Products</p>
           </div>
         </div>
       </div>
