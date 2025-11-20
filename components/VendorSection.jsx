@@ -30,29 +30,31 @@ const VendorSection = () => {
   }, []);
   return (
     <div className="my-16">
-      <div className="flex flex-col items-center mb-8">
-        <h2 className="text-3xl font-bold text-gray-800">Our Top Vendors</h2>
-        <p className="text-gray-500 mt-2">
-          Discover products from our most trusted sellers.
-        </p>
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h2 className="text-xl md:text-2xl font-bold text-gray-800">
+            Our Top Vendors
+          </h2>
+          <p className="text-gray-500 text-sm text-[18px] mt-2">
+            Discover products from our most trusted sellers.
+          </p>
+        </div>
+        <Link
+          href="/all-vendors"
+          className="px-6 py-2 rounded bg-blue-500 text-white hover:bg-blue-600 transition text-sm whitespace-nowrap"
+        >
+          View All Vendors
+        </Link>
       </div>
       {loading ? (
         <Loading />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 px-4 sm:px-0">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6 px-4 sm:px-0">
           {vendors.slice(0, 4).map((vendor) => (
             <VendorCard key={vendor._id} {...vendor} />
           ))}
         </div>
       )}
-      <div className="text-center mt-12">
-        <Link
-          href="/all-vendors"
-          className="inline-block px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-        >
-          View All Vendors
-        </Link>
-      </div>
     </div>
   );
 };

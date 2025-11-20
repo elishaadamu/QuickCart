@@ -69,7 +69,7 @@ const CategorySidebar = () => {
   }, []);
 
   return (
-    <div className="w-full h-[400px] overflow-y-auto mt-6 md:flex-[20%] bg-white hidden md:block shadow-lg rounded-lg z-10 p-4  border border-gray-200 top-20 ">
+    <div className="w-full h-[250px] overflow-y-auto mt-6 md:flex-[20%] bg-white hidden md:block shadow-lg rounded-lg z-10 p-4  border border-gray-200 top-20 ">
       <h3 className="text-lg font-semibold mb-4 text-gray-800">Categories</h3>
       {loading ? (
         <div className="space-y-2">

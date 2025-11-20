@@ -8,7 +8,6 @@ import Image from "next/image";
 import { decryptData } from "@/lib/encryption";
 import { apiUrl, API_CONFIG } from "@/configs/api";
 import axios from "axios";
-import { categoriesData } from "@/components/CategorySidebar";
 import { usePathname } from "next/navigation";
 import {
   HiOutlineCpuChip,
@@ -36,21 +35,33 @@ const Navbar = () => {
     cartItems,
   } = useAppContext();
   const pathname = usePathname();
+
+  // UI state
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filteredProducts, setFilteredProducts] = useState([]);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [animate, setAnimate] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  // Desktop dropdown opens (hover + click)
+  const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
   const [pagesOpen, setPagesOpen] = useState(false);
   const [vendorOpen, setVendorOpen] = useState(false);
   const [deliveryOpen, setDeliveryOpen] = useState(false);
-  const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
-  const [walletBalance, setWalletBalance] = useState(0);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
 
-  // Icon mapping for dynamic categories
+  // Mobile accordion state: which section is open ('categories','pages','vendor','delivery','account', null)
+  const [mobileOpenSection, setMobileOpenSection] = useState(null);
+
+  // Search
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredProducts, setFilteredProducts] = useState([]);
+
+  // Data
+  const [categories, setCategories] = useState([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [walletBalance, setWalletBalance] = useState(0);
+
+  // Icons mapping
   const iconMap = {
     Electronics: <HiOutlineCpuChip className="w-5 h-5 mr-2 text-gray-500" />,
     Fashion: <HiOutlineShoppingBag className="w-5 h-5 mr-2 text-gray-500" />,
@@ -83,28 +94,25 @@ const Navbar = () => {
     return iconMap[categoryName] || iconMap.default;
   };
 
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-
+  // Fetch categories
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        setLoading(true);
+        setLoadingCategories(true);
         const response = await axios.get(
           apiUrl(API_CONFIG.ENDPOINTS.CATEGORY.GET_ALL)
         );
-        console.log(response.data);
-        setCategories(response.data.categories);
-      } catch (error) {
-        console.error("Failed to fetch categories:", error);
-        // You could set an error state here to show a message in the UI
+        setCategories(response.data.categories || []);
+      } catch (err) {
+        console.error("Failed to fetch categories:", err);
       } finally {
-        setLoading(false);
+        setLoadingCategories(false);
       }
     };
     fetchCategories();
   }, []);
 
+  // Filter products for search
   useEffect(() => {
     if (searchQuery.trim() !== "") {
       const filtered = products.filter((product) =>
@@ -116,6 +124,7 @@ const Navbar = () => {
     }
   }, [searchQuery, products]);
 
+  // Fetch wallet balance
   useEffect(() => {
     const fetchWalletBalance = async () => {
       try {
@@ -135,34 +144,30 @@ const Navbar = () => {
         console.error("Error fetching wallet balance:", error);
       }
     };
-
     fetchWalletBalance();
   }, []);
 
+  // Window resize: close search on large screens
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 768) {
+      if (window.innerWidth >= 1024) {
         setIsSearchOpen(false);
       }
     };
-
     window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Animate mobile menu and lock body scroll
   useEffect(() => {
     if (isMobileMenuOpen) {
       document.body.style.overflow = "hidden";
-      requestAnimationFrame(() => {
-        setAnimate(true);
-      });
+      requestAnimationFrame(() => setAnimate(true));
     } else {
       document.body.style.overflow = "unset";
+      setAnimate(false);
+      setMobileOpenSection(null);
     }
-
     return () => {
       document.body.style.overflow = "unset";
     };
@@ -183,20 +188,32 @@ const Navbar = () => {
 
   const handleSearchIconClick = () => {
     setIsSearchOpen(true);
-    // Focus the input when the modal opens
     setTimeout(() => document.getElementById("search-modal-input")?.focus(), 0);
   };
 
+  // Toggle a mobile accordion section
+  const toggleMobileSection = (section) => {
+    setMobileOpenSection((prev) => (prev === section ? null : section));
+  };
+
+  // Helper to show rotated chevron class
+  const chevronClass = (isOpen) =>
+    `transform transition-transform duration-200 ${isOpen ? "rotate-90" : ""}`;
+
   return (
-    <nav className=" border-b border-gray-300 text-gray-700 relative bg-white shadow-md z-10">
-      <div className="max-w-[1440px] mx-auto flex items-center  justify-between px-6 md:px-4 lg:px-4 py-3">
-        <Image
-          className="cursor-pointer w-[200px] md:w-[250px]"
-          onClick={() => router.push("/")}
-          src={Logo}
-          alt="logo"
-        />
-        <div className="flex items-center gap-4 lg:gap-4 max-md:hidden">
+    <nav className="border-b border-gray-300 text-gray-700 relative bg-white shadow-md z-40">
+      <div className="max-w-[1440px] mx-auto flex items-center justify-between px-6 md:px-4 lg:px-4 py-3">
+        <div className="flex items-center gap-4">
+          <Image
+            className="cursor-pointer w-[160px] md:w-[200px] lg:w-[250px]"
+            onClick={() => router.push("/")}
+            src={Logo}
+            alt="logo"
+          />
+        </div>
+
+        {/* Desktop nav (>=1024px) */}
+        <div className="hidden lg:flex items-center gap-6">
           <Link
             href="/"
             className={`transition text-[18px] ${
@@ -207,6 +224,7 @@ const Navbar = () => {
           >
             Home
           </Link>
+
           <Link
             href="/all-products"
             className={`transition text-[18px] ${
@@ -218,62 +236,74 @@ const Navbar = () => {
             Shop
           </Link>
 
+          {/* Desktop: Categories (hover + click) */}
           <div
             className="relative"
             onMouseEnter={() => setIsCategoryMenuOpen(true)}
             onMouseLeave={() => setIsCategoryMenuOpen(false)}
           >
-            <button className="hover:text-gray-900 transition flex items-center gap-1 text-[18px]">
+            <button
+              onClick={() => setIsCategoryMenuOpen((s) => !s)}
+              className="hover:text-gray-900 transition flex items-center gap-2 text-[18px]"
+            >
               Categories
               <Image
                 src={assets.arrow_icon}
                 alt="arrow"
-                className={`w-2 h-2 transform transition-transform ${
-                  isCategoryMenuOpen ? "rotate-90" : ""
-                }`}
+                className={`w-2 h-2 ${isCategoryMenuOpen ? "rotate-90" : ""}`}
               />
             </button>
+
             <div
-              className={`absolute top-full mt-3 left-0 w-64 bg-white border rounded-lg shadow-lg z-20 transform transition-all duration-200 ease-in-out origin-top ${
+              className={`absolute top-full mt-3 left-0 w-64 bg-white border rounded-lg shadow-lg z-30 transform transition-all duration-200 ease-in-out origin-top ${
                 isCategoryMenuOpen
                   ? "opacity-100 scale-100 visible"
                   : "opacity-0 scale-95 invisible"
               }`}
             >
               <div className="p-2 max-h-96 overflow-y-auto">
-                {categories?.map((category) => (
-                  <Link
-                    key={category._id}
-                    href={`/category/${category.name
-                      .toLowerCase()
-                      .replace(/ & /g, "-")
-                      .replace(/ /g, "-")}`}
-                    className="flex items-center p-2 rounded-md text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200"
-                  >
-                    {getCategoryIcon(category.name)}
-                    <span className="text-sm">{category.name}</span>
-                  </Link>
-                ))}
+                {loadingCategories ? (
+                  <div className="p-3 text-sm text-gray-600">Loading...</div>
+                ) : categories.length === 0 ? (
+                  <div className="p-3 text-sm text-gray-600">No categories</div>
+                ) : (
+                  categories.map((category) => (
+                    <Link
+                      key={category._id}
+                      href={`/category/${category.name
+                        .toLowerCase()
+                        .replace(/ & /g, "-")
+                        .replace(/ /g, "-")}`}
+                      className="flex items-center p-2 rounded-md text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200"
+                    >
+                      {getCategoryIcon(category.name)}
+                      <span className="text-sm">{category.name}</span>
+                    </Link>
+                  ))
+                )}
               </div>
             </div>
           </div>
+
+          {/* Desktop: Pages */}
           <div
             className="relative"
             onMouseEnter={() => setPagesOpen(true)}
             onMouseLeave={() => setPagesOpen(false)}
           >
-            <button className="hover:text-gray-900 transition flex items-center gap-1 text-[18px]">
+            <button
+              onClick={() => setPagesOpen((s) => !s)}
+              className="hover:text-gray-900 transition flex items-center gap-2 text-[18px]"
+            >
               Pages
               <Image
                 src={assets.arrow_icon}
                 alt="arrow"
-                className={`w-2 h-2 transform transition-transform ${
-                  pagesOpen ? "rotate-90" : ""
-                }`}
+                className={`${pagesOpen ? "rotate-90" : ""} w-2 h-2`}
               />
             </button>
             <div
-              className={`absolute top-full mt-3 left-0 w-40 bg-white border rounded-lg shadow-lg z-20 transform transition-all duration-200 ease-in-out origin-top ${
+              className={`absolute top-full mt-3 left-0 w-40 bg-white border rounded-lg shadow-lg z-30 transform transition-all duration-200 ease-in-out origin-top ${
                 pagesOpen
                   ? "opacity-100 scale-100 visible"
                   : "opacity-0 scale-95 invisible"
@@ -312,6 +342,7 @@ const Navbar = () => {
             </div>
           </div>
 
+          {/* Desktop: Vendor */}
           {isLoggedIn && userData?.role === "vendor" ? (
             <Link
               href="/vendor-dashboard/add-products"
@@ -329,18 +360,19 @@ const Navbar = () => {
               onMouseEnter={() => setVendorOpen(true)}
               onMouseLeave={() => setVendorOpen(false)}
             >
-              <button className="hover:text-gray-900 transition flex items-center gap-1 text-[18px]">
+              <button
+                onClick={() => setVendorOpen((s) => !s)}
+                className="hover:text-gray-900 transition flex items-center gap-2 text-[18px]"
+              >
                 Vendor
                 <Image
                   src={assets.arrow_icon}
                   alt="arrow"
-                  className={`w-2 h-2 transform transition-transform ${
-                    vendorOpen ? "rotate-90" : ""
-                  }`}
+                  className={`${vendorOpen ? "rotate-90" : ""} w-2 h-2`}
                 />
               </button>
               <div
-                className={`absolute top-full mt-3 left-0 w-48 bg-white border rounded-lg shadow-lg z-20 transform transition-all duration-200 ease-in-out origin-top ${
+                className={`absolute top-full mt-3 left-0 w-48 bg-white border rounded-lg shadow-lg z-30 transform transition-all duration-200 ease-in-out origin-top ${
                   vendorOpen
                     ? "opacity-100 scale-100 visible"
                     : "opacity-0 scale-95 invisible"
@@ -369,23 +401,26 @@ const Navbar = () => {
               </div>
             </div>
           )}
+
+          {/* Desktop: Delivery */}
           <div
             className="relative"
             onMouseEnter={() => setDeliveryOpen(true)}
             onMouseLeave={() => setDeliveryOpen(false)}
           >
-            <button className="hover:text-gray-900 transition flex items-center gap-1 text-[18px]">
+            <button
+              onClick={() => setDeliveryOpen((s) => !s)}
+              className="hover:text-gray-900 transition flex items-center gap-2 text-[18px]"
+            >
               Delivery Man
               <Image
                 src={assets.arrow_icon}
                 alt="arrow"
-                className={`w-2 h-2 transform transition-transform ${
-                  deliveryOpen ? "rotate-90" : ""
-                }`}
+                className={`${deliveryOpen ? "rotate-90" : ""} w-2 h-2`}
               />
             </button>
             <div
-              className={`absolute top-full mt-3 left-0 w-56 bg-white border rounded-lg shadow-lg z-20 transform transition-all duration-200 ease-in-out origin-top ${
+              className={`absolute top-full mt-3 left-0 w-56 bg-white border rounded-lg shadow-lg z-30 transform transition-all duration-200 ease-in-out origin-top ${
                 deliveryOpen
                   ? "opacity-100 scale-100 visible"
                   : "opacity-0 scale-95 invisible"
@@ -423,7 +458,9 @@ const Navbar = () => {
             </div>
           </div>
         </div>
-        <ul className="hidden md:flex items-center gap-6 relative">
+
+        {/* Right side icons (desktop) */}
+        <ul className="hidden lg:flex items-center gap-6 relative">
           <Image
             className="w-5 cursor-pointer"
             src={assets.search_icon}
@@ -436,6 +473,7 @@ const Navbar = () => {
               <p>{getWishlistCount()}</p>
             </div>
           </Link>
+
           <div
             className="relative"
             onMouseEnter={() => setIsCartOpen(true)}
@@ -447,8 +485,9 @@ const Navbar = () => {
                 <p>{getCartCount()}</p>
               </div>
             </Link>
+
             <div
-              className={`absolute top-full mt-4 right-0 w-72 bg-white border rounded-lg shadow-lg z-20 transform transition-all duration-200 ease-in-out origin-top-right ${
+              className={`absolute top-full mt-4 right-0 w-72 bg-white border rounded-lg shadow-lg z-30 transform transition-all duration-200 ease-in-out origin-top-right ${
                 isCartOpen
                   ? "opacity-100 scale-100 visible"
                   : "opacity-0 scale-95 invisible"
@@ -496,13 +535,15 @@ const Navbar = () => {
               )}
             </div>
           </div>
+
           {isLoggedIn && (
             <div className="flex items-center gap-2">
-              <p className="text-2xl  text-gray-600">
+              <p className="text-2xl text-gray-600">
                 ₦{walletBalance?.balance?.toFixed(2)}
               </p>
             </div>
           )}
+
           <div
             className="relative"
             onMouseEnter={() => setAccountOpen(true)}
@@ -511,10 +552,10 @@ const Navbar = () => {
             <Image
               src={assets.user_icon}
               alt="user"
-              className="w-6 h-6  md:w-10 md:h-10 cursor-pointer md:mt-[-5px] md:ml-[-10px] "
+              className="w-6 h-6 md:w-10 md:h-10 cursor-pointer md:mt-[-5px] md:ml-[-10px]"
             />
             <div
-              className={`absolute top-full mt-3 right-0 w-48 bg-white border rounded-lg shadow-lg z-20 transform transition-all duration-200 ease-in-out origin-top-right ${
+              className={`absolute top-full mt-3 right-0 w-48 bg-white border rounded-lg shadow-lg z-30 transform transition-all duration-200 ease-in-out origin-top-right ${
                 accountOpen
                   ? "opacity-100 scale-100 visible"
                   : "opacity-0 scale-95 invisible"
@@ -558,9 +599,9 @@ const Navbar = () => {
                         Vendor Dashboard
                       </Link>
                       <Link
-                        href="/my-orders"
+                        href="/vendor-dashboard/all-orders"
                         className={`block px-4 py-2 ${
-                          pathname === "/my-orders"
+                          pathname === "/vendor-dashboard/all-orders"
                             ? "bg-gray-100 text-blue-600"
                             : "hover:bg-gray-100"
                         }`}
@@ -573,7 +614,7 @@ const Navbar = () => {
                       <Link
                         href="/dashboard"
                         className={`block px-4 py-2 ${
-                          pathname === "/delivery-dashboard/withdraw"
+                          pathname === "/dashboard"
                             ? "bg-gray-100 text-blue-600"
                             : "hover:bg-gray-100"
                         }`}
@@ -611,7 +652,9 @@ const Navbar = () => {
             </div>
           </div>
         </ul>
-        <div className="flex items-center md:hidden gap-4">
+
+        {/* Mobile / Tablet icons (0 - 1023.99px) */}
+        <div className="flex items-center lg:hidden gap-4">
           <Image
             className="w-5 cursor-pointer"
             src={assets.search_icon}
@@ -637,225 +680,498 @@ const Navbar = () => {
             onClick={() => setIsMobileMenuOpen(true)}
           />
         </div>
-        {isSearchOpen && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-start pt-20"
-            onClick={() => setIsSearchOpen(false)}
-          >
-            <div
-              className="relative w-11/12 md:w-1/2 lg:w-1/3"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <input
-                type="text"
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                id="search-modal-input"
-                className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <div
-                className={`absolute top-full mt-2 left-0 w-full bg-white border rounded-lg shadow-lg z-20 max-h-96 overflow-y-auto ${
-                  searchQuery.trim() !== "" ? "block" : "hidden"
-                }`}
-              >
-                {filteredProducts.length > 0 ? (
-                  filteredProducts.map((product) => (
-                    <div
-                      key={product._id}
-                      onClick={() => handleProductClick(product._id)}
-                      className="p-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3"
-                    >
-                      <Image
-                        src={product.images?.[0]?.url || ""}
-                        alt={product.name}
-                        width={50}
-                        height={50}
-                        className="rounded-md object-cover"
-                      />
-                      <div>
-                        <p className="font-medium">{product.name}</p>
-                        <p className="text-sm text-gray-600">
-                          ₦{product.price}
-                        </p>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="p-3 text-center text-gray-500">
-                    No products found
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-        {isMobileMenuOpen && (
-          <div className="fixed inset-0 z-50 md:hidden">
-            {/* Overlay */}
-            <div
-              className={`fixed inset-0 bg-black transition-opacity duration-300 ${
-                animate ? "bg-opacity-50" : "bg-opacity-0"
-              }`}
-              onClick={handleCloseMenu}
-            ></div>
-
-            {/* Menu panel */}
-            <div
-              className={`fixed top-0 right-0 h-full w-4/5 max-w-sm bg-gray-900 text-white p-6 transform transition-transform duration-300 ease-in-out ${
-                animate ? "translate-x-0" : "translate-x-full"
-              }`}
-            >
-              <div className="flex justify-end">
-                <button onClick={handleCloseMenu} className="text-white">
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-              <div className="flex flex-col items-center gap-6 text-lg mt-8">
-                <Link
-                  href="/"
-                  className="hover:text-gray-400 transition"
-                  onClick={handleCloseMenu}
-                >
-                  Home
-                </Link>
-                <Link
-                  href="/all-products"
-                  className="hover:text-gray-400 transition"
-                  onClick={handleCloseMenu}
-                >
-                  Shop
-                </Link>
-                <Link
-                  href="/all-vendors"
-                  className="hover:text-gray-400 transition"
-                  onClick={handleCloseMenu}
-                >
-                  Vendors
-                </Link>
-                <Link
-                  href="/categories"
-                  className="hover:text-gray-400 transition"
-                  onClick={handleCloseMenu}
-                >
-                  Categories
-                </Link>
-                <Link
-                  href="/about"
-                  className="hover:text-gray-400 transition"
-                  onClick={handleCloseMenu}
-                >
-                  About Us
-                </Link>{" "}
-                <Link
-                  href="/contact"
-                  className="hover:text-gray-400 transition"
-                  onClick={handleCloseMenu}
-                >
-                  Contact
-                </Link>
-                {isLoggedIn && userData?.role === "vendor" ? (
-                  <Link
-                    href="/seller"
-                    className="hover:text-gray-400 transition"
-                    onClick={handleCloseMenu}
-                  >
-                    Add Products
-                  </Link>
-                ) : (
-                  <>
-                    <Link
-                      href="/vendor-signup"
-                      className="hover:text-gray-400 transition"
-                      onClick={handleCloseMenu}
-                    >
-                      Become a Vendor
-                    </Link>
-                    <Link
-                      href="/vendor-signin"
-                      className="hover:text-gray-400 transition"
-                      onClick={handleCloseMenu}
-                    >
-                      Vendor Login
-                    </Link>
-                  </>
-                )}
-                {isLoggedIn && userData?.user?.role === "delivery" ? (
-                  <Link
-                    href="/delivery-dashboard"
-                    className="hover:text-gray-400 transition"
-                    onClick={handleCloseMenu}
-                  >
-                    Delivery Dashboard
-                  </Link>
-                ) : (
-                  <>
-                    <Link
-                      href="/delivery-signup"
-                      className="hover:text-gray-400 transition"
-                      onClick={handleCloseMenu}
-                    >
-                      Become a Delivery Man
-                    </Link>
-                    <Link
-                      href="/delivery-signin"
-                      className="hover:text-gray-400 transition"
-                      onClick={handleCloseMenu}
-                    >
-                      Delivery Man Login
-                    </Link>
-                  </>
-                )}
-                {isLoggedIn && userData?.role === "user" && (
-                  <Link
-                    href="/dashboard"
-                    className="hover:text-gray-400 transition"
-                    onClick={handleCloseMenu}
-                  >
-                    Dashboard
-                  </Link>
-                )}
-                {isLoggedIn ? (
-                  <button
-                    onClick={() => {
-                      logout();
-                      handleCloseMenu();
-                    }}
-                    className="bg-red-600 text-white px-6 py-2 rounded-full w-40 hover:bg-red-500 transition"
-                  >
-                    Logout
-                  </button>
-                ) : (
-                  <div className="flex flex-col items-center gap-4 mt-4">
-                    <Link href="/signin" onClick={handleCloseMenu}>
-                      <button className="border border-white text-white px-6 py-2 rounded-full w-40 hover:bg-white hover:text-gray-900 transition">
-                        Sign in
-                      </button>
-                    </Link>
-                    <Link href="/signup" onClick={handleCloseMenu}>
-                      <button className="bg-blue-600 text-white px-6 py-2 rounded-full w-40 hover:bg-blue-500 transition">
-                        Sign up
-                      </button>
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* Search modal */}
+      {isSearchOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-start pt-20"
+          onClick={() => setIsSearchOpen(false)}
+        >
+          <div
+            className="relative w-11/12 md:w-1/2 lg:w-1/3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              id="search-modal-input"
+              className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <div
+              className={`absolute top-full mt-2 left-0 w-full bg-white border rounded-lg shadow-lg z-20 max-h-96 overflow-y-auto ${
+                searchQuery.trim() !== "" ? "block" : "hidden"
+              }`}
+            >
+              {filteredProducts.length > 0 ? (
+                filteredProducts.map((product) => (
+                  <div
+                    key={product._id}
+                    onClick={() => handleProductClick(product._id)}
+                    className="p-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3"
+                  >
+                    <Image
+                      src={product.images?.[0]?.url || ""}
+                      alt={product.name}
+                      width={50}
+                      height={50}
+                      className="rounded-md object-cover"
+                    />
+                    <div>
+                      <p className="font-medium">{product.name}</p>
+                      <p className="text-sm text-gray-600">₦{product.price}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-3 text-center text-gray-500">
+                  No products found
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Sidebar (slides in from RIGHT). active for <1024px (lg:hidden used above to show mobile controls) */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          {/* overlay */}
+          <div
+            className={`fixed inset-0 bg-black transition-opacity duration-300 ${
+              animate ? "bg-opacity-50" : "bg-opacity-0"
+            }`}
+            onClick={handleCloseMenu}
+          />
+
+          {/* panel (right) */}
+          <aside
+            className={`fixed top-0 right-0 h-full w-4/5 max-w-md bg-white text-gray-900 p-6 transform transition-transform duration-300 ease-in-out overflow-y-auto ${
+              animate ? "translate-x-0" : "translate-x-full"
+            }`}
+            aria-modal="true"
+            role="dialog"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Image
+                  src={Logo}
+                  alt="logo"
+                  className="w-36"
+                  onClick={() => {
+                    router.push("/");
+                    handleCloseMenu();
+                  }}
+                />
+              </div>
+              <button onClick={handleCloseMenu} className="text-gray-700">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <nav className="mt-6">
+              <ul className="flex flex-col gap-3">
+                <li>
+                  <Link
+                    href="/"
+                    onClick={handleCloseMenu}
+                    className="block px-2 py-3 rounded-md hover:bg-gray-100"
+                  >
+                    Home
+                  </Link>
+                </li>
+
+                <li>
+                  <Link
+                    href="/all-products"
+                    onClick={handleCloseMenu}
+                    className="block px-2 py-3 rounded-md hover:bg-gray-100"
+                  >
+                    Shop
+                  </Link>
+                </li>
+
+                <li>
+                  <button
+                    onClick={() => toggleMobileSection("categories")}
+                    className="w-full flex items-center justify-between px-2 py-3 rounded-md hover:bg-gray-100"
+                  >
+                    <span>Categories</span>
+                    <Image
+                      src={assets.arrow_icon}
+                      alt="arrow"
+                      className={
+                        chevronClass(mobileOpenSection === "categories") +
+                        " w-3 h-3"
+                      }
+                    />
+                  </button>
+
+                  <div
+                    className={`overflow-hidden transition-[max-height] duration-300 ease-in-out ${
+                      mobileOpenSection === "categories"
+                        ? "max-h-[24rem]"
+                        : "max-h-0"
+                    }`}
+                  >
+                    <div className="mt-2 pb-2 border-b border-gray-200">
+                      {loadingCategories ? (
+                        <div className="px-2 py-2 text-sm text-gray-600">
+                          Loading...
+                        </div>
+                      ) : categories.length === 0 ? (
+                        <div className="px-2 py-2 text-sm text-gray-600">
+                          No categories
+                        </div>
+                      ) : (
+                        categories.map((category) => (
+                          <Link
+                            key={category._id}
+                            href={`/category/${category.name
+                              .toLowerCase()
+                              .replace(/ & /g, "-")
+                              .replace(/ /g, "-")}`}
+                            onClick={handleCloseMenu}
+                            className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 rounded-md"
+                          >
+                            {getCategoryIcon(category.name)}
+                            <span className="text-sm">{category.name}</span>
+                          </Link>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </li>
+
+                <li>
+                  <button
+                    onClick={() => toggleMobileSection("pages")}
+                    className="w-full flex items-center justify-between px-2 py-3 rounded-md hover:bg-gray-100"
+                  >
+                    <span>Pages</span>
+                    <Image
+                      src={assets.arrow_icon}
+                      alt="arrow"
+                      className={
+                        chevronClass(mobileOpenSection === "pages") + " w-3 h-3"
+                      }
+                    />
+                  </button>
+
+                  <div
+                    className={`overflow-hidden transition-[max-height] duration-300 ease-in-out ${
+                      mobileOpenSection === "pages" ? "max-h-40" : "max-h-0"
+                    }`}
+                  >
+                    <div className="mt-2 pb-2 border-b border-gray-200">
+                      <Link
+                        href="/about"
+                        onClick={handleCloseMenu}
+                        className="block px-3 py-2 rounded-md hover:bg-gray-50"
+                      >
+                        About Us
+                      </Link>
+                      <Link
+                        href="/contact"
+                        onClick={handleCloseMenu}
+                        className="block px-3 py-2 rounded-md hover:bg-gray-50"
+                      >
+                        Contact
+                      </Link>
+                      <Link
+                        href="/all-vendors"
+                        onClick={handleCloseMenu}
+                        className="block px-3 py-2 rounded-md hover:bg-gray-50"
+                      >
+                        All Vendors
+                      </Link>
+                    </div>
+                  </div>
+                </li>
+
+                <li>
+                  {isLoggedIn && userData?.role === "vendor" ? (
+                    <Link
+                      href="/vendor-dashboard/add-products"
+                      onClick={handleCloseMenu}
+                      className="block px-2 py-3 rounded-md hover:bg-gray-100"
+                    >
+                      Add Products
+                    </Link>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => toggleMobileSection("vendor")}
+                        className="w-full flex items-center justify-between px-2 py-3 rounded-md hover:bg-gray-100"
+                      >
+                        <span>Vendor</span>
+                        <Image
+                          src={assets.arrow_icon}
+                          alt="arrow"
+                          className={
+                            chevronClass(mobileOpenSection === "vendor") +
+                            " w-3 h-3"
+                          }
+                        />
+                      </button>
+                      <div
+                        className={`overflow-hidden transition-[max-height] duration-300 ease-in-out ${
+                          mobileOpenSection === "vendor"
+                            ? "max-h-40"
+                            : "max-h-0"
+                        }`}
+                      >
+                        <div className="mt-2 pb-2 border-b border-gray-200">
+                          <Link
+                            href="/vendor-signup"
+                            onClick={handleCloseMenu}
+                            className="block px-3 py-2 rounded-md hover:bg-gray-50"
+                          >
+                            Become a Vendor
+                          </Link>
+                          <Link
+                            href="/vendor-signin"
+                            onClick={handleCloseMenu}
+                            className="block px-3 py-2 rounded-md hover:bg-gray-50"
+                          >
+                            Vendor Login
+                          </Link>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </li>
+
+                <li>
+                  <button
+                    onClick={() => toggleMobileSection("delivery")}
+                    className="w-full flex items-center justify-between px-2 py-3 rounded-md hover:bg-gray-100"
+                  >
+                    <span>Delivery Man</span>
+                    <Image
+                      src={assets.arrow_icon}
+                      alt="arrow"
+                      className={
+                        chevronClass(mobileOpenSection === "delivery") +
+                        " w-3 h-3"
+                      }
+                    />
+                  </button>
+                  <div
+                    className={`overflow-hidden transition-[max-height] duration-300 ease-in-out ${
+                      mobileOpenSection === "delivery" ? "max-h-40" : "max-h-0"
+                    }`}
+                  >
+                    <div className="mt-2 pb-2 border-b border-gray-200">
+                      {isLoggedIn && userData?.user?.role === "delivery" ? (
+                        <Link
+                          href="/delivery-dashboard"
+                          onClick={handleCloseMenu}
+                          className="block px-3 py-2 rounded-md hover:bg-gray-50"
+                        >
+                          Delivery Dashboard
+                        </Link>
+                      ) : (
+                        <>
+                          <Link
+                            href="/delivery-signup"
+                            onClick={handleCloseMenu}
+                            className="block px-3 py-2 rounded-md hover:bg-gray-50"
+                          >
+                            Become a Delivery Man
+                          </Link>
+                          <Link
+                            href="/delivery-signin"
+                            onClick={handleCloseMenu}
+                            className="block px-3 py-2 rounded-md hover:bg-gray-50"
+                          >
+                            Delivery Man Login
+                          </Link>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </li>
+
+                {/* Account */}
+                <li>
+                  <button
+                    onClick={() => toggleMobileSection("account")}
+                    className="w-full flex items-center justify-between px-2 py-3 rounded-md hover:bg-gray-100"
+                  >
+                    <span>Account</span>
+                    <Image
+                      src={assets.arrow_icon}
+                      alt="arrow"
+                      className={
+                        chevronClass(mobileOpenSection === "account") +
+                        " w-3 h-3"
+                      }
+                    />
+                  </button>
+
+                  <div
+                    className={`overflow-hidden transition-[max-height] duration-300 ease-in-out ${
+                      mobileOpenSection === "account" ? "max-h-60" : "max-h-0"
+                    }`}
+                  >
+                    <div className="mt-2 pb-2 border-b border-gray-200">
+                      {isLoggedIn ? (
+                        <>
+                          {userData?.role === "delivery" ? (
+                            <>
+                              <Link
+                                href="/delivery-dashboard"
+                                onClick={handleCloseMenu}
+                                className="block px-3 py-2 rounded-md hover:bg-gray-50"
+                              >
+                                Dashboard
+                              </Link>
+                              <Link
+                                href="/delivery-dashboard/withdraw"
+                                onClick={handleCloseMenu}
+                                className="block px-3 py-2 rounded-md hover:bg-gray-50"
+                              >
+                                Withdraw
+                              </Link>
+                            </>
+                          ) : userData?.role === "vendor" ? (
+                            <>
+                              <Link
+                                href="/vendor-dashboard"
+                                onClick={handleCloseMenu}
+                                className="block px-3 py-2 rounded-md hover:bg-gray-50"
+                              >
+                                Vendor Dashboard
+                              </Link>
+                              <Link
+                                href="/vendor-dashboard/all-orders"
+                                onClick={handleCloseMenu}
+                                className="block px-3 py-2 rounded-md hover:bg-gray-50"
+                              >
+                                My Orders
+                              </Link>
+                            </>
+                          ) : (
+                            <Link
+                              href="/dashboard"
+                              onClick={handleCloseMenu}
+                              className="block px-3 py-2 rounded-md hover:bg-gray-50"
+                            >
+                              Dashboard
+                            </Link>
+                          )}
+                          <button
+                            onClick={() => {
+                              logout();
+                              handleCloseMenu();
+                            }}
+                            className="w-full text-left px-3 py-2 text-red-600"
+                          >
+                            Logout
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <Link
+                            href="/signin"
+                            onClick={handleCloseMenu}
+                            className="block px-3 py-2 rounded-md hover:bg-gray-50"
+                          >
+                            Sign In
+                          </Link>
+                          <Link
+                            href="/signup"
+                            onClick={handleCloseMenu}
+                            className="block px-3 py-2 rounded-md hover:bg-gray-50"
+                          >
+                            Sign Up
+                          </Link>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </li>
+
+                {/* Extra quick links */}
+                <li className="pt-2">
+                  <Link
+                    href="/about"
+                    onClick={handleCloseMenu}
+                    className="block px-2 py-3 rounded-md hover:bg-gray-100"
+                  >
+                    About
+                  </Link>
+                  <Link
+                    href="/contact"
+                    onClick={handleCloseMenu}
+                    className="block px-2 py-3 rounded-md hover:bg-gray-100"
+                  >
+                    Contact
+                  </Link>
+                </li>
+
+                {/* Sign in / out CTA */}
+                <li className="mt-4">
+                  {isLoggedIn ? (
+                    <button
+                      onClick={() => {
+                        logout();
+                        handleCloseMenu();
+                      }}
+                      className="w-full bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-500 transition"
+                    >
+                      Logout
+                    </button>
+                  ) : (
+                    <div className="flex gap-3">
+                      <Link
+                        href="/signin"
+                        onClick={handleCloseMenu}
+                        className="flex-1"
+                      >
+                        <button className="w-full border border-gray-300 px-4 py-2 rounded-md hover:bg-gray-50">
+                          Sign in
+                        </button>
+                      </Link>
+                      <Link
+                        href="/signup"
+                        onClick={handleCloseMenu}
+                        className="flex-1"
+                      >
+                        <button className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-500">
+                          Sign up
+                        </button>
+                      </Link>
+                    </div>
+                  )}
+                </li>
+              </ul>
+            </nav>
+
+            <div className="mt-8 text-sm text-gray-500">
+              {/* Optional wallet / utility area */}
+              {isLoggedIn && (
+                <div>Wallet: ₦{walletBalance?.balance?.toFixed(2)}</div>
+              )}
+            </div>
+          </aside>
+        </div>
+      )}
     </nav>
   );
 };

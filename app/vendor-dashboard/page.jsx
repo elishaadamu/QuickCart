@@ -633,7 +633,7 @@ const DashboardHome = () => {
             </div>
             <div className="mt-3">
               <Link
-                href="/dashboard/referrals"
+                href="/vendor-dashboard/referrals"
                 className="text-xs text-blue-600 hover:text-blue-800"
               >
                 Get referral link →
@@ -704,7 +704,7 @@ const DashboardHome = () => {
             )}
             <div className="mt-3">
               <Link
-                href="/dashboard/orders"
+                href="/vendor-dashboard/orders"
                 className="text-xs text-gray-600 hover:text-gray-900"
               >
                 View all orders →
@@ -797,35 +797,35 @@ const DashboardHome = () => {
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 md:hidden z-40">
         <div className="flex justify-around items-center h-14">
           <Link
-            href="/dashboard"
+            href="/vendor-dashboard"
             className="flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 text-xs"
           >
             <FaHome className="w-5 h-5 mb-1" />
             <span>Home</span>
           </Link>
           <Link
-            href="/dashboard/inbox"
+            href="/vendor-dashboard/inbox"
             className="flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 text-xs"
           >
             <FaCommentDots className="w-5 h-5 mb-1" />
             <span>Chat</span>
           </Link>
           <Link
-            href="/dashboard/request-delivery"
+            href="/vendor-dashboard/request-delivery"
             className="flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 text-xs"
           >
             <FaTruck className="w-5 h-5 mb-1" />
             <span>Delivery</span>
           </Link>
           <Link
-            href="/dashboard/orders"
+            href="/vendor-dashboard/orders"
             className="flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 text-xs"
           >
             <FaBoxOpen className="w-5 h-5 mb-1" />
             <span>Orders</span>
           </Link>
           <Link
-            href="/dashboard/personal-details"
+            href="/vendor-dashboard/personal-details"
             className="flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 text-xs"
           >
             <FaUser className="w-5 h-5 mb-1" />

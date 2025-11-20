@@ -1,5 +1,6 @@
 "use client";
 
+import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -11,19 +12,28 @@ const HeaderSlider = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  // Static brand description
+  const brandDescription =
+    "Kasuwar Zamani is your go-to online marketplace for quality products, great prices, and a seamless shopping experience.";
+
+  // Static badges for brand trust
+  const trustBadges = [
+    { text: "Fast Delivery" },
+    { text: "Secure Payments" },
+    { text: "24/7 Support" },
+  ];
 
   useEffect(() => {
     const fetchBanners = async () => {
       try {
         setLoading(true);
-        // Assuming the endpoint is configured in API_CONFIG
         const response = await axios.get(
           apiUrl(API_CONFIG.ENDPOINTS.BANNERS.GET_ALL)
         );
-        console.log(response.data);
-        setBanners(response.data.banners);
+        setBanners(response.data.banners || []);
       } catch (err) {
-        console.error("Failed to fetch banners:", err);
         setError("Could not load banners at the moment.");
       } finally {
         setLoading(false);
@@ -34,76 +44,122 @@ const HeaderSlider = () => {
 
   useEffect(() => {
     if (banners.length === 0) return;
+
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % banners.length);
-    }, 3000);
+    }, 4000);
+
     return () => clearInterval(interval);
   }, [banners.length]);
 
+  useEffect(() => {
+    // Animation effect for text on slide change
+    setIsAnimating(true);
+    const timer = setTimeout(() => setIsAnimating(false), 500); // Duration of the fade-in animation
+    return () => clearTimeout(timer);
+  }, [currentSlide]);
+
   const handleSlideChange = (index) => {
-    setCurrentSlide(index);
+    if (index !== currentSlide) {
+      setCurrentSlide(index);
+    }
   };
 
   return (
-    <div className="overflow-hidden relative w-full md:flex-[80%] pr-0 md:mr-6">
+    <div className="relative w-full overflow-hidden rounded-2xl mt-6 bg-gray-100">
       {loading ? (
-        <div className="flex items-center justify-center bg-gray-200 mt-6 rounded-xl min-h-[300px]">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="flex items-center justify-center min-h-[350px] bg-gray-200 rounded-xl">
+          <div className="animate-spin h-12 w-12 border-b-2 border-blue-600 rounded-full"></div>
         </div>
       ) : error || banners.length === 0 ? (
-        <div className="flex items-center justify-center bg-gray-200 mt-6 rounded-xl min-h-[300px]">
+        <div className="flex items-center justify-center min-h-[350px] bg-gray-200 rounded-xl">
           <p className="text-gray-600">{error || "No banners available."}</p>
         </div>
       ) : (
         <>
+          {/* SLIDER */}
           <div
-            className="flex transition-transform duration-700 ease-in-out"
-            style={{
-              transform: `translateX(-${currentSlide * 100}%)`,
-            }}
+            className="flex transition-transform duration-700 ease-out"
+            style={{ transform: `translateX(-${currentSlide * 100}%)` }}
           >
             {banners.map((banner) => (
               <div
                 key={banner._id}
-                className="flex flex-col-reverse md:flex-row items-center justify-between bg-[#E6E9F2] py-8 md:px-14 px-5 mt-6 rounded-xl min-w-full"
+                className="min-w-full flex flex-col-reverse md:flex-row items-center justify-between px-6 md:px-16 py-10 md:py-8 bg-gradient-to-r from-[#E7ECF5] to-[#F6F7FA]"
               >
-                <div className="md:pl-8 mt-10 md:mt-0">
-                  <p className="md:text-base text-blue-600 pb-1">
-                    {banner.offer}
-                  </p>
-                  <h1 className="max-w-lg md:text-[40px] md:leading-[48px] text-2xl font-semibold">
+                {/* TEXT SECTION */}
+                <div
+                  className={`flex-1 md:max-w-[40%] text-center md:text-left mt-8 md:mt-0 transition-opacity duration-500 ${
+                    isAnimating && currentSlide === banners.indexOf(banner)
+                      ? "opacity-0"
+                      : "opacity-100"
+                  }`}
+                >
+                  {banner.offer && (
+                    <p className="text-blue-600 font-medium tracking-wide mb-2">
+                      {banner.offer}
+                    </p>
+                  )}
+
+                  <h1 className="text-3xl md:text-5xl font-bold leading-tight text-gray-900 max-w-md mx-auto md:mx-0">
                     {banner.title}
                   </h1>
-                  <div className="flex items-center mt-4 md:mt-6 ">
+
+                  {/* STATIC BRAND DESCRIPTION ALWAYS SHOWN */}
+                  <p className="text-gray-700 text-sm md:text-base leading-relaxed mt-4 max-w-md mx-auto md:mx-0">
+                    {brandDescription}
+                  </p>
+
+                  <div className="mt-6">
                     <Link
                       href={banner.link || "#"}
-                      className="md:px-10 px-7 md:py-2.5 py-2 bg-blue-600 rounded-full text-white font-medium hover:bg-blue-700 transition-colors"
+                      className="inline-block px-10 py-3 bg-blue-600 text-white rounded-full font-semibold transition-all hover:bg-blue-700"
                     >
                       Shop Now
                     </Link>
                   </div>
+
+                  {/* TRUST BADGES */}
+                  <div className="mt-8 flex flex-wrap items-center justify-center md:justify-start gap-x-6 gap-y-2">
+                    {trustBadges.map((badge, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-2 text-xs text-gray-600"
+                      >
+                        <CheckCircleIcon className="h-4 w-4 text-green-500" />
+                        <span>{badge.text}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex items-center flex-1 justify-center">
+
+                {/* IMAGE SECTION */}
+                <div className="flex-1 flex items-center justify-center">
                   <Image
-                    className="md:w-[90%] w-48 object-contain"
                     src={banner.image.url}
                     alt={banner.title}
-                    width={288}
-                    height={288}
-                    priority={true}
+                    width={800}
+                    height={800}
+                    className="object-contain w-[80%] md:w-[90%] max-h-[380px] md:max-h-[520px]"
+                    priority
                   />
                 </div>
               </div>
             ))}
           </div>
-          <div className="flex items-center justify-center gap-2 mt-8">
+
+          {/* DOTS */}
+          <div className="absolute bottom-5 w-full flex items-center justify-center gap-3">
             {banners.map((_, index) => (
               <div
                 key={index}
                 onClick={() => handleSlideChange(index)}
-                className={`h-2 w-2 rounded-full cursor-pointer transition-colors ${
-                  currentSlide === index ? "bg-blue-600" : "bg-gray-500/30"
-                }`}
+                className={`h-3 w-3 rounded-full cursor-pointer transition-all 
+                  ${
+                    currentSlide === index
+                      ? "bg-blue-600 scale-110"
+                      : "bg-white/60 border border-gray-300"
+                  }`}
               ></div>
             ))}
           </div>

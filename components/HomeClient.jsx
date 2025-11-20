@@ -129,17 +129,26 @@ const HomeClient = () => {
 
   return (
     <>
-      <div className="flex justify-center max-w-[1280px] mx-auto gap-10">
+      <div className="flex justify-center max-w-[1280px] mb-10 mx-auto gap-10">
         <CategorySidebar />
         <HeaderSlider />
       </div>
       <div className="px-6  max-w-[1280px] mx-auto lg:px-32">
         <HomeProducts />
+        <hr className="my-12 border-gray-200" />
+
         <VendorSection />
+        <hr className="my-12 border-gray-200" />
+
         <FeaturedProduct />
+        <hr className="my-12 border-gray-200" />
+
         <SubscriptionPlans />
+        <hr className="my-12 border-gray-200" />
 
         <Banner />
+        <hr className="my-12 border-gray-200" />
+
         <NewsLetter />
       </div>
       {showBackToTop && (
