@@ -1,8 +1,13 @@
-import React from "react";
+"use client";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { FaStar } from "react-icons/fa";
 import { FiFolder } from "react-icons/fi";
+import { useAppContext } from "@/context/AppContext";
+import { toast } from "react-toastify";
+import axios from "axios";
+import { apiUrl, API_CONFIG } from "@/configs/api";
 
 const VendorCard = ({
   _id,
@@ -16,6 +21,58 @@ const VendorCard = ({
   category, // Added category prop
   followers,
 }) => {
+  const {
+    isLoggedIn,
+    router,
+    userData,
+    followingList,
+    followVendor,
+    checkIfFollowing,
+  } = useAppContext();
+
+  // Optimistic UI update
+  const [isFollowing, setIsFollowing] = useState(followingList?.includes(_id));
+  const [followerCount, setFollowerCount] = useState(followers || 0);
+
+  useEffect(() => {
+    // Sync with the accurate check from the backend when component mounts
+    if (isLoggedIn) {
+      checkIfFollowing(_id).then((status) => setIsFollowing(status));
+    }
+
+    const fetchFollowerCount = async () => {
+      try {
+        const response = await axios.get(
+          apiUrl(API_CONFIG.ENDPOINTS.FOLLOW.GET_FOLLOWERS + _id)
+        );
+
+        setFollowerCount(response.data.followersCount || 0);
+      } catch (error) {
+        console.error("Error fetching follower count:", error);
+        // Keep the initial prop value on error
+      }
+    };
+    fetchFollowerCount();
+  }, [_id, isLoggedIn, checkIfFollowing]);
+
+  const handleFollowClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isLoggedIn) {
+      toast.error("Please sign in to follow vendors.");
+      router.push("/signin");
+      return;
+    }
+
+    // Call the context function to handle the API call
+    followVendor(_id);
+
+    // Optimistically update the UI
+    setIsFollowing(!isFollowing);
+    setFollowerCount((prev) => (isFollowing ? prev - 1 : prev + 1));
+  };
+
   return (
     <Link
       href={`/vendor/${_id}`}
@@ -51,11 +108,27 @@ const VendorCard = ({
 
       {/* Content */}
       <div className="pt-12 px-4 pb-4">
-        <div className="flex flex-row justify-between items-baseline">
-          <h3 className="text-lg sm:text-xl font-semibold">{businessName}</h3>
-          <div className="text-blue-800 bg-gray-100 rounded-lg flex flex-row gap-2 items-center px-3 py-2">
-            <p className="text-lg sm:text-xl font-semibold">{followers || 0}</p>
-            <p className="text-gray-500 text-xs sm:text-sm mt-0">Followers</p>
+        <div className="flex flex-row justify-between items-start">
+          <h3 className="text-lg sm:text-xl font-semibold flex-1 mr-2">
+            {businessName}
+          </h3>
+          {isLoggedIn && userData?.role === "user" && (
+            <button
+              onClick={handleFollowClick}
+              className={`px-3 py-1 text-sm font-semibold rounded-full transition-colors whitespace-nowrap ${
+                isFollowing
+                  ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                  : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+              }`}
+            >
+              {isFollowing ? "Following" : "Follow"}
+            </button>
+          )}
+        </div>
+        <div className="flex flex-row justify-between items-baseline mt-2">
+          <div className="text-blue-800 bg-gray-100 rounded-lg flex flex-row gap-2 items-center px-3 py-1">
+            <p className="text-sm font-semibold">{followerCount}</p>
+            <p className="text-gray-500 text-xs mt-0">Followers</p>
           </div>
         </div>
 
@@ -80,14 +153,14 @@ const VendorCard = ({
         <div className="flex justify-center items-center gap-2 sm:gap-3 mt-4 text-center">
           <div className="text-blue-800 bg-gray-100 rounded-lg flex flex-row gap-2 items-center px-3 py-2">
             <p className="text-lg sm:text-xl font-semibold">
-              {totalReviews || 0}
+              {totalReviews ?? 0}
             </p>
             <p className="text-gray-500 text-xs sm:text-sm mt-0">Reviews</p>
           </div>
 
           <div className="text-blue-800 bg-gray-100 rounded-lg flex flex-row gap-2 items-center px-3 py-2">
             <p className="text-lg sm:text-xl font-semibold">
-              {productCount || 0}
+              {productCount ?? 0}
             </p>
             <p className="text-gray-500 text-xs sm:text-sm mt-0">Products</p>
           </div>

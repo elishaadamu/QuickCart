@@ -9,7 +9,7 @@ import axios from "axios";
 import { apiUrl, API_CONFIG } from "@/configs/api";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import Sidebar from "@/components/vendor-dashboard/Sidebar";
+import Sidebar from "@/components/dashboard/Sidebar";
 
 const DashboardLayout = ({ children }) => {
   const router = useRouter();

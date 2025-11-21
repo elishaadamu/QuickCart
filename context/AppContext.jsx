@@ -6,6 +6,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import axios from "axios";
 import { apiUrl, API_CONFIG } from "@/configs/api";
 import statesData from "@/lib/states.json";
+import { toast } from "react-toastify";
 import lgasData from "@/lib/lgas.json";
 
 export const AppContext = createContext();
@@ -29,6 +30,9 @@ export const AppContextProvider = (props) => {
   const [cartItems, setCartItems] = useState({});
 
   const [wishlistItems, setWishlistItems] = useState([]);
+
+  // Following vendors state
+  const [followingList, setFollowingList] = useState([]);
 
   const fetchProductData = async () => {
     try {
@@ -75,6 +79,7 @@ export const AppContextProvider = (props) => {
     setUserData(null);
     setCartItems({}); // Clear cart on logout
     setWishlistItems([]); // Clear wishlist on logout
+    setFollowingList([]); // Clear following list on logout
     console.log("Logging out and redirecting to homepage...");
     // It's better to show toast notifications in the component that calls logout.
     router.push("/"); // Redirect to the homepage
@@ -150,11 +155,90 @@ export const AppContextProvider = (props) => {
     return wishlistItems.length;
   };
 
-  useEffect(() => {
-    fetchProductData();
-  }, []);
+  const fetchFollowingList = async (userId) => {
+    if (!userId) {
+      setFollowingList([]);
+      return;
+    }
+    try {
+      const response = await axios.get(
+        apiUrl(API_CONFIG.ENDPOINTS.FOLLOW.GET_FOLLOWING + userId)
+      );
+      console.log("Following vendors", response.data);
+      // Safely access the followings array
+      const followingsArray = response.data?.followings;
+
+      if (Array.isArray(followingsArray)) {
+        const followingIds = followingsArray.map((following) => following._id);
+        setFollowingList(followingIds);
+      } else {
+        setFollowingList([]); // Reset if the data is not in the expected format
+      }
+    } catch (error) {
+      console.error("Error fetching following list:", error);
+      setFollowingList([]); // Reset on error
+    }
+  };
+
+  const checkIfFollowing = async (vendorId) => {
+    if (!isLoggedIn || !userData?.id) {
+      return false;
+    }
+    try {
+      const payload = {
+        followerId: userData.id,
+        followingId: vendorId,
+      };
+      const response = await axios.post(
+        apiUrl(API_CONFIG.ENDPOINTS.FOLLOW.CHECK_FOLLOW),
+        payload
+      );
+      // The backend should return { isFollowing: true/false }
+      return response.data.isFollowing;
+    } catch (error) {
+      console.error("Error checking follow status:", error);
+      return followingList.includes(vendorId); // Fallback to existing list on error
+    }
+  };
+
+  const followVendor = async (vendorId) => {
+    if (!isLoggedIn || !userData?.id) {
+      toast.error("Please sign in to follow vendors.");
+      router.push("/signin");
+      return;
+    }
+
+    const isCurrentlyFollowing = followingList.includes(vendorId);
+
+    try {
+      const payload = {
+        followerId: userData.id,
+        followingId: vendorId,
+      };
+      console.log(payload);
+      const response = await axios.post(
+        apiUrl(API_CONFIG.ENDPOINTS.FOLLOW.FOLLOW_VENDOR),
+        payload
+      );
+      console.log(response.data);
+      if (response.data.action === "follow") {
+        toast.success("You are now following this vendor.");
+      } else if (response.data.action === "unfollow") {
+        toast.success("You have unfollowed this vendor.");
+      }
+
+      // Refetch the list to ensure it's in sync with the database
+      if (userData?.id) fetchFollowingList(userData.id);
+    } catch (error) {
+      console.error("Error following/unfollowing vendor:", error);
+      toast.error(error.response?.data?.message || "An error occurred.");
+      // Revert optimistic UI by refetching
+      if (userData?.id) fetchFollowingList(userData.id);
+    }
+  };
 
   useEffect(() => {
+    fetchProductData();
     fetchUserData();
   }, []);
 
@@ -165,6 +249,9 @@ export const AppContextProvider = (props) => {
         const userId = userData._id;
         const cartStorageKey = `cartItems_storage_${userId}`;
         const wishlistStorageKey = `wishlistItems_storage_${userId}`;
+
+        // Fetch user-specific data
+        if (userId) fetchFollowingList(userId);
 
         // Load cart items
         const storedCart = localStorage.getItem(cartStorageKey);
@@ -215,6 +302,7 @@ export const AppContextProvider = (props) => {
         // Clear cart and wishlist if no user is logged in
         setCartItems({});
         setWishlistItems([]);
+        setFollowingList([]);
       }
     }
   }, [userData]); // Re-run when userData changes
@@ -267,6 +355,10 @@ export const AppContextProvider = (props) => {
     states,
     lgas,
     fetchLgas,
+    followingList,
+    followVendor,
+    fetchFollowingList,
+    checkIfFollowing,
   };
 
   return (

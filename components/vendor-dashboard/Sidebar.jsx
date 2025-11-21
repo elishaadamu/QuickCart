@@ -6,7 +6,8 @@ import { usePathname } from "next/navigation";
 import Logo from "@/assets/logo/logo.png";
 import { FaTruck } from "react-icons/fa";
 import { FaHistory } from "react-icons/fa";
-import { FaStar } from "react-icons/fa";
+import { FaStar, FaUsers } from "react-icons/fa";
+
 import { decryptData } from "@/lib/encryption";
 
 const Sidebar = ({
@@ -264,6 +265,17 @@ const Sidebar = ({
             >
               <FaStar className="w-5 h-5" />
               <span>Subscription</span>
+            </Link>
+            <Link
+              href="/vendor-dashboard/get-followers"
+              className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors ${
+                pathname === "/vendor-dashboard/get-followers"
+                  ? "bg-gray-700"
+                  : ""
+              }`}
+            >
+              <FaUsers className="w-5 h-5" />
+              <span>Get Followers</span>
             </Link>
             <div className="space-y-1">
               <button

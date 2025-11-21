@@ -111,6 +111,12 @@ export const API_CONFIG = {
       DELETE: "/coupons/", // append couponId
       VALIDATE: "/coupons/validate",
     },
+    FOLLOW: {
+      FOLLOW_VENDOR: "/follow", // POST with { followerId, followingId }
+      GET_FOLLOWING: "/follow/followings/", // append userId
+      GET_FOLLOWERS: "/follow/my-followers/", // append vendorId
+      CHECK_FOLLOW: "/follow/check", // POST with { followerId, followingId }
+    },
   },
   SHIPPING_FEE: {
     GET_ALL: "/shipping-fee/all",

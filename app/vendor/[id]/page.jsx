@@ -44,7 +44,13 @@ const StarRating = ({ rating, setRating }) => {
 const VendorPage = () => {
   const { id } = useParams();
   const router = useRouter();
-  const { isLoggedIn, products, userData } = useAppContext();
+  const {
+    isLoggedIn,
+    userData,
+    followVendor,
+    followingList,
+    checkIfFollowing,
+  } = useAppContext();
   const [vendor, setVendor] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -52,6 +58,10 @@ const VendorPage = () => {
   const [comment, setComment] = useState("");
   const [vendorProducts, setVendorProducts] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [followerCount, setFollowerCount] = useState(0);
+
+  // Follow state
+  const [isFollowing, setIsFollowing] = useState(followingList?.includes(id));
 
   useEffect(() => {
     if (id) {
@@ -73,6 +83,14 @@ const VendorPage = () => {
               )
             );
             setReviews(reviewsResponse.data.ratings || []);
+
+            // Fetch follower count
+            const followerCountResponse = await axios.get(
+              apiUrl(
+                API_CONFIG.ENDPOINTS.FOLLOW.GET_FOLLOWERS + foundVendor._id
+              )
+            );
+            setFollowerCount(followerCountResponse.data.followersCount || 0);
           } else {
             router.push("/404");
           }
@@ -83,8 +101,18 @@ const VendorPage = () => {
         }
       };
       fetchVendor();
+
+      // Also perform an accurate check for follow status on page load
+      if (isLoggedIn) {
+        checkIfFollowing(id).then((status) => setIsFollowing(status));
+      }
     }
   }, [id, router]);
+
+  useEffect(() => {
+    // Update following state if the followingList from context changes
+    setIsFollowing(followingList?.includes(id));
+  }, [followingList, id]);
 
   useEffect(() => {
     const fetchVendorProducts = async () => {
@@ -104,6 +132,24 @@ const VendorPage = () => {
     };
     fetchVendorProducts();
   }, [vendor]);
+
+  const handleFollowClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isLoggedIn) {
+      toast.error("Please sign in to follow vendors.");
+      router.push("/signin");
+      return;
+    }
+
+    // Call the context function to handle the API call
+    followVendor(id);
+
+    // Optimistically update the UI
+    setIsFollowing(!isFollowing);
+    setFollowerCount((prev) => (isFollowing ? prev - 1 : prev + 1));
+  };
 
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
@@ -223,10 +269,25 @@ const VendorPage = () => {
           </div>
         </div>
         <div className="pt-24 pb-8 px-8 text-center md:text-left">
-          <h1 className="text-3xl md:text-[32px] font-bold text-gray-800">
-            {vendor.businessName}
-          </h1>
-          <div className="flex items-center justify-center md:justify-start mt-2 space-x-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+            <h1 className="text-3xl md:text-[32px] font-bold text-gray-800 mb-2 md:mb-0">
+              {vendor.businessName}
+            </h1>
+            {isLoggedIn && userData?.role === "user" && (
+              <button
+                onClick={handleFollowClick}
+                className={`px-4 py-2 text-sm font-semibold rounded-full transition-colors whitespace-nowrap ${
+                  isFollowing
+                    ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                    : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                }`}
+              >
+                {isFollowing ? "Following" : "Follow"}
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center justify-center md:justify-start mt-4 space-x-6">
             <div className="flex items-center text-lg text-gray-600">
               <FaStar className="text-yellow-400 mr-2" />
               <span>
@@ -236,6 +297,9 @@ const VendorPage = () => {
             </div>
             <p className="text-gray-500 text-lg">
               <b>{vendor.productCount}</b> Products Listed
+            </p>
+            <p className="text-gray-500 text-lg">
+              <b>{followerCount}</b> Followers
             </p>
           </div>
         </div>
@@ -247,7 +311,7 @@ const VendorPage = () => {
           Products from {vendor.businessName}
         </h2>
         {vendorProducts.length > 0 ? (
-          <div className="grid home-products grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+          <div className="grid home-products grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-6">
             {vendorProducts.map((product) => (
               <ProductCard key={product._id} product={product} />
             ))}

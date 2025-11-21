@@ -4,9 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import Logo from "@/assets/logo/logo.png";
-import { FaTruck } from "react-icons/fa";
 import { decryptData } from "@/lib/encryption";
-import { FaHistory } from "react-icons/fa";
+import { FaHistory, FaTruck, FaUsers } from "react-icons/fa";
 
 const Sidebar = ({
   isSidebarOpen,
@@ -103,6 +102,16 @@ const Sidebar = ({
                 </div>
               </Link>
             </div>
+            <Link
+              href="/dashboard/vendor-following"
+              className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors ${
+                pathname === "/dashboard/vendor-following" ? "bg-gray-700" : ""
+              }`}
+            >
+              <FaUsers className="w-5 h-5" />
+              <span>Vendor am Following</span>
+            </Link>
+
             <Link
               href="/dashboard/funding-history"
               className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors ${

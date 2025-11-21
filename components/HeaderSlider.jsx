@@ -68,11 +68,11 @@ const HeaderSlider = () => {
   return (
     <div className="relative w-full overflow-hidden rounded-2xl mt-6 bg-gray-100">
       {loading ? (
-        <div className="flex items-center justify-center min-h-[350px] bg-gray-200 rounded-xl">
+        <div className="flex items-center justify-center min-h-[280px] bg-gray-200 rounded-xl">
           <div className="animate-spin h-12 w-12 border-b-2 border-blue-600 rounded-full"></div>
         </div>
       ) : error || banners.length === 0 ? (
-        <div className="flex items-center justify-center min-h-[350px] bg-gray-200 rounded-xl">
+        <div className="flex items-center justify-center min-h-[280px] bg-gray-200 rounded-xl">
           <p className="text-gray-600">{error || "No banners available."}</p>
         </div>
       ) : (
@@ -85,7 +85,7 @@ const HeaderSlider = () => {
             {banners.map((banner) => (
               <div
                 key={banner._id}
-                className="min-w-full flex flex-col-reverse md:flex-row items-center justify-between px-6 md:px-16 py-10 md:py-8 bg-gradient-to-r from-[#E7ECF5] to-[#F6F7FA]"
+                className="min-w-full flex flex-col-reverse md:flex-row items-center justify-between px-6 md:px-16 py-8 md:py-6 bg-gradient-to-r from-[#E7ECF5] to-[#F6F7FA]"
               >
                 {/* TEXT SECTION */}
                 <div
@@ -104,11 +104,6 @@ const HeaderSlider = () => {
                   <h1 className="text-3xl md:text-5xl font-bold leading-tight text-gray-900 max-w-md mx-auto md:mx-0">
                     {banner.title}
                   </h1>
-
-                  {/* STATIC BRAND DESCRIPTION ALWAYS SHOWN */}
-                  <p className="text-gray-700 text-sm md:text-base leading-relaxed mt-4 max-w-md mx-auto md:mx-0">
-                    {brandDescription}
-                  </p>
 
                   <div className="mt-6">
                     <Link
@@ -140,7 +135,7 @@ const HeaderSlider = () => {
                     alt={banner.title}
                     width={800}
                     height={800}
-                    className="object-contain w-[80%] md:w-[90%] max-h-[380px] md:max-h-[520px]"
+                    className="object-contain w-[80%] md:w-[90%] max-h-[280px] md:max-h-[320px]"
                     priority
                   />
                 </div>
