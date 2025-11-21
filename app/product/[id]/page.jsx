@@ -17,18 +17,26 @@ import { apiUrl, API_CONFIG } from "@/configs/api";
 const Product = () => {
   const { id } = useParams();
 
-  const { products, router, addToCart, isLoggedIn, currency } = useAppContext();
+  const { products, router, addToCart, isLoggedIn, currency, userData } =
+    useAppContext();
   const [mainImage, setMainImage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [product, setProduct] = useState(null);
 
   useEffect(() => {
     const fetchVendorProducts = async () => {
+      const payload = {
+        userId: userData?.id || null,
+        page: 1,
+      };
       try {
-        const response = await axios.get(
-          apiUrl(API_CONFIG.ENDPOINTS.PRODUCT.GET_PRODUCT)
+        const response = await axios.post(
+          apiUrl(API_CONFIG.ENDPOINTS.PRODUCT.GET_PRODUCT),
+          payload
         );
-        const foundProduct = response.data.find((item) => item._id === id);
+        const foundProduct = response.data.products?.find(
+          (item) => item._id === id
+        );
         if (foundProduct) {
           setProduct(foundProduct);
           console.log(foundProduct);
@@ -40,7 +48,7 @@ const Product = () => {
       }
     };
     fetchVendorProducts();
-  }, [id]);
+  }, [id, userData]);
 
   if (loading || !product) {
     return <Loading />;

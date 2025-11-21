@@ -20,6 +20,9 @@ export const AppContextProvider = (props) => {
   const router = useRouter();
 
   const [products, setProducts] = useState([]);
+  const [productPage, setProductPage] = useState(1);
+  const [hasMoreProducts, setHasMoreProducts] = useState(true);
+  const [productsLoading, setProductsLoading] = useState(false);
   const [userData, setUserData] = useState(null);
   const [isSeller, setIsSeller] = useState(true);
   const [authLoading, setAuthLoading] = useState(true);
@@ -33,17 +36,6 @@ export const AppContextProvider = (props) => {
 
   // Following vendors state
   const [followingList, setFollowingList] = useState([]);
-
-  const fetchProductData = async () => {
-    try {
-      const response = await axios.get(
-        apiUrl(API_CONFIG.ENDPOINTS.PRODUCT.GET_PRODUCT)
-      );
-      setProducts(response.data || []);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-    }
-  };
 
   const fetchUserData = async () => {
     try {
@@ -74,6 +66,36 @@ export const AppContextProvider = (props) => {
     }
   };
 
+  const fetchProductData = async (page = 1, reset = false) => {
+    if (productsLoading || (page > 1 && !hasMoreProducts)) return;
+
+    setProductsLoading(true);
+    try {
+      // Construct payload inside the function
+      const payload = {
+        userId: userData?.id || null, // Safely access userId
+        page: page,
+      };
+      console.log(payload);
+
+      const response = await axios.post(
+        apiUrl(API_CONFIG.ENDPOINTS.PRODUCT.GET_PRODUCT),
+        payload
+      );
+      const newProducts = response.data.products || [];
+
+      setProducts((prev) =>
+        reset || page === 1 ? newProducts : [...prev, ...newProducts]
+      );
+      setHasMoreProducts(newProducts.length === 20);
+      setProductPage(page);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      toast.error("Could not load products.");
+    } finally {
+      setProductsLoading(false);
+    }
+  };
   const logout = () => {
     localStorage.removeItem("user");
     setUserData(null);
@@ -238,7 +260,7 @@ export const AppContextProvider = (props) => {
   };
 
   useEffect(() => {
-    fetchProductData();
+    fetchProductData(1); // Fetch initial page of products
     fetchUserData();
   }, []);
 
@@ -340,6 +362,9 @@ export const AppContextProvider = (props) => {
     fetchUserData,
     products,
     fetchProductData,
+    productPage,
+    hasMoreProducts,
+    productsLoading,
     cartItems,
     setCartItems,
     addToCart,
