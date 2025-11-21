@@ -202,7 +202,7 @@ const Navbar = () => {
 
   return (
     <nav className="border-b border-gray-300 text-gray-700 relative bg-white shadow-md z-40">
-      <div className="max-w-[1440px] mx-auto flex items-center justify-between px-6 md:px-4 lg:px-4 py-3">
+      <div className="max-w-[1440px] mx-auto flex items-center justify-between px-3 md:px-4 lg:px-4 py-3">
         <div className="flex items-center gap-4">
           <Image
             className="cursor-pointer w-[160px] md:w-[200px] lg:w-[250px]"
