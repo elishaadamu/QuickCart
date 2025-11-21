@@ -19,7 +19,7 @@ const VendorSection = () => {
     dots: true,
     infinite: false,
     speed: 500,
-    slidesToShow: 3,
+    slidesToShow: 1.15,
     slidesToScroll: 1,
     arrows: true,
 
@@ -27,7 +27,7 @@ const VendorSection = () => {
       {
         breakpoint: 1024,
         settings: {
-          slidesToShow: 3,
+          slidesToShow: 1.15,
           slidesToScroll: 1,
         },
       },
