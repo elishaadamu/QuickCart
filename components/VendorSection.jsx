@@ -16,28 +16,34 @@ const VendorSection = () => {
   const [loading, setLoading] = useState(true);
 
   const sliderSettings = {
-    dots: true,
+    dots: false, // Dots can be cluttered with partial slides, setting to false
     infinite: false,
     speed: 500,
-    slidesToShow: 1.15,
+    slidesToShow: 3.15, // Default for > 1024px
     slidesToScroll: 1,
     arrows: true,
-
     responsive: [
       {
-        breakpoint: 1024,
+        breakpoint: 1280,
         settings: {
-          slidesToShow: 1.15,
+          slidesToShow: 2.15, // For screens < 1280px
           slidesToScroll: 1,
+          arrows: true,
         },
       },
       {
-        breakpoint: 768,
+        breakpoint: 1024,
         settings: {
-          slidesToShow: 1.15,
+          slidesToShow: 2.15, // For screens < 1024px and > 768px
           slidesToScroll: 1,
-          // centerMode: true,
-          // centerPadding: "12.5%", // shows a portion of the next card
+          arrows: true,
+        },
+      },
+      {
+        breakpoint: 767,
+        settings: {
+          slidesToShow: 1.15, // For screens < 768px
+          slidesToScroll: 1,
           arrows: false,
         },
       },
