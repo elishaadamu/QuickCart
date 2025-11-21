@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { FaStar } from "react-icons/fa";
+import { FiFolder } from "react-icons/fi";
 
 const VendorCard = ({
   _id,
@@ -12,6 +13,7 @@ const VendorCard = ({
   averageRating,
   totalReviews,
   isClosed,
+  category, // Added category prop
 }) => {
   return (
     <Link
@@ -49,6 +51,14 @@ const VendorCard = ({
       {/* Content */}
       <div className="pt-12 px-4 pb-4">
         <h3 className="text-lg font-semibold">{businessName}</h3>
+
+        {/* Category */}
+        {category && (
+          <div className="flex items-center mt-2 text-gray-500">
+            <FiFolder className="mr-2 text-sm" />
+            <p className="text-sm">{category}</p>
+          </div>
+        )}
 
         {/* Rating Row */}
         <div className="flex items-center mt-1">
