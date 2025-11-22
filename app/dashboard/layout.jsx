@@ -31,6 +31,10 @@ const DashboardLayout = ({ children }) => {
     } else {
       const decryptedData = decryptData(user);
       setUserData(decryptedData);
+      if (decryptedData.role !== "user") {
+        toast.error("You are not authorized to view this page.");
+        router.push("/signin");
+      }
     }
   }, [router]);
 
@@ -46,7 +50,8 @@ const DashboardLayout = ({ children }) => {
         } catch (error) {
           if (error.response && error.response.status === 404) {
             setHasWallet(false);
-            setShowCreateAccount(true);
+            // Only show create account prompt if they are a user
+            if (userData.role === "user") setShowCreateAccount(true);
           }
         }
       };

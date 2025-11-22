@@ -241,14 +241,15 @@ const WithdrawalRequestPage = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <span
-                        className={`px-2 py-2 text-[16px]  rounded-[10px]  ${
-                          w.status === "completed"
-                            ? "bg-green-100 text-green-800"
-                            : w.status === "approved"
-                            ? "bg-blue-100 text-blue-800"
-                            : w.status === "failed"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-yellow-100 text-yellow-800"
+                        className={`px-2 py-1.5 text-sm font-medium rounded-full capitalize ${
+                          {
+                            completed: "bg-green-100 text-green-800",
+                            paid: "bg-green-100 text-green-800",
+                            approved: "bg-blue-100 text-blue-800",
+                            pending: "bg-yellow-100 text-yellow-800",
+                            failed: "bg-red-100 text-red-800",
+                            cancelled: "bg-red-100 text-red-800",
+                          }[w.status] || "bg-gray-100 text-gray-800"
                         }`}
                       >
                         {w.status || "pending"}

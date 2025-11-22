@@ -7,11 +7,12 @@ import { API_CONFIG, apiUrl } from "@/configs/api";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const FundingHistoryPage = () => {
+const TransactionHistoryPage = () => {
   const { userData, authLoading } = useAppContext();
   const router = useRouter();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [walletBalance, setWalletBalance] = useState(0);
   const [stats, setStats] = useState({
     totalEarnings: 0,
     completedDeliveries: 0,
@@ -60,7 +61,24 @@ const FundingHistoryPage = () => {
       }
     };
 
+    const fetchWalletBalance = async () => {
+      if (authLoading || !userData) return;
+      try {
+        const response = await axios.get(
+          apiUrl(
+            API_CONFIG.ENDPOINTS.ACCOUNT.walletBalance +
+              userData.id +
+              "/balance"
+          )
+        );
+        setWalletBalance(response.data.data.balance || 0);
+      } catch (error) {
+        console.error("Failed to fetch wallet balance", error);
+      }
+    };
+
     fetchTransactions();
+    fetchWalletBalance();
   }, [userData, authLoading, router]);
 
   const calculateStats = (transactions) => {
@@ -224,7 +242,7 @@ const FundingHistoryPage = () => {
 
         <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl p-8 border border-gray-100 shadow-sm">
           <h1 className="text-3xl font-bold text-gray-900 mb-3">
-            Funding History
+            Transaction History
           </h1>
           <p className="text-gray-600 text-lg">
             Track your earnings and transaction history
@@ -270,10 +288,10 @@ const FundingHistoryPage = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-amber-600 text-sm font-medium mb-1">
-                Pending Balance
+                Current Balance
               </p>
               <p className="text-2xl font-bold text-gray-900">
-                ₦{stats.pendingBalance.toLocaleString()}
+                ₦{walletBalance.toLocaleString()}
               </p>
             </div>
             <div className="w-12 h-12 bg-amber-500 rounded-2xl flex items-center justify-center">
@@ -624,4 +642,4 @@ const FundingHistoryPage = () => {
   );
 };
 
-export default FundingHistoryPage;
+export default TransactionHistoryPage;
