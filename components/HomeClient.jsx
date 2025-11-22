@@ -1,5 +1,7 @@
 "use client";
 import React, { useEffect, useRef, useCallback, useState } from "react";
+import axios from "axios";
+import { apiUrl, API_CONFIG } from "@/configs/api";
 import { useRouter } from "next/navigation";
 
 import HeaderSlider from "@/components/HeaderSlider";
@@ -104,6 +106,21 @@ const HomeClient = () => {
   // The idle timer is only enabled if the user is logged in.
   useIdleTimeout(handleIdle, 120, isLoggedIn);
 
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get(
+          apiUrl(API_CONFIG.ENDPOINTS.CATEGORY.GET_ALL)
+        );
+        setCategories(response.data.categories || []);
+      } catch (err) {
+        console.error("Failed to fetch categories:", err);
+      }
+    };
+    fetchCategories();
+  }, []);
   const [showBackToTop, setShowBackToTop] = useState(false);
 
   useEffect(() => {
@@ -142,10 +159,14 @@ const HomeClient = () => {
         <hr className="my-12 border-gray-200" />
 
         <FeaturedProduct />
-        <hr className="my-12 border-gray-200" />
 
-        <CategoryProducts />
-        <hr className="my-12 border-gray-200" />
+        {/* Dynamically render a section for each category */}
+        {categories.map((category) => (
+          <React.Fragment key={category._id}>
+            <CategoryProducts category={category} />
+            <hr className="my-12 border-gray-200" />
+          </React.Fragment>
+        ))}
 
         <SubscriptionPlans />
         <hr className="my-12 border-gray-200" />

@@ -18,7 +18,7 @@ const CategoryProducts = () => {
         const response = await axios.get(
           apiUrl(API_CONFIG.ENDPOINTS.CATEGORY.GET_ALL)
         );
-        console.log(response.data.categories);
+        console.log("Categories", response.data.categories);
         const categories = response.data.categories || [];
 
         // You can make this dynamic, e.g., random or based on popularity.
