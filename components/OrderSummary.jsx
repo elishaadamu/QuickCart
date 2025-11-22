@@ -200,8 +200,9 @@ const OrderSummary = () => {
       pin,
       totalAmount: totalAmount,
       couponCode: couponDiscount > 0 ? couponCode : null,
+      deliveryType: selectedShipping, // Express or Standard
     };
-    payload.deliveryType = selectedShipping; // Express or Standard
+
     console.log(payload);
     if (!payload.vendorId) {
       Swal.fire({
