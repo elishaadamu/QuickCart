@@ -33,14 +33,14 @@ const CategoryProducts = ({ category }) => {
           }
         }
       `}</style>
-      <div className="flex flex-col items-center text-left mb-12">
-        <div className="inline-flex items-center gap-3 mb-4">
+      <div className="flex flex-col  text-left mb-12">
+        <div className="inline-flex  gap-3 mb-4">
           <FaTags className="w-6 h-6 text-blue-600" />
-          <h2 className="text-3xl md:text-3xl font-bold text-gray-900">
+          <h2 className="text-xl md:text-3xl font-bold text-gray-900">
             {category.name}
           </h2>
         </div>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+        <p className="text-lg text-gray-600 text-left max-w-2xl">
           Check out our latest arrivals in the {category.name} category.
         </p>
       </div>

@@ -28,12 +28,12 @@ const Cart = () => {
     }
   }, [isLoggedIn, router]);
 
-  console.log(products);
   const cartProductList = useMemo(() => {
     return Object.keys(cartItems)
       .map((itemId) => {
         const product = products.find((p) => p._id === itemId);
         if (product && cartItems[itemId] > 0) {
+          console.log("Exact Product", product);
           return { ...product, quantity: cartItems[itemId] };
         }
         return null;

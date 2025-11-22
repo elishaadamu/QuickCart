@@ -1,6 +1,6 @@
 import { addressDummyData } from "@/assets/assets";
 import { useAppContext } from "@/context/AppContext";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import { apiUrl, API_CONFIG } from "@/configs/api";
 import confetti from "canvas-confetti";
@@ -29,20 +29,39 @@ const OrderSummary = () => {
     fetchLgas,
   } = useAppContext();
 
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [, setPageLoading] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [addresses, setAddresses] = useState("");
   const [pin, setPin] = useState("");
   const [showPin, setShowPin] = useState(false);
 
   // Delivery logic states
   const [deliveryState, setDeliveryState] = useState("");
   const [deliveryLga, setDeliveryLga] = useState("");
-  const [shippingFee, setShippingFee] = useState(0);
-  const [shippingPercentage, setShippingPercentage] = useState(0);
   const [isInterState, setIsInterState] = useState(false);
-  const [interStateAddress, setInterStateAddress] = useState("");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
+
+  // New shipping logic states
+  const [shippingOptions, setShippingOptions] = useState([]);
+  const [selectedShipping, setSelectedShipping] = useState(null);
+  const [shippingFee, setShippingFee] = useState(0);
+  const [deliveryFees, setDeliveryFees] = useState([]);
+
+  const shippingConfig = {
+    intraState: {
+      Standard: { price: 900, days: "1-2 days" },
+      Express: { price: 1500, days: "1 day" },
+    },
+    interState: {
+      Standard: { price: 1000, days: "4-5 days" },
+      Express: { price: 2000, days: "2-3 days" },
+    },
+    interRegional: {
+      Standard: { price: 2000, days: "8-9 days" },
+      Express: { price: 4000, days: "2-3 days" },
+    },
+  };
+
+  const [shippingType, setShippingType] = useState(""); // 'intraState', 'interState', 'interRegional'
 
   // Coupon logic states
   const [couponCode, setCouponCode] = useState("");
@@ -50,12 +69,57 @@ const OrderSummary = () => {
   const [couponLoading, setCouponLoading] = useState(false);
   const [finalAmount, setFinalAmount] = useState(null);
 
+  const geoPoliticalZones = {
+    nc: ["Benue", "FCT", "Kogi", "Kwara", "Nasarawa", "Niger", "Plateau"],
+    ne: ["Adamawa", "Bauchi", "Borno", "Gombe", "Taraba", "Yobe"],
+    nw: ["Jigawa", "Kaduna", "Kano", "Katsina", "Kebbi", "Sokoto", "Zamfara"],
+    se: ["Abia", "Anambra", "Ebonyi", "Enugu", "Imo"],
+    ss: ["Akwa Ibom", "Bayelsa", "Cross River", "Delta", "Edo", "Rivers"],
+    sw: ["Ekiti", "Lagos", "Ogun", "Ondo", "Osun", "Oyo"],
+  };
+
+  const getStateRegion = (state) => {
+    for (const region in geoPoliticalZones) {
+      if (geoPoliticalZones[region].includes(state)) return region;
+    }
+    return null;
+  };
+  const vendorShippingInfo = useMemo(() => {
+    if (getCartCount() > 0) {
+      const firstItemId = Object.keys(cartItems)[0];
+      const product = products.find((p) => p._id === firstItemId);
+      if (product && product.vendor) {
+        return {
+          shippingAddress: product.vendor.shippingAddress,
+          shippingState: product.vendor.shippingState,
+          zipCode: product.vendor.zipCode,
+        };
+      }
+    }
+    return null;
+  }, [cartItems, products, getCartCount]);
+
   useEffect(() => {
     if (deliveryState) {
       fetchLgas(deliveryState);
       setDeliveryLga(""); // Reset LGA when state changes
     }
   }, [deliveryState, fetchLgas]);
+
+  useEffect(() => {
+    const fetchShippingFees = async () => {
+      try {
+        const response = await axios.get(
+          apiUrl(API_CONFIG.ENDPOINTS.SHIPPING_FEE.GET_ALL)
+        );
+        setDeliveryFees(response.data.deliveryFees || []);
+      } catch (error) {
+        console.error("Failed to fetch shipping fees", error);
+      }
+    };
+
+    fetchShippingFees();
+  }, []);
 
   const createOrder = async () => {
     if (!pin || pin.length !== 4) {
@@ -78,11 +142,11 @@ const OrderSummary = () => {
       return;
     }
 
-    if (isInterState && !interStateAddress) {
+    if (deliveryState && !deliveryAddress) {
       Swal.fire({
         icon: "error",
         title: "Validation Error",
-        text: "Please enter the inter-state delivery address.",
+        text: "Please enter the delivery address.",
       });
       setLoading(false);
       return;
@@ -126,12 +190,10 @@ const OrderSummary = () => {
       userId: userData?.id,
       vendorId: vendorId,
       products: orderProducts,
-      deliveryAddress: isInterState
-        ? interStateAddress
-        : addresses.shippingAddress,
+      deliveryAddress: deliveryAddress,
       state: deliveryState,
       lga: deliveryLga,
-      zipcode: addresses.zipCode,
+      zipcode: userData?.zipCode || vendorShippingInfo?.zipCode || "",
       shippingFee: shippingFee,
       tax: tax,
       phone: userData?.phone,
@@ -139,6 +201,7 @@ const OrderSummary = () => {
       totalAmount: totalAmount,
       couponCode: couponDiscount > 0 ? couponCode : null,
     };
+    payload.deliveryType = selectedShipping; // Express or Standard
     console.log(payload);
     if (!payload.vendorId) {
       Swal.fire({
@@ -213,26 +276,6 @@ const OrderSummary = () => {
     }
   };
 
-  const fetchAddresses = async () => {
-    setPageLoading(true);
-    try {
-      const response = await axios.get(
-        `${apiUrl(API_CONFIG.ENDPOINTS.PROFILE.GET)}/${userData.id}`
-      );
-
-      setAddresses(response.data.user || []);
-    } catch (error) {
-      console.error("Error fetching addresses:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "Failed to fetch shipping addresses.",
-      });
-    } finally {
-      setPageLoading(false);
-    }
-  };
-
   const handleApplyCoupon = async () => {
     if (!couponCode) {
       Swal.fire({
@@ -284,29 +327,59 @@ const OrderSummary = () => {
   };
 
   useEffect(() => {
-    if (userData) {
-      fetchAddresses();
-    }
-  }, []);
+    // Reset shipping on delivery state change
+    setShippingOptions([]);
+    setSelectedShipping(null);
+    setShippingFee(0);
+    setShippingType("");
+    setIsInterState(false);
+    setDeliveryAddress("");
 
-  useEffect(() => {
-    const cartAmount = getCartAmount();
-    if (deliveryState && addresses.shippingState) {
-      if (deliveryState === addresses.shippingState) {
-        setShippingPercentage(5);
-        setShippingFee(Math.floor(cartAmount * 0.05));
+    if (deliveryState && vendorShippingInfo?.shippingState) {
+      let type = "";
+      if (deliveryState === vendorShippingInfo.shippingState) {
+        type = "intraState";
         setIsInterState(false);
       } else {
-        setShippingPercentage(10);
-        setShippingFee(Math.floor(cartAmount * 0.1));
         setIsInterState(true);
+        const vendorRegion = getStateRegion(vendorShippingInfo.shippingState);
+        const deliveryRegion = getStateRegion(deliveryState);
+        if (vendorRegion && deliveryRegion && vendorRegion === deliveryRegion) {
+          type = "interState";
+        } else {
+          type = "interRegional";
+        }
       }
-    } else {
-      setShippingFee(0);
-      setShippingPercentage(0);
-      setIsInterState(false);
+
+      if (type) {
+        setShippingType(type);
+        const options = Object.entries(shippingConfig[type]).map(
+          ([name, details]) => ({
+            name,
+            price: details.price,
+            days: details.days,
+          })
+        );
+        setShippingOptions(options);
+        // Default to standard shipping
+        if (options.length > 0) {
+          const standardOption = options.find((o) => o.name === "Standard");
+          if (standardOption) {
+            setSelectedShipping(standardOption.name);
+            setShippingFee(standardOption.price);
+          }
+        }
+      }
     }
-  }, [deliveryState, addresses.shippingState, getCartAmount]);
+  }, [deliveryState, vendorShippingInfo]);
+
+  useEffect(() => {
+    if (selectedShipping && shippingType) {
+      setShippingFee(
+        shippingConfig[shippingType][selectedShipping]?.price || 0
+      );
+    }
+  }, [selectedShipping, shippingType]);
 
   return (
     <div className="w-full bg-white p-6 rounded-xl shadow-lg border border-gray-200">
@@ -333,60 +406,18 @@ const OrderSummary = () => {
             <label className="text-sm font-medium text-gray-700 block mb-2">
               Shipping From
             </label>
-            <div className="relative inline-block w-full">
-              <div
-                className="peer w-full text-left px-4 pr-3 py-3 bg-gray-50 text-gray-700 rounded-lg border border-gray-300 flex justify-between items-center cursor-pointer transition-all hover:border-gray-400"
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              >
-                <div className="flex-1">
-                  <span className="block text-gray-900 font-medium">
-                    {addresses.shippingAddress || "Select Address"}
+            <div className="w-full text-left px-4 py-3 bg-gray-50 text-gray-700 rounded-lg border border-gray-300">
+              <div className="flex-1">
+                <span className="block text-gray-900 font-medium line-clamp-1">
+                  {vendorShippingInfo?.shippingAddress || "No shipping origin"}
+                </span>
+                {vendorShippingInfo?.shippingState && (
+                  <span className="text-sm text-gray-500">
+                    {vendorShippingInfo.shippingState} State •{" "}
+                    {vendorShippingInfo.zipCode}
                   </span>
-                  {addresses.shippingState && (
-                    <span className="text-sm text-gray-500">
-                      {addresses.shippingState} State • {addresses.zipCode}
-                    </span>
-                  )}
-                </div>
-                <svg
-                  className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${
-                    isDropdownOpen ? "rotate-180" : "rotate-0"
-                  }`}
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
+                )}
               </div>
-
-              {isDropdownOpen && (
-                <div className="absolute w-full bg-white border border-gray-300 shadow-lg mt-2 z-10 rounded-lg overflow-hidden">
-                  <div className="p-4 border-b border-gray-200">
-                    <div className="text-sm text-gray-600 space-y-1">
-                      <div className="font-medium text-gray-900">
-                        {userData.firstName} {userData.lastName}
-                      </div>
-                      <div>{addresses.shippingAddress}</div>
-                      <div>
-                        {addresses.shippingState} State • {addresses.zipCode}
-                      </div>
-                    </div>
-                  </div>
-                  <div
-                    onClick={() => router.push("/dashboard/shipping")}
-                    className="px-4 py-3 bg-gray-50 hover:bg-gray-100 cursor-pointer text-center text-blue-600 font-medium transition-colors"
-                  >
-                    Edit Shipping Address
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 
@@ -441,16 +472,15 @@ const OrderSummary = () => {
               </select>
             </div>
           )}
-          {/* Inter-state Address Form */}
-          {isInterState && (
+          {/* Delivery Address Form */}
+          {deliveryState && (
             <div className="animate-fadeIn">
               <label className="text-sm font-medium text-gray-700 block mb-2">
-                Inter-State Delivery Address{" "}
-                <span className="text-red-500">*</span>
+                Delivery Address <span className="text-red-500">*</span>
               </label>
               <textarea
-                value={interStateAddress}
-                onChange={(e) => setInterStateAddress(e.target.value)}
+                value={deliveryAddress}
+                onChange={(e) => setDeliveryAddress(e.target.value)}
                 placeholder="Enter the full delivery address for the selected state..."
                 className="w-full outline-none p-3 text-gray-700 border border-gray-300 resize-none rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-gray-50"
                 rows="3"
@@ -462,8 +492,66 @@ const OrderSummary = () => {
 
       <hr className="border-gray-200 my-6" />
 
+      {/* Shipping Method Selection */}
+      {shippingOptions.length > 0 && (
+        <fieldset className="space-y-4 animate-fadeIn">
+          <legend className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+            <FaShippingFast className="text-blue-500" />
+            Shipping Method
+            {shippingType && (
+              <span className="text-xs font-semibold uppercase px-2.5 py-1 rounded-full bg-blue-100 text-blue-800">
+                {shippingType.replace(/([A-Z])/g, " $1").trim()}
+              </span>
+            )}
+          </legend>
+          <div className="space-y-3">
+            {shippingOptions.map((option) => (
+              <div
+                key={option.name}
+                onClick={() => {
+                  setSelectedShipping(option.name);
+                  setShippingFee(option.price);
+                }}
+                className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-all ${
+                  selectedShipping === option.name
+                    ? "border-blue-500 bg-blue-50 ring-2 ring-blue-500"
+                    : "border-gray-300 bg-white hover:border-blue-400"
+                }`}
+              >
+                <div className="flex items-center gap-4">
+                  <input
+                    type="radio"
+                    id={`shipping-${option.name}`}
+                    name="shipping-option"
+                    value={option.name}
+                    checked={selectedShipping === option.name}
+                    onChange={() => {
+                      setSelectedShipping(option.name);
+                      setShippingFee(option.price);
+                    }}
+                    className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                  />
+                  <label
+                    htmlFor={`shipping-${option.name}`}
+                    className="font-medium text-gray-800 cursor-pointer"
+                  >
+                    {option.name}{" "}
+                    <span className="text-sm text-gray-500 font-normal">
+                      ({option.days})
+                    </span>
+                  </label>
+                </div>
+                <p className="font-semibold text-gray-900">
+                  {currency}
+                  {option.price.toFixed(2)}
+                </p>
+              </div>
+            ))}
+          </div>
+        </fieldset>
+      )}
       {/* Cost Breakdown Section */}
-      <fieldset className="space-y-4">
+      <fieldset className="space-y-4 mt-8">
         <legend className="text-lg font-semibold text-gray-800 mb-4">
           Cost Breakdown
         </legend>
@@ -477,8 +565,7 @@ const OrderSummary = () => {
           </div>
           <div className="flex justify-between items-center py-2">
             <p className="text-gray-600">
-              Shipping Fee
-              {shippingPercentage > 0 && ` (${shippingPercentage}%)`}
+              Shipping Fee{selectedShipping && ` (${selectedShipping})`}
             </p>
             <p className="font-medium text-gray-800">
               {currency}
@@ -599,7 +686,7 @@ const OrderSummary = () => {
       {/* Place Order Button */}
       <button
         onClick={createOrder}
-        disabled={loading || !pin || pin.length !== 4}
+        disabled={loading || !pin || pin.length !== 4 || !selectedShipping}
         className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold py-4 mt-6 rounded-lg hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-[1.02] focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-offset-2 shadow-lg"
       >
         {loading ? (
