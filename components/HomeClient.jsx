@@ -8,6 +8,7 @@ import Banner from "@/components/Banner";
 import NewsLetter from "@/components/NewsLetter";
 import CategorySidebar from "@/components/CategorySidebar";
 import FeaturedProduct from "@/components/FeaturedProduct";
+import CategoryProducts from "@/components/CategoryProducts";
 import VendorSection from "@/components/VendorSection";
 import { FaArrowUp } from "react-icons/fa";
 import { useAppContext } from "@/context/AppContext";
@@ -141,6 +142,9 @@ const HomeClient = () => {
         <hr className="my-12 border-gray-200" />
 
         <FeaturedProduct />
+        <hr className="my-12 border-gray-200" />
+
+        <CategoryProducts />
         <hr className="my-12 border-gray-200" />
 
         <SubscriptionPlans />

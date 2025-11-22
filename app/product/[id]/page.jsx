@@ -58,6 +58,19 @@ const Product = () => {
     <>
       <ToastContainer position="top-right" autoClose={3000} />
       <div className="px-6 md:px-16 lg:px-32 pt-14 space-y-10">
+        <style jsx global>{`
+          @media screen and (max-width: 360px) {
+            .home-products {
+              grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+            }
+            .button-see_more {
+              flex-direction: column;
+              justify-content: start;
+              align-items: baseline;
+              gap: 10px;
+            }
+          }
+        `}</style>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
           <div className="px-5 lg:px-16 xl:px-20">
             <div
@@ -203,7 +216,7 @@ const Product = () => {
             </p>
             <div className="w-28 h-0.5 bg-blue-600 mt-2"></div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6 mt-6 pb-14 w-full">
+          <div className="home-products grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 items-center justify-items-center gap-6 mt-6 pb-14 w-full">
             {products.slice(0, 5).map((product, index) => (
               <ProductCard key={index} product={product} />
             ))}
