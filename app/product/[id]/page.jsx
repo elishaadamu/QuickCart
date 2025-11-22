@@ -1,12 +1,12 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { assets } from "@/assets/assets";
 import ProductCard from "@/components/ProductCard";
 import ImageMagnify from "@/components/ImageMagnify/ImageMagnify.jsx";
 
 import Image from "next/image";
 import { useParams } from "next/navigation";
-import Loading from "@/components/Loading";
+import Loading from "@/components/Loading.jsx";
 import { useAppContext } from "@/context/AppContext";
 import React from "react";
 import { ToastContainer, toast } from "react-toastify";
@@ -50,6 +50,15 @@ const Product = () => {
     fetchVendorProducts();
   }, [id, userData]);
 
+  const relatedProducts = useMemo(() => {
+    if (!product || !products) {
+      return [];
+    }
+    // Filter for products in the same category, exclude the current product, and take the first 4
+    return products
+      .filter((p) => p.category === product.category && p._id !== product._id)
+      .slice(0, 4);
+  }, [product, products]);
   if (loading || !product) {
     return <Loading />;
   }
@@ -207,24 +216,26 @@ const Product = () => {
           </div>
         </div>
 
-        {/* Featured products */}
-        <div className="flex flex-col items-center">
-          <div className="flex flex-col items-center mb-4 mt-16">
-            <p className="text-3xl font-medium">
-              Featured{" "}
-              <span className="font-medium text-blue-600">Products</span>
-            </p>
-            <div className="w-28 h-0.5 bg-blue-600 mt-2"></div>
+        {/* Related products */}
+        {relatedProducts.length > 0 && (
+          <div className="flex flex-col items-center">
+            <div className="flex flex-col items-center mb-4 mt-16">
+              <p className="text-3xl font-medium">
+                Related{" "}
+                <span className="font-medium text-blue-600">Products</span>
+              </p>
+              <div className="w-28 h-0.5 bg-blue-600 mt-2"></div>
+            </div>
+            <div className="home-products grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 items-center justify-items-center gap-6 mt-6 pb-14 w-full">
+              {relatedProducts.map((relatedProduct) => (
+                <ProductCard
+                  key={relatedProduct._id}
+                  product={relatedProduct}
+                />
+              ))}
+            </div>
           </div>
-          <div className="home-products grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 items-center justify-items-center gap-6 mt-6 pb-14 w-full">
-            {products.slice(0, 5).map((product, index) => (
-              <ProductCard key={index} product={product} />
-            ))}
-          </div>
-          <button className="px-8 py-2 mb-16 border rounded text-gray-500/70 hover:bg-slate-50/90 transition">
-            See more
-          </button>
-        </div>
+        )}
       </div>
     </>
   );

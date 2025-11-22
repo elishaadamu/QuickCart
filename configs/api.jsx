@@ -45,6 +45,7 @@ export const API_CONFIG = {
       ADD: "/product/",
       GET_SELLER_PRODUCTS: "/product/my-products/",
       GET_PRODUCT: "/product",
+      GET_SINGLE_PRODUCT: "/product/", // Append product ID
       UPDATE: "/product/",
       DELETE: "/product/",
     },
