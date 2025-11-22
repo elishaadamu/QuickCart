@@ -3,6 +3,7 @@ import { useAppContext } from "@/context/AppContext";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { apiUrl, API_CONFIG } from "@/configs/api";
+import confetti from "canvas-confetti";
 import PinInput from "./PinInput";
 import Swal from "sweetalert2";
 import {
@@ -154,18 +155,53 @@ const OrderSummary = () => {
         apiUrl(API_CONFIG.ENDPOINTS.ORDER.CREATE),
         payload
       );
-      Swal.fire({
+
+      // Trigger confetti celebration
+      const duration = 2 * 1000; // 2 seconds
+      const animationEnd = Date.now() + duration;
+      const defaults = {
+        startVelocity: 30,
+        spread: 360,
+        ticks: 60,
+        zIndex: 1000,
+      };
+
+      function randomInRange(min, max) {
+        return Math.random() * (max - min) + min;
+      }
+
+      const interval = setInterval(function () {
+        const timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) {
+          return clearInterval(interval);
+        }
+
+        const particleCount = 50 * (timeLeft / duration);
+        // since particles fall down, start a bit higher than random
+        confetti(
+          Object.assign({}, defaults, {
+            particleCount,
+            origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+          })
+        );
+        confetti(
+          Object.assign({}, defaults, {
+            particleCount,
+            origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+          })
+        );
+      }, 250);
+
+      await Swal.fire({
         icon: "success",
         title: "Success!",
         text: "Order placed successfully!",
         timer: 2000,
         showConfirmButton: false,
       });
-      if (userData.id === "vendor") {
-        router.push("vendor-dashboard/all-orders");
-      } else {
-        router.push("dashboard/all-orders");
-      }
+
+      router.push("/dashboard/all-orders");
     } catch (error) {
       console.error("Error creating order:", error);
       const errorMessage =

@@ -110,6 +110,10 @@ const RequestDelivery = () => {
     // Keep pickupState and dropoffState in sync for the useEffect hooks
     if (name === "senderState") {
       setFormData((prev) => ({ ...prev, pickupState: value }));
+      if (deliveryType === "intra-state") {
+        setFormData((prev) => ({ ...prev, receipientState: value }));
+        fetchLgasForState(value, "dropoff");
+      }
     }
     if (name === "receipientState") {
       setFormData((prev) => ({ ...prev, dropoffState: value }));
@@ -148,7 +152,7 @@ const RequestDelivery = () => {
       receipientName: formData.receipientName,
       receipientPhone: formData.receipientPhone,
       receipientAltPhone: formData.receipientAltPhone,
-      receipientAddress: formData.receipientAddress,
+      receipientAddress: formData.recipientAddress,
       receipientState:
         deliveryType === "intra-state"
           ? formData.senderState
