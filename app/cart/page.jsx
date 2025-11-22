@@ -4,6 +4,7 @@ import { assets } from "@/assets/assets";
 import OrderSummary from "@/components/OrderSummary";
 import Image from "next/image";
 
+import ProductCard from "@/components/ProductCard";
 import { useAppContext } from "@/context/AppContext";
 import { toast } from "react-toastify";
 import { FaShoppingCart, FaTrash } from "react-icons/fa";
@@ -27,6 +28,7 @@ const Cart = () => {
     }
   }, [isLoggedIn, router]);
 
+  console.log(products);
   const cartProductList = useMemo(() => {
     return Object.keys(cartItems)
       .map((itemId) => {
@@ -38,6 +40,23 @@ const Cart = () => {
       })
       .filter(Boolean);
   }, [cartItems, products]);
+
+  const allRelatedProducts = useMemo(() => {
+    if (cartProductList.length === 0 || products.length === 0) {
+      return [];
+    }
+
+    const cartCategories = new Set(cartProductList.map((p) => p.category));
+    const cartItemIds = new Set(cartProductList.map((p) => p._id));
+    return products.filter(
+      (p) => cartCategories.has(p.category) && !cartItemIds.has(p._id)
+    );
+  }, [cartProductList, products]);
+
+  const relatedProductsToShow = useMemo(
+    () => allRelatedProducts.slice(0, 4),
+    [allRelatedProducts]
+  );
 
   if (!isLoggedIn) {
     // Render nothing or a loader while redirecting
@@ -165,6 +184,33 @@ const Cart = () => {
           />
           Continue Shopping
         </button>
+
+        {/* Related Products Section (Desktop Only) */}
+        {relatedProductsToShow.length > 0 && (
+          <div className="hidden lg:block mt-16">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-semibold text-slate-800">
+                You Might Also Like
+              </h2>
+              {allRelatedProducts.length > 4 && (
+                <button
+                  onClick={() => router.push("/all-products")}
+                  className="px-4 py-2 rounded bg-blue-500 text-white hover:bg-blue-600 transition text-sm"
+                >
+                  View all
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 xl:grid-cols-2 gap-6">
+              {relatedProductsToShow.map((product) => (
+                <div key={product._id} className="w-full">
+                  <ProductCard product={product} />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
       <OrderSummary />
     </div>

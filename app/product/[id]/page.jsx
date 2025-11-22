@@ -39,7 +39,6 @@ const Product = () => {
         );
         if (foundProduct) {
           setProduct(foundProduct);
-          console.log(foundProduct);
         }
       } catch (error) {
         console.error("Error fetching vendor products:", error);

@@ -76,7 +76,6 @@ export const AppContextProvider = (props) => {
         userId: userData?.id || null, // Safely access userId
         page: page,
       };
-      console.log(payload);
 
       const response = await axios.post(
         apiUrl(API_CONFIG.ENDPOINTS.PRODUCT.GET_PRODUCT),
@@ -102,7 +101,6 @@ export const AppContextProvider = (props) => {
     setCartItems({}); // Clear cart on logout
     setWishlistItems([]); // Clear wishlist on logout
     setFollowingList([]); // Clear following list on logout
-    console.log("Logging out and redirecting to homepage...");
     // It's better to show toast notifications in the component that calls logout.
     router.push("/"); // Redirect to the homepage
   };
@@ -186,7 +184,7 @@ export const AppContextProvider = (props) => {
       const response = await axios.get(
         apiUrl(API_CONFIG.ENDPOINTS.FOLLOW.GET_FOLLOWING + userId)
       );
-      console.log("Following vendors", response.data);
+
       // Safely access the followings array
       const followingsArray = response.data?.followings;
 
@@ -237,12 +235,12 @@ export const AppContextProvider = (props) => {
         followerId: userData.id,
         followingId: vendorId,
       };
-      console.log(payload);
+
       const response = await axios.post(
         apiUrl(API_CONFIG.ENDPOINTS.FOLLOW.FOLLOW_VENDOR),
         payload
       );
-      console.log(response.data);
+
       if (response.data.action === "follow") {
         toast.success("You are now following this vendor.");
       } else if (response.data.action === "unfollow") {
@@ -379,6 +377,7 @@ export const AppContextProvider = (props) => {
     authLoading,
     states,
     lgas,
+    fetchLgas,
     fetchLgas,
     followingList,
     followVendor,

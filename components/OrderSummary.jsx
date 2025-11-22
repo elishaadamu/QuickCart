@@ -24,6 +24,8 @@ const OrderSummary = () => {
     cartItems,
     products,
     states,
+    lgas,
+    fetchLgas,
   } = useAppContext();
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -35,6 +37,7 @@ const OrderSummary = () => {
 
   // Delivery logic states
   const [deliveryState, setDeliveryState] = useState("");
+  const [deliveryLga, setDeliveryLga] = useState("");
   const [shippingFee, setShippingFee] = useState(0);
   const [shippingPercentage, setShippingPercentage] = useState(0);
   const [isInterState, setIsInterState] = useState(false);
@@ -45,6 +48,13 @@ const OrderSummary = () => {
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [couponLoading, setCouponLoading] = useState(false);
   const [finalAmount, setFinalAmount] = useState(null);
+
+  useEffect(() => {
+    if (deliveryState) {
+      fetchLgas(deliveryState);
+      setDeliveryLga(""); // Reset LGA when state changes
+    }
+  }, [deliveryState, fetchLgas]);
 
   const createOrder = async () => {
     if (!pin || pin.length !== 4) {
@@ -119,6 +129,7 @@ const OrderSummary = () => {
         ? interStateAddress
         : addresses.shippingAddress,
       state: deliveryState,
+      lga: deliveryLga,
       zipcode: addresses.zipCode,
       shippingFee: shippingFee,
       tax: tax,
@@ -369,6 +380,31 @@ const OrderSummary = () => {
             </select>
           </div>
 
+          {/* LGA Selection */}
+          {deliveryState && (
+            <div className="animate-fadeIn">
+              <label
+                htmlFor="delivery-lga"
+                className="text-sm font-medium text-gray-700 block mb-2"
+              >
+                Delivery LGA <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="delivery-lga"
+                value={deliveryLga}
+                onChange={(e) => setDeliveryLga(e.target.value)}
+                className="w-full outline-none p-3 text-gray-700 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-gray-50"
+                required
+              >
+                <option value="">Select delivery LGA</option>
+                {lgas.map((lga) => (
+                  <option key={lga} value={lga}>
+                    {lga}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           {/* Inter-state Address Form */}
           {isInterState && (
             <div className="animate-fadeIn">
