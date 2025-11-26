@@ -297,6 +297,7 @@ const OrderSummary = () => {
         apiUrl(API_CONFIG.ENDPOINTS.COUPON.VALIDATE),
         payload
       );
+      console.log(response.data);
 
       const { discountAmount, finalAmount: apiFinalAmount } =
         response.data.coupon;

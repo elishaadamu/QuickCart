@@ -446,7 +446,7 @@ const DashboardHome = () => {
                         ₦{walletBalance?.balance?.toFixed(2) || "0.00"}
                       </h1>
                     </div>
-                    <Link href="/vendor-dashboard/transaction-history">
+                    <Link href="/dashboard/transaction-history">
                       {" "}
                       <button className="bg-white/20 text-white px-3 py-1.5 rounded text-xs hover:bg-white/30 transition">
                         Transaction History
