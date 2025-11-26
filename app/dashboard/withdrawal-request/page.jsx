@@ -2,8 +2,8 @@
 import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { decryptData } from "@/lib/encryption";
-import { toast } from "react-toastify";
 import { apiUrl, API_CONFIG } from "@/configs/api";
+import { message } from "antd";
 
 const WithdrawalRequestPage = () => {
   const [withdrawals, setWithdrawals] = useState([]);
@@ -64,7 +64,7 @@ const WithdrawalRequestPage = () => {
       setWithdrawals(Array.isArray(data) ? data : data.withdrawals || []);
     } catch (err) {
       console.error("Failed to fetch withdrawals", err);
-      toast.error("Failed to load withdrawal history.");
+      message.error("Failed to load withdrawal history.");
       setWithdrawals([]);
     } finally {
       setLoadingWithdrawals(false);
@@ -82,19 +82,19 @@ const WithdrawalRequestPage = () => {
   const handleWithdrawalSubmit = async (e) => {
     e.preventDefault();
     if (!withdrawalAmount || Number(withdrawalAmount) <= 0) {
-      toast.warn("Please enter a valid withdrawal amount.");
+      message.warn("Please enter a valid withdrawal amount.");
       return;
     }
 
     const amount = Number(withdrawalAmount);
     if (amount < 100) {
-      toast.warn("Minimum withdrawal amount is ₦100.");
+      message.warn("Minimum withdrawal amount is ₦100.");
       return;
     }
 
     const userId = getUserId();
     if (!userId) {
-      toast.error("You must be signed in to make a withdrawal.");
+      message.error("You must be signed in to make a withdrawal.");
       return;
     }
 
@@ -105,7 +105,7 @@ const WithdrawalRequestPage = () => {
         apiUrl(API_CONFIG.ENDPOINTS.DELIVERY_WITHDRAWAL.CREATE),
         payload
       );
-      toast.success("Withdrawal request submitted successfully.");
+      message.success("Withdrawal request submitted successfully.");
       setWithdrawalAmount("");
       closeWithdrawModal();
       // Refresh the history
@@ -113,7 +113,7 @@ const WithdrawalRequestPage = () => {
       fetchWalletBalance(); // Refresh balance
     } catch (err) {
       console.error("Withdrawal submit error", err);
-      toast.error(
+      message.error(
         err?.response?.data?.message || "Failed to submit withdrawal."
       );
     } finally {

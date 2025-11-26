@@ -9,10 +9,9 @@ import { useParams } from "next/navigation";
 import Loading from "@/components/Loading.jsx";
 import { useAppContext } from "@/context/AppContext";
 import React from "react";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import { apiUrl, API_CONFIG } from "@/configs/api";
+import { message } from "antd";
 
 const Product = () => {
   const { id } = useParams();
@@ -64,7 +63,6 @@ const Product = () => {
 
   return (
     <>
-      <ToastContainer position="top-right" autoClose={3000} />
       <div className="px-6 md:px-16 lg:px-32 pt-14 space-y-10">
         <style jsx global>{`
           @media screen and (max-width: 360px) {
@@ -185,12 +183,14 @@ const Product = () => {
               <button
                 onClick={() => {
                   if (!isLoggedIn) {
-                    toast.error("Please sign in to add items to cart");
+                    message.error("Please sign in to add items to cart");
                     router.push("/signin");
                     return;
                   }
                   addToCart(product._id);
-                  toast.success(`${product.name} has been added to your cart!`);
+                  message.success(
+                    `${product.name} has been added to your cart!`
+                  );
                 }}
                 className="w-full py-3.5 bg-gray-100 text-gray-800/80 hover:bg-gray-200 transition"
               >
@@ -199,12 +199,14 @@ const Product = () => {
               <button
                 onClick={() => {
                   if (!isLoggedIn) {
-                    toast.error("Please sign in to add items to cart");
+                    message.error("Please sign in to add items to cart");
                     router.push("/signin");
                     return;
                   }
                   addToCart(product._id);
-                  toast.success(`${product.name} has been added to your cart!`);
+                  message.success(
+                    `${product.name} has been added to your cart!`
+                  );
                   router.push("/cart");
                 }}
                 className="w-full py-3.5 bg-blue-500 text-white hover:bg-blue-600 transition"

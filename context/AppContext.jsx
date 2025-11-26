@@ -30,9 +30,49 @@ export const AppContextProvider = (props) => {
   const [states] = useState(statesData.state || []);
   const [lgas, setLgas] = useState([]);
 
-  const [cartItems, setCartItems] = useState({});
+  const [cartItems, setCartItems] = useState(() => {
+    if (typeof window !== "undefined") {
+      const encryptedUser = localStorage.getItem("user");
+      if (encryptedUser) {
+        const decryptedUser = decryptData(encryptedUser);
+        if (decryptedUser && decryptedUser._id) {
+          const cartStorageKey = `cartItems_storage_${decryptedUser._id}`;
+          const storedCart = localStorage.getItem(cartStorageKey);
+          if (storedCart) {
+            try {
+              const parsedCart = JSON.parse(storedCart);
+              return parsedCart.data || {};
+            } catch (e) {
+              return {};
+            }
+          }
+        }
+      }
+    }
+    return {};
+  });
 
-  const [wishlistItems, setWishlistItems] = useState([]);
+  const [wishlistItems, setWishlistItems] = useState(() => {
+    if (typeof window !== "undefined") {
+      const encryptedUser = localStorage.getItem("user");
+      if (encryptedUser) {
+        const decryptedUser = decryptData(encryptedUser);
+        if (decryptedUser && decryptedUser._id) {
+          const wishlistStorageKey = `wishlistItems_storage_${decryptedUser._id}`;
+          const storedWishlist = localStorage.getItem(wishlistStorageKey);
+          if (storedWishlist) {
+            try {
+              const parsedWishlist = JSON.parse(storedWishlist);
+              return parsedWishlist.data || [];
+            } catch (e) {
+              return [];
+            }
+          }
+        }
+      }
+    }
+    return [];
+  });
 
   // Following vendors state
   const [followingList, setFollowingList] = useState([]);
@@ -116,13 +156,11 @@ export const AppContextProvider = (props) => {
       router.push("/signin");
       return;
     }
-    let cartData = structuredClone(cartItems);
-    if (cartData[itemId]) {
-      cartData[itemId] += 1;
-    } else {
-      cartData[itemId] = 1;
-    }
-    setCartItems(cartData);
+    setCartItems((prevCartItems) => {
+      const newCartItems = { ...prevCartItems };
+      newCartItems[itemId] = (newCartItems[itemId] || 0) + 1;
+      return newCartItems;
+    });
   };
 
   const updateCartQuantity = async (itemId, quantity) => {

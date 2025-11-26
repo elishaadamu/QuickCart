@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useState, useContext } from "react";
+import React, { createContext, useState, useContext, useEffect } from "react";
 
 // 1. Create the context
 const CartContext = createContext();
@@ -16,9 +16,35 @@ export const useCart = () => {
 
 // 3. Create the Provider component
 export const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState([]);
+  const [cartItems, setCartItems] = useState(() => {
+    if (typeof window !== "undefined") {
+      const savedCart = localStorage.getItem("cartItems");
+      return savedCart ? JSON.parse(savedCart) : [];
+    }
+    return [];
+  });
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [wishlistItems, setWishlistItems] = useState([]);
+  const [wishlistItems, setWishlistItems] = useState(() => {
+    if (typeof window !== "undefined") {
+      const savedWishlist = localStorage.getItem("wishlistItems");
+      return savedWishlist ? JSON.parse(savedWishlist) : [];
+    }
+    return [];
+  });
+
+  // Effect to save cartItems to localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("cartItems", JSON.stringify(cartItems));
+    }
+  }, [cartItems]);
+
+  // Effect to save wishlistItems to localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("wishlistItems", JSON.stringify(wishlistItems));
+    }
+  }, [wishlistItems]);
 
   const addToCart = (product) => {
     setCartItems((prevItems) => {

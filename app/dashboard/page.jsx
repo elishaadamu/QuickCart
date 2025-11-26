@@ -189,7 +189,7 @@ const DashboardHome = () => {
       }
     } catch (error) {
       console.error("Error fetching account details:", error);
-      toast.error("Failed to fetch account details");
+      message.error("Failed to fetch account details");
     } finally {
       setLoading(false);
     }
@@ -274,7 +274,7 @@ const DashboardHome = () => {
 
   const handlePayment = async () => {
     if (!amount || amount < 100) {
-      toast.error("Please enter an amount of at least ₦100");
+      message.error("Please enter an amount of at least ₦100");
       return;
     }
 
@@ -300,7 +300,7 @@ const DashboardHome = () => {
   const onSuccess = async (transaction) => {
     setLoading(true);
     try {
-      toast.success("Wallet funded successfully!");
+      message.success("Wallet funded successfully!");
       setAmount("");
       setShowFundModal(false);
 
@@ -312,14 +312,14 @@ const DashboardHome = () => {
       setWalletBalance(walletResponse.data.data);
     } catch (error) {
       console.error("Error processing payment:", error);
-      toast.error("Failed to process payment. Please contact support.");
+      message.error("Failed to process payment. Please contact support.");
     } finally {
       setLoading(false);
     }
   };
 
   const onClose = () => {
-    toast.info("Payment cancelled");
+    message.info("Payment cancelled");
     setShowFundModal(false);
   };
 
@@ -333,12 +333,14 @@ const DashboardHome = () => {
         apiUrl(API_CONFIG.ENDPOINTS.ACCOUNT.CREATE + userData.id),
         payload
       );
-      toast.success("Account created successfully!");
+      message.success("Account created successfully!");
       setShowCreateAccount(false);
       await fetchAccountDetails();
     } catch (error) {
       console.error("Error creating account:", error);
-      toast.error(error.response?.data?.message || "Failed to create account.");
+      message.error(
+        error.response?.data?.message || "Failed to create account."
+      );
     } finally {
       setLoading(false);
     }

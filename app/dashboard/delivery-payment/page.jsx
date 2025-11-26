@@ -2,9 +2,9 @@
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { decryptData } from "@/lib/encryption";
-import { toast } from "react-toastify";
 import { apiUrl, API_CONFIG } from "@/configs/api";
 import PinInput from "@/components/PinInput";
+import { message } from "antd";
 
 const DeliveryPaymentPage = () => {
   const [requests, setRequests] = useState([]);
@@ -129,12 +129,12 @@ const DeliveryPaymentPage = () => {
     if (!selectedRequest) return;
     const userId = getUserId();
     if (!userId) {
-      toast.error("You must be signed in to pay.");
+      message.error("You must be signed in to pay.");
       return;
     }
 
     if (!selectedRequest.approvedPrice) {
-      toast.error("This request has no price set yet.");
+      message.error("This request has no price set yet.");
       return;
     }
 
@@ -157,14 +157,14 @@ const DeliveryPaymentPage = () => {
         ),
         payload
       );
-      toast.success(
+      message.success(
         `Payment of ₦${selectedRequest.approvedPrice.toLocaleString()} successful`
       );
       closeModal();
       fetchRequests();
     } catch (error) {
       console.error("Payment failed", error);
-      toast.error(error?.response?.data?.message || "Payment failed");
+      message.error(error?.response?.data?.message || "Payment failed");
     } finally {
       setPaying(false);
     }

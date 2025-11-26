@@ -8,8 +8,8 @@ import Loading from "@/components/Loading";
 import axios from "axios";
 import { apiUrl, API_CONFIG } from "@/configs/api";
 import ProductCard from "@/components/ProductCard";
-import { toast } from "react-toastify";
-import { FaStar } from "react-icons/fa";
+import { FaStar, FaCopy } from "react-icons/fa";
+import { message } from "antd";
 
 const StarRating = ({ rating, setRating }) => {
   const [hover, setHover] = useState(null);
@@ -58,6 +58,7 @@ const VendorPage = () => {
   const [comment, setComment] = useState("");
   const [vendorProducts, setVendorProducts] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [coupons, setCoupons] = useState([]);
   const [followerCount, setFollowerCount] = useState(0);
 
   // Follow state
@@ -90,6 +91,14 @@ const VendorPage = () => {
                 API_CONFIG.ENDPOINTS.FOLLOW.GET_FOLLOWERS + foundVendor._id
               )
             );
+            const checkFollower = followerCountResponse.data.followers?.find(
+              (item) => item._id === userData?.id
+            );
+            // Fetch coupons for the vendor
+            const couponsResponse = await axios.get(
+              apiUrl(API_CONFIG.ENDPOINTS.COUPON.GET_ALL + foundVendor._id)
+            );
+            setCoupons(couponsResponse.data.coupons || []);
             setFollowerCount(followerCountResponse.data.followersCount || 0);
           } else {
             router.push("/404");
@@ -138,7 +147,7 @@ const VendorPage = () => {
     e.stopPropagation();
 
     if (!isLoggedIn) {
-      toast.error("Please sign in to follow vendors.");
+      message.error("Please sign in to follow vendors.");
       router.push("/signin");
       return;
     }
@@ -154,13 +163,13 @@ const VendorPage = () => {
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
     if (!isLoggedIn) {
-      toast.error("Please log in to submit a review.");
+      message.error("Please log in to submit a review.");
       router.push("/signin");
       return;
     }
 
     if (userData?.role !== "user") {
-      toast.error("Only users can submit reviews.");
+      message.error("Only users can submit reviews.");
       return;
     }
 
@@ -169,12 +178,12 @@ const VendorPage = () => {
       (review) => review.userId?._id === userData?.id
     );
     if (userHasReviewed) {
-      toast.error("You have already submitted a review for this vendor.");
+      message.error("You have already submitted a review for this vendor.");
       return;
     }
 
     if (rating === 0) {
-      toast.error("Please select a rating.");
+      message.error("Please select a rating.");
       return;
     }
 
@@ -193,7 +202,7 @@ const VendorPage = () => {
       );
       console.log(response.data);
       if (response.data) {
-        toast.success("Review submitted successfully!");
+        message.success("Review submitted successfully!");
         // Optimistically add the review to the UI
         setReviews((prevReviews) =>
           [response.data.review, ...prevReviews].filter(Boolean)
@@ -201,32 +210,54 @@ const VendorPage = () => {
         setRating(0);
         setComment("");
       } else {
-        toast.error("Failed to submit review.");
+        message.error("Failed to submit review.");
       }
     } catch (error) {
       console.error("Error submitting review:", error.response.data.message);
-      toast.error(error.response.data.message);
+      message.error(error.response.data.message);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDeleteReview = async (reviewId) => {
-    if (!isLoggedIn) {
-      toast.error("Please log in to delete a review.");
-      return;
-    }
     try {
       await axios.delete(
         apiUrl(
           `${API_CONFIG.ENDPOINTS.RATING.DELETE}${vendor._id}/${userData._id}`
         )
       );
-      toast.success("Review deleted successfully!");
+      message.success("Review deleted successfully!");
       setReviews(reviews.filter((review) => review._id !== reviewId));
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to delete review.");
+      message.error(
+        error.response?.data?.message || "Failed to delete review."
+      );
     }
+  };
+
+  const isCouponActive = (coupon) => {
+    const now = new Date();
+    const validFrom = new Date(coupon.validFrom);
+    const validUntil = new Date(coupon.validUntil);
+    return now >= validFrom && now <= validUntil && coupon.isActive;
+  };
+
+  const handleCopyCoupon = (code) => {
+    navigator.clipboard.writeText(code).then(
+      () => {
+        message.success(`Copied coupon code: ${code}`);
+      },
+      (err) => {
+        message.error("Failed to copy coupon code.");
+        console.error("Could not copy text: ", err);
+      }
+    );
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleDateString();
   };
 
   if (loading) {
@@ -304,6 +335,112 @@ const VendorPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Coupon Management Section */}
+      {coupons.length > 0 && (
+        <div className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
+              🎁 Special Offers
+            </h2>
+          </div>
+
+          {/* Available Coupons Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {coupons.map((coupon) => {
+              const active = isCouponActive(coupon);
+              return (
+                <div
+                  key={coupon._id}
+                  className={`border-2 rounded-2xl p-6 transition-all duration-300 hover:shadow-lg ${
+                    active
+                      ? "bg-gradient-to-br from-green-50 to-emerald-100 border-green-200"
+                      : "bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200"
+                  }`}
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3
+                        className={`text-xl font-bold ${
+                          active ? "text-gray-900" : "text-gray-500"
+                        }`}
+                      >
+                        {coupon.discountType === "fixed"
+                          ? `₦${coupon.discountAmount} OFF`
+                          : `${coupon.discount}% OFF`}
+                      </h3>
+                      <p
+                        className={`text-sm ${
+                          active ? "text-gray-600" : "text-gray-400"
+                        }`}
+                      >
+                        {coupon.description || "Special discount coupon"}
+                      </p>
+                    </div>
+                    <span
+                      className={`text-xs px-2 py-1 rounded-full ${
+                        active
+                          ? "bg-green-500 text-white"
+                          : "bg-gray-400 text-white"
+                      }`}
+                    >
+                      {active ? "Active" : "Expired"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between mb-4">
+                    <code
+                      className={`text-lg font-mono font-bold px-3 py-2 rounded-lg border ${
+                        active
+                          ? "bg-white text-gray-900"
+                          : "bg-gray-200 text-gray-500"
+                      }`}
+                    >
+                      {coupon.code}
+                    </code>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleCopyCoupon(coupon.code)}
+                        className={`p-2 rounded-lg transition-colors ${
+                          active
+                            ? "bg-green-500 hover:bg-green-600 text-white"
+                            : "bg-gray-400 text-white cursor-not-allowed"
+                        }`}
+                        title="Copy code"
+                        disabled={!active}
+                      >
+                        <FaCopy size={14} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Coupon Details */}
+                  <div className="text-xs space-y-2 mb-3">
+                    <div className="flex justify-between">
+                      <span
+                        className={active ? "text-gray-600" : "text-gray-400"}
+                      >
+                        Valid Until:
+                      </span>
+                      <span
+                        className={active ? "text-gray-800" : "text-gray-500"}
+                      >
+                        {formatDate(coupon.validUntil)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {!active && (
+                    <div className="text-center text-red-500 text-xs font-semibold mt-2">
+                      This offer has expired
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Products Section */}
       <div className="mb-12">
