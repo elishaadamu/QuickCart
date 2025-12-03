@@ -93,7 +93,7 @@ const SubscriptionPaymentContent = () => {
       console.log("Payment successful:", result);
       toast.success(result.message || "Subscription successful!");
       setTimeout(() => {
-        router.push("/vendor/dashboard");
+        router.push("/vendor-dashboard/my-subscription");
       }, 2000); // Delay redirect to allow user to see the success message
     } catch (error) {
       console.error("Payment error:", error);
