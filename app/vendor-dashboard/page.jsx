@@ -431,10 +431,10 @@ const DashboardHome = () => {
                           Withdraw funds
                         </button>
                       </Link>
-                      <Link href="/vendor-dashboard/funding-history">
+                      <Link href="/vendor-dashboard/transaction-history">
                         {" "}
                         <button className="bg-white/20 text-white px-3 py-1.5 rounded text-xs hover:bg-white/30 transition">
-                          Funding History
+                          Transaction History
                         </button>
                       </Link>
                     </div>

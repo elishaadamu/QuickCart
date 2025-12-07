@@ -245,9 +245,9 @@ const Sidebar = ({
               <span>Withdrawal Request</span>{" "}
             </Link>
             <Link
-              href="/vendor-dashboard/funding-history"
+              href="/vendor-dashboard/transaction-history"
               className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors ${
-                pathname === "/vendor-dashboard/funding-history"
+                pathname === "/vendor-dashboard/transaction-history"
                   ? "bg-gray-700"
                   : ""
               }`}
