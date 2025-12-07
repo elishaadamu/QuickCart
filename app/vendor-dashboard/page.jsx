@@ -176,29 +176,6 @@ const DashboardHome = () => {
     };
   }, [dashboardData.orders, timePeriod]);
 
-  const fetchAccountDetails = async () => {
-    setLoading(true);
-    try {
-      const encryptedUser = localStorage.getItem("user");
-      if (encryptedUser) {
-        const decryptedUserData = decryptData(encryptedUser);
-        const response = await axios.get(
-          apiUrl(API_CONFIG.ENDPOINTS.ACCOUNT.GET + decryptedUserData.id)
-        );
-        setAccountDetails(response.data);
-      }
-    } catch (error) {
-      console.error("Error fetching account details:", error);
-      toast.error("Failed to fetch account details");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchAccountDetails();
-  }, []);
-
   useEffect(() => {
     const fetchDashboardData = async () => {
       setLoading(true);
@@ -236,8 +213,6 @@ const DashboardHome = () => {
               totalProducts: productsResponse.data.length,
             }));
           }
-
-          await fetchAccountDetails();
         }
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
@@ -297,27 +272,6 @@ const DashboardHome = () => {
     });
   };
 
-  const onSuccess = async (transaction) => {
-    setLoading(true);
-    try {
-      toast.success("Wallet funded successfully!");
-      setAmount("");
-      setShowFundModal(false);
-
-      const walletResponse = await axios.get(
-        apiUrl(
-          API_CONFIG.ENDPOINTS.ACCOUNT.walletBalance + userData.id + "/balance"
-        )
-      );
-      setWalletBalance(walletResponse.data.data);
-    } catch (error) {
-      console.error("Error processing payment:", error);
-      toast.error("Failed to process payment. Please contact support.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const onClose = () => {
     toast.info("Payment cancelled");
     setShowFundModal(false);
@@ -335,7 +289,7 @@ const DashboardHome = () => {
       );
       toast.success("Account created successfully!");
       setShowCreateAccount(false);
-      await fetchAccountDetails();
+      await getBalance();
     } catch (error) {
       console.error("Error creating account:", error);
       toast.error(error.response?.data?.message || "Failed to create account.");
@@ -344,6 +298,30 @@ const DashboardHome = () => {
     }
   };
 
+  const getBalance = async () => {
+    setLoading(true);
+    try {
+      setAmount("");
+      setShowFundModal(false);
+
+      const walletResponse = await axios.get(
+        apiUrl(
+          API_CONFIG.ENDPOINTS.ACCOUNT.walletBalance + userData.id + "/balance"
+        )
+      );
+      console.log("walletResponse", walletResponse);
+      setAccountDetails(walletResponse.data.data);
+    } catch (error) {
+      console.error("Error processing payment:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    if (userData?.id) {
+      getBalance();
+    }
+  }, [userData]);
   return (
     <div className="max-w-6xl mx-auto pb-20 md:pb-0 px-4">
       {loading ? (
@@ -443,7 +421,7 @@ const DashboardHome = () => {
                     <div>
                       <p className="text-blue-100 text-xs">Current Balance</p>
                       <h1 className="text-2xl font-bold mt-1">
-                        ₦{walletBalance?.balance?.toFixed(2) || "0.00"}
+                        ₦{accountDetails?.balance?.toFixed(2) || "0.00"}
                       </h1>
                     </div>
                     <div className="flex gap-2 mt-3 sm:mt-0">
@@ -478,7 +456,7 @@ const DashboardHome = () => {
                         <div>
                           <p className="text-blue-100 text-xs">Account Name</p>
                           <p className="text-white font-medium text-sm">
-                            {accountDetails.accountName || "N/A"}
+                            {accountDetails.wallet.virtualAccountName || "N/A"}
                           </p>
                         </div>
                       </div>
@@ -492,7 +470,8 @@ const DashboardHome = () => {
                             Account Number
                           </p>
                           <p className="text-white font-medium text-sm">
-                            {accountDetails.accountNumber || "N/A"}
+                            {accountDetails.wallet.virtualAccountNumber ||
+                              "N/A"}
                           </p>
                         </div>
                       </div>
@@ -504,7 +483,7 @@ const DashboardHome = () => {
                         <div>
                           <p className="text-blue-100 text-xs">Bank Name</p>
                           <p className="text-white font-medium text-sm">
-                            {accountDetails.bankName || "N/A"}
+                            {accountDetails.wallet.virtualBanktName || "N/A"}
                           </p>
                         </div>
                       </div>
