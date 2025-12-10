@@ -138,6 +138,7 @@ const Navbar = () => {
                 "/balance"
             )
           );
+          console.log(walletResponse.data);
           setWalletBalance(walletResponse.data.data);
         }
       } catch (error) {
