@@ -94,7 +94,7 @@ const DashboardHome = () => {
           orderStatusCounts.delivered,
           orderStatusCounts.cancelled,
         ]
-      : [5, 3, 2, 8, 1]; // Demo data
+      : [0, 0, 0, 0, 0]; // Demo data
 
     return {
       labels: ["Pending", "Paid", "Shipped", "Delivered", "Cancelled"],
@@ -137,7 +137,7 @@ const DashboardHome = () => {
         dataPoints = Array.from(monthlyData.values());
       } else {
         // Demo data for monthly view
-        dataPoints = [2, 5, 3, 6, 4, 8, 5, 9, 6, 10, 7, 12];
+        dataPoints = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
       }
     } else {
       // Weekly
@@ -158,7 +158,7 @@ const DashboardHome = () => {
         dataPoints = Array.from(weeklyData.values());
       } else {
         // Demo data for weekly view
-        dataPoints = [1, 2, 1, 3, 2, 4, 2, 5, 3, 5, 4, 6];
+        dataPoints = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
       }
     }
 

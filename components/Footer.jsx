@@ -68,7 +68,7 @@ const Footer = () => {
         </div>
 
         {/* Main Footer Sections */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 py-16">
           {/* Company Info */}
           <div className="lg:col-span-1">
             <div className="flex items-center gap-3 mb-6">
@@ -112,7 +112,7 @@ const Footer = () => {
             <ul className="space-y-3">
               {[
                 { name: "Home", href: "/" },
-                { name: "Shop", href: "/products" },
+                { name: "Shop", href: "/all-products" },
                 { name: "About Us", href: "/about" },
                 { name: "Contact", href: "/contact" },
                 { name: "FAQ", href: "/faq" },
@@ -123,33 +123,6 @@ const Footer = () => {
                     className="text-gray-300 hover:text-white transition-all duration-300 flex items-center gap-2 group"
                   >
                     <FaArrowRight className="w-3 h-3 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Customer Service */}
-          <div>
-            <h3 className="text-lg font-semibold mb-6 text-white relative inline-block">
-              Customer Service
-              <span className="absolute bottom-0 left-0 w-1/2 h-0.5 bg-green-500"></span>
-            </h3>
-            <ul className="space-y-3">
-              {[
-                { name: "Shipping Info", href: "/shipping" },
-                { name: "Returns & Refunds", href: "/returns" },
-                { name: "Privacy Policy", href: "/privacy" },
-                { name: "Terms of Service", href: "/terms" },
-                { name: "Size Guide", href: "/size-guide" },
-              ].map((link, index) => (
-                <li key={index}>
-                  <Link
-                    href={link.href}
-                    className="text-gray-300 hover:text-white transition-all duration-300 flex items-center gap-2 group"
-                  >
-                    <FaArrowRight className="w-3 h-3 text-green-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     {link.name}
                   </Link>
                 </li>
@@ -172,7 +145,7 @@ const Footer = () => {
                     <br />
                     Central Area,
                     <br />
-                    Abuja, Nigeria
+                    Kano, Nigeria
                   </p>
                 </div>
               </div>
