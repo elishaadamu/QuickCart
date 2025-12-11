@@ -121,7 +121,7 @@ export const AppContextProvider = (props) => {
         apiUrl(API_CONFIG.ENDPOINTS.PRODUCT.GET_PRODUCT),
         payload
       );
-      console.log("Products fetched:", response.data);
+      
       const newProducts = response.data.products || [];
 
       setProducts((prev) =>

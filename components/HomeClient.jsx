@@ -138,7 +138,7 @@ const HomeClient = () => {
       </div>
       <div className="px-6  max-w-[1280px] mx-auto lg:px-32">
         <HomeProducts />
-        <hr className="my-12 border-gray-200" />
+        <hr className="my-6 border-gray-200" />
 
         <VendorSection />
         <hr className="my-12 border-gray-200" />

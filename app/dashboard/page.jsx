@@ -57,7 +57,7 @@ const DashboardHome = () => {
     recentOrders: [],
     totalProducts: 0,
   });
-  const [walletBalance, setWalletBalance] = useState({ balance: 0 });
+  const [walletBalance, setWalletBalance] = useState(null);
   const [userData, setUserData] = useState(null);
   const [accountDetails, setAccountDetails] = useState(null);
   const [showFundModal, setShowFundModal] = useState(false);
@@ -65,6 +65,27 @@ const DashboardHome = () => {
   const [nin, setNin] = useState("");
   const [showCreateAccount, setShowCreateAccount] = useState(false);
   const [timePeriod, setTimePeriod] = useState("monthly"); // 'monthly' or 'weekly'
+
+  const fetchWalletBalance = async () => {
+    try {
+      const encryptedUser = localStorage.getItem("user");
+      if (encryptedUser) {
+        const decryptedUserData = decryptData(encryptedUser);
+        const walletResponse = await axios.get(
+          apiUrl(
+            API_CONFIG.ENDPOINTS.ACCOUNT.walletBalance +
+              decryptedUserData.id +
+              "/balance"
+          )
+        );
+        console.log("Wallet", walletResponse);
+        setWalletBalance(walletResponse.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching wallet balance:", error);
+      setWalletBalance(null);
+    }
+  };
 
   const orderStatusCounts = useMemo(() => {
     return dashboardData.orders.reduce(
@@ -137,7 +158,7 @@ const DashboardHome = () => {
         dataPoints = Array.from(monthlyData.values());
       } else {
         // Demo data for monthly view
-        dataPoints = [2, 5, 3, 6, 4, 8, 5, 9, 6, 10, 7, 12];
+        dataPoints = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
       }
     } else {
       // Weekly
@@ -158,7 +179,7 @@ const DashboardHome = () => {
         dataPoints = Array.from(weeklyData.values());
       } else {
         // Demo data for weekly view
-        dataPoints = [1, 2, 1, 3, 2, 4, 2, 5, 3, 5, 4, 6];
+        dataPoints = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
       }
     }
 
@@ -214,7 +235,7 @@ const DashboardHome = () => {
             }));
           }
 
-          await fetchAccountDetails();
+          await fetchWalletBalance();
         }
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
@@ -224,31 +245,6 @@ const DashboardHome = () => {
     };
 
     fetchDashboardData();
-  }, []);
-
-  useEffect(() => {
-    const fetchWalletBalance = async () => {
-      try {
-        const encryptedUser = localStorage.getItem("user");
-        if (encryptedUser) {
-          const decryptedUserData = decryptData(encryptedUser);
-          const walletResponse = await axios.get(
-            apiUrl(
-              API_CONFIG.ENDPOINTS.ACCOUNT.walletBalance +
-                decryptedUserData.id +
-                "/balance"
-            )
-          );
-          console.log("Wallet", walletResponse);
-          setWalletBalance(walletResponse.data.data);
-        }
-      } catch (error) {
-        console.error("Error fetching wallet balance:", error);
-        toa;
-      }
-    };
-
-    fetchWalletBalance();
   }, []);
 
   const handlePayment = async () => {
@@ -282,14 +278,7 @@ const DashboardHome = () => {
       toast.success("Wallet funded successfully!");
       setAmount("");
       setShowFundModal(false);
-
-      const walletResponse = await axios.get(
-        apiUrl(
-          API_CONFIG.ENDPOINTS.ACCOUNT.walletBalance + userData.id + "/balance"
-        )
-      );
-      console.log("Wallet", walletResponse);
-      setWalletBalance(walletResponse.data.data);
+      await fetchWalletBalance();
     } catch (error) {
       console.error("Error processing payment:", error);
       toast.error("Failed to process payment. Please contact support.");
@@ -315,7 +304,7 @@ const DashboardHome = () => {
       );
       toast.success("Account created successfully!");
       setShowCreateAccount(false);
-      await fetchAccountDetails();
+      await fetchWalletBalance();
     } catch (error) {
       console.error("Error creating account:", error);
       toast.error(error.response?.data?.message || "Failed to create account.");
@@ -423,7 +412,7 @@ const DashboardHome = () => {
                     <div>
                       <p className="text-blue-100 text-xs">Current Balance</p>
                       <h1 className="text-2xl font-bold mt-1">
-                        ₦{walletBalance?.balance?.toFixed(2) || "2"}
+                        ₦{walletBalance?.balance?.toFixed(2) || "0.00"}
                       </h1>
                     </div>
                     <Link href="/dashboard/transaction-history">
@@ -436,7 +425,7 @@ const DashboardHome = () => {
                 </div>
 
                 {/* Account Details Section */}
-                {walletBalance ? (
+                {walletBalance?.wallet ? (
                   <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
                     <h3 className="font-semibold mb-3 flex items-center gap-2 text-sm">
                       <FaCreditCard className="w-4 h-4" />
