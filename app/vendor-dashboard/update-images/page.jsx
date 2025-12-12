@@ -70,21 +70,28 @@ const UpdateImages = () => {
   const [previews, setPreviews] = useState({ avatar: null, banner: null });
 
   useEffect(() => {
-    const fetchUserData = () => {
+    const fetchUserProfile = async () => {
       try {
         const encryptedUser = localStorage.getItem("user");
-
         if (encryptedUser) {
-          const userData = decryptData(encryptedUser);
-          console.log("My details", userData);
-          setPreviews({ avatar: userData.avatar, banner: userData.banner });
+           const userData = decryptData(encryptedUser);
+           const response = await axios.get(`${apiUrl(API_CONFIG.ENDPOINTS.PROFILE.GET)}/${userData.id}`);
+           
+           if (response.data.user) {
+             const { avatar, banner } = response.data.user;
+             setPreviews({
+               avatar: avatar?.url || avatar || null,
+               banner: banner?.url || banner || null
+             });
+           }
         }
+      } catch (error) {
+        console.error("Failed to fetch user profile", error);
       } finally {
         setPageLoading(false);
       }
     };
-
-    fetchUserData();
+    fetchUserProfile();
   }, []);
 
   const handleFileChange = (e) => {

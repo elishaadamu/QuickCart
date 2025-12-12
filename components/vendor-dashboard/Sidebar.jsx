@@ -336,10 +336,11 @@ const Sidebar = ({
                 >
                   Update Images
                 </Link>
+               
                 <Link
-                  href="/vendor-dashboard/pin-management"
+                  href="/vendor-dashboard/shipping"
                   className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
-                    pathname === "/vendor-dashboard/pin-management"
+                    pathname === "/vendor-dashboard/shipping"
                       ? "bg-gray-700"
                       : ""
                   }`}
@@ -356,16 +357,7 @@ const Sidebar = ({
                 >
                   Change Password
                 </Link>
-                <Link
-                  href="/vendor-dashboard/shipping"
-                  className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
-                    pathname === "/vendor-dashboard/shipping"
-                      ? "bg-gray-700"
-                      : ""
-                  }`}
-                >
-                  Shipping Address
-                </Link>
+               
               </div>
             </div>
             <div className="space-y-1">
