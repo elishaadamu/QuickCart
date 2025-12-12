@@ -221,6 +221,7 @@ const PersonalDetails = () => {
         payload = userPayload;
       }
 
+      console.log(payload);
       const response = await axios.put(
         `${apiUrl(API_CONFIG.ENDPOINTS.PROFILE.UPDATE_USER)}/${userData.id}`,
         payload

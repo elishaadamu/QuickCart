@@ -245,8 +245,8 @@ const WithdrawalRequestPage = () => {
                           w.status === "completed"
                             ? "bg-green-100 text-green-800"
                             : w.status === "approved"
-                            ? "bg-blue-100 text-blue-800"
-                            : w.status === "failed"
+                            ? "bg-green-100 text-green-800"
+                            : w.status === "rejected"
                             ? "bg-red-100 text-red-800"
                             : "bg-yellow-100 text-yellow-800"
                         }`}
