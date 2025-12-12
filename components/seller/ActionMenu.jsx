@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { FaEllipsisV } from "react-icons/fa";
+import { MoreVertical, Edit2, Trash2, X, Save, AlertTriangle } from "lucide-react";
 import { useAppContext } from "@/context/AppContext";
 import axios from "axios";
 import { API_CONFIG, apiUrl } from "@/configs/api";
@@ -16,6 +16,10 @@ const ActionMenu = ({ product, onDelete, onEdit, categories, states }) => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [editedProduct, setEditedProduct] = useState({ ...product });
   const [isSaving, setIsSaving] = useState(false);
+
+  // Close menu when clicking outside could be added here, 
+  // but for now we rely on the user clicking the toggle or an option.
+  // Ideally, a click-outside handler would improve UX further.
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -75,7 +79,17 @@ const ActionMenu = ({ product, onDelete, onEdit, categories, states }) => {
       );
       onEdit(editedProduct);
       setIsEditModalOpen(false);
-      toast.success("Product has been sent for approval!");
+      
+      // Ensure toast is called
+      toast.success("Product has been updated!", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
     } catch (err) {
       console.error("Failed to update product:", err);
       toast.error("Failed to update product.");
@@ -90,131 +104,177 @@ const ActionMenu = ({ product, onDelete, onEdit, categories, states }) => {
   };
 
   return (
-    <div className="relative">
+    <div className="relative inline-block text-left">
       <button
         onClick={toggleMenu}
-        className="text-gray-500 hover:text-gray-700"
+        className={`p-2 rounded-full transition-all duration-200 ${
+          isOpen
+            ? "bg-blue-50 text-blue-600"
+            : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+        }`}
       >
-        <FaEllipsisV />
+        <MoreVertical size={20} />
       </button>
+
       {isOpen && (
-        <div className="absolute right-0 bottom-full mb-2 w-48 bg-white rounded-md shadow-lg z-1000">
-          <button
-            onClick={handleEdit}
-            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-          >
-            Edit
-          </button>
-          <button
-            onClick={handleDelete}
-            className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-          >
-            Delete
-          </button>
-        </div>
+        <>
+          {/* Backdrop to close menu when clicking outside (simple version) */}
+          <div 
+            className="fixed inset-0 z-10 cursor-default" 
+            onClick={() => setIsOpen(false)}
+          ></div>
+          
+          <div className="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl z-20 border border-gray-100 overflow-hidden transform transition-all duration-200 origin-top-right">
+            <div className="py-1">
+              <button
+                onClick={handleEdit}
+                className="flex items-center w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors gap-3"
+              >
+                <Edit2 size={16} />
+                <span>Edit Product</span>
+              </button>
+              <button
+                onClick={handleDelete}
+                className="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors gap-3"
+              >
+                <Trash2 size={16} />
+                <span>Delete Product</span>
+              </button>
+            </div>
+          </div>
+        </>
       )}
 
       {isEditModalOpen && (
         <Modal onClose={() => setIsEditModalOpen(false)}>
-          <h2 className="text-2xl font-bold mb-4">Edit Product</h2>
+          <div className="mb-6 flex justify-between items-center border-b pb-4">
+            <h2 className="text-xl font-bold text-gray-800">Edit Product</h2>
+            <button 
+              onClick={() => setIsEditModalOpen(false)}
+              className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
+            >
+              <X size={20} />
+            </button>
+          </div>
+          
           <form
             onSubmit={handleEditSubmit}
-            className="max-h-[90vh] my-4 overflow-y-auto pr-4"
+            className="max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar"
           >
-            <div className="mb-4">
-              <label className="block text-gray-700">Product name</label>
-              <input
-                name="name"
-                value={editedProduct.name}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border rounded-md"
-              ></input>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
+                <input
+                  name="name"
+                  value={editedProduct.name}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-gray-800 placeholder-gray-400"
+                  placeholder="Enter product name"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">₦</span>
+                    <input
+                      type="number"
+                      name="price"
+                      value={editedProduct.price}
+                      onChange={handleInputChange}
+                      className="w-full pl-8 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
+                  <input
+                    type="number"
+                    name="stock"
+                    value={editedProduct.stock}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                <select
+                  name="category"
+                  value={editedProduct.category}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none bg-white"
+                >
+                  <option value="" disabled>Select a category</option>
+                  {categories.map((cat) => (
+                    <option key={cat._id} value={cat.name}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea
+                  name="description"
+                  value={editedProduct.description}
+                  onChange={handleInputChange}
+                  rows="4"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none resize-none"
+                  placeholder="Product description..."
+                ></textarea>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Condition</label>
+                  <select
+                    name="condition"
+                    value={editedProduct.condition}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none bg-white"
+                  >
+                    <option value="New">New</option>
+                    <option value="Used">Used</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+                  <select
+                    name="state"
+                    value={editedProduct.state}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none bg-white"
+                  >
+                   <option value="" disabled>Select State</option>
+                    {states.map((state) => (
+                      <option key={state} value={state}>
+                        {state}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
-            <div className="mb-4">
-              <label className="block text-gray-700">Price</label>
-              <input
-                type="number"
-                name="price"
-                value={editedProduct.price}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border rounded-md"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700">Category</label>
-              <select
-                name="category"
-                value={editedProduct.category}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border rounded-md"
-              >
-                {categories.map((cat) => (
-                  <option key={cat._id} value={cat.name}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700">Description</label>
-              <textarea
-                name="description"
-                value={editedProduct.description}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border rounded-md"
-              ></textarea>
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700">Stock</label>
-              <input
-                type="number"
-                name="stock"
-                value={editedProduct.stock}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border rounded-md"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700">Condition</label>
-              <select
-                name="condition"
-                value={editedProduct.condition}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border rounded-md"
-              >
-                <option value="New">New</option>
-                <option value="Used">Used</option>
-              </select>
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700">State</label>
-              <select
-                name="state"
-                value={editedProduct.state}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border rounded-md"
-              >
-                {states.map((state) => (
-                  <option key={state} value={state}>
-                    {state}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex justify-end">
+
+            <div className="flex justify-end items-center gap-3 mt-8 pt-4 border-t">
               <button
                 type="button"
                 onClick={() => setIsEditModalOpen(false)}
-                className="mr-4 px-4 py-2 bg-gray-300 rounded-md"
+                className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-gray-200 transition-all"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-md disabled:bg-blue-400"
                 disabled={isSaving}
+                className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-500/20 transition-all disabled:opacity-70 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
               >
-                {isSaving ? "Saving..." : "Save"}
+                <Save size={16} />
+                {isSaving ? "Saving Changes..." : "Save Changes"}
               </button>
             </div>
           </form>
@@ -223,21 +283,31 @@ const ActionMenu = ({ product, onDelete, onEdit, categories, states }) => {
 
       {isDeleteModalOpen && (
         <Modal onClose={() => setIsDeleteModalOpen(false)}>
-          <h2 className="text-xl font-bold mb-4">Confirm Delete</h2>
-          <p>Are you sure you want to delete this product?</p>
-          <div className="flex justify-end mt-4">
-            <button
-              onClick={() => setIsDeleteModalOpen(false)}
-              className="mr-4 px-4 py-2 bg-gray-300 rounded-md"
-            >
-              No
-            </button>
-            <button
-              onClick={confirmDelete}
-              className="px-4 py-2 bg-red-600 text-white rounded-md"
-            >
-              Yes
-            </button>
+          <div className="text-center sm:text-left">
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10 mb-4">
+              <AlertTriangle className="h-6 w-6 text-red-600" />
+            </div>
+            
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Delete Product</h2>
+            <p className="text-sm text-gray-500 mb-6">
+              Are you sure you want to delete <span className="font-semibold text-gray-900">"{product.name}"</span>? 
+              This action cannot be undone and will permanently remove the product from your inventory.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row-reverse gap-3">
+              <button
+                onClick={confirmDelete}
+                className="inline-flex justify-center items-center px-4 py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-500/20 shadow-md hover:shadow-lg transition-all"
+              >
+                Yes, Delete Product
+              </button>
+              <button
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="inline-flex justify-center items-center px-4 py-2.5 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </Modal>
       )}

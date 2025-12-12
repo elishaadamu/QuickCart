@@ -76,7 +76,7 @@ const UpdateImages = () => {
         if (encryptedUser) {
            const userData = decryptData(encryptedUser);
            const response = await axios.get(`${apiUrl(API_CONFIG.ENDPOINTS.PROFILE.GET)}/${userData.id}`);
-           
+           console.log("response", response.data.user);
            if (response.data.user) {
              const { avatar, banner } = response.data.user;
              setPreviews({

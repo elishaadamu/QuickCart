@@ -9,12 +9,11 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { decryptData } from "@/lib/encryption";
 import statesData from "@/lib/states.json";
-import { FaTimesCircle } from "react-icons/fa";
+import { FaTimesCircle, FaUpload, FaTrash } from "react-icons/fa";
 import axios from "axios";
 
 const AddProduct = () => {
   const { router, userData } = useAppContext();
-  const userId = userData?.id;
   const [images, setImages] = useState(new Array(4).fill(null));
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -31,31 +30,24 @@ const AddProduct = () => {
   const [subscriptionInvalid, setSubscriptionInvalid] = useState(false);
   const [states] = useState(statesData.state);
 
+  // Fetch categories & check subscription (unchanged logic)
   useEffect(() => {
     const fetchCategories = async () => {
-      // This will run after the status check passes
       try {
-        const response = await axios.get(
-          apiUrl(API_CONFIG.ENDPOINTS.CATEGORY.GET_ALL)
-        );
-        console.log("Fetched categories:", response.data);
-        setCategories(response.data.categories);
-        if (response.data.length > 0) {
-          setCategory(response.data[0].name); // Set default category
+        const response = await axios.get(apiUrl(API_CONFIG.ENDPOINTS.CATEGORY.GET_ALL));
+        setCategories(response.data.categories || []);
+        if (response.data.categories?.length > 0) {
+          setCategory(response.data.categories[0].name);
         }
       } catch (error) {
-        toast.error("Failed to fetch categories.");
-        console.error("Error fetching categories:", error);
+        toast.error("Failed to load categories");
       }
     };
     fetchCategories();
   }, []);
 
   useEffect(() => {
-    if (!userData?.id) {
-      // Wait for user data to be available
-      return;
-    }
+    if (!userData?.id) return;
 
     const checkSubscriptionStatus = async () => {
       setIsCheckingStatus(true);
@@ -63,29 +55,30 @@ const AddProduct = () => {
         const response = await axios.get(
           apiUrl(API_CONFIG.ENDPOINTS.SUBSCRIPTION.CHECK_STATUS + userData.id)
         );
-
-        if (response.data?.canPostProduct === false) {
-          setError("You cannot add a product. Please renew your subscription.");
-          setSubscriptionInvalid(true);
-        } else {
-          setSubscriptionInvalid(false);
+        setSubscriptionInvalid(!response.data?.canPostProduct);
+        if (!response.data?.canPostProduct) {
+          setError("Your subscription does not allow adding products. Please upgrade.");
         }
       } catch (err) {
-        console.error("Error checking subscription status:", err);
-        setError("Failed to verify your subscription status.");
         setSubscriptionInvalid(true);
+        setError("Failed to verify subscription status.");
       } finally {
         setIsCheckingStatus(false);
       }
     };
 
     checkSubscriptionStatus();
-  }, [userData, router]);
+  }, [userData]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    if (images.filter(Boolean).length === 0) {
+      toast.error("Please upload at least one product image");
+      return;
+    }
+
     setLoading(true);
+    setError("");
 
     try {
       const encryptedUser = localStorage.getItem("user");
@@ -98,46 +91,23 @@ const AddProduct = () => {
       formData.append("category", category);
       formData.append("price", parseFloat(price));
       formData.append("state", state);
-      formData.append("minOrder", parseInt(minOrder));
+      formData.append("minOrder", parseInt(minOrder) || 1);
       formData.append("condition", condition);
-      formData.append("stock", parseInt(stock));
-      images.filter(Boolean).forEach((image) => {
-        formData.append("images", image);
+      formData.append("stock", parseInt(stock) || 0);
+
+      images.filter(Boolean).forEach((img) => formData.append("images", img));
+
+      await axios.post(apiUrl(API_CONFIG.ENDPOINTS.PRODUCT.ADD + userId), formData, {
+        withCredentials: true,
+        headers: { "Content-Type": "multipart/form-data" },
       });
-      console.log("Submitting form with data:", {
-        name,
-        description,
-        category,
-        price,
-        state,
-        minOrder,
-        condition,
-        stock,
-        images: images.filter(Boolean),
-      });
-      const response = await axios.post(
-        apiUrl(API_CONFIG.ENDPOINTS.PRODUCT.ADD + userId),
-        formData,
-        {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
 
       toast.success("Product added successfully!");
       router.push("/vendor-dashboard/products-list");
     } catch (err) {
-      console.error("Error adding product:", err);
-      toast.error(
-        err.response?.data?.message ||
-          "Failed to add product. Please try again."
-      );
-      setError(
-        err.response?.data?.message ||
-          "Failed to add product. Please try again."
-      );
+      const msg = err.response?.data?.message || "Failed to add product";
+      toast.error(msg);
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -145,11 +115,13 @@ const AddProduct = () => {
 
   const handleFileChange = (e, index) => {
     const file = e.target.files[0];
+    if (!file) return;
+
     if (file.size > 5 * 1024 * 1024) {
-      // 5MB limit
-      toast.error("Image size should be less than 5MB");
+      toast.error("Image must be under 5MB");
       return;
     }
+
     const newImages = [...images];
     newImages[index] = file;
     setImages(newImages);
@@ -161,313 +133,207 @@ const AddProduct = () => {
     setImages(newImages);
   };
 
-  return (
-    <div className="flex-1 min-h-screen flex flex-col justify-between">
-      <ToastContainer />
-      {isCheckingStatus ? (
-        <Loading />
-      ) : subscriptionInvalid ? (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="flex flex-col items-center justify-center text-center p-4">
-            <FaTimesCircle className="text-red-500 text-5xl mb-4" />
-            <p className="text-red-600 text-lg mb-4">{error}</p>
-            <button
-              onClick={() => router.push("/")}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              View Subscription Plans
-            </button>
-          </div>
+  if (isCheckingStatus) return <Loading />;
+  if (subscriptionInvalid) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <div className="text-center max-w-md">
+          <FaTimesCircle className="mx-auto text-red-500 text-6xl mb-4" />
+          <h3 className="text-2xl font-bold text-gray-800 mb-2">Subscription Required</h3>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button
+            onClick={() => router.push("/pricing")}
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium px-8 py-3 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all"
+          >
+            View Plans
+          </button>
         </div>
-      ) : loading ? (
-        <Loading />
-      ) : (
-        <form
-          onSubmit={handleSubmit}
-          className="md:p-10 p-4 max-w-4xl mx-auto bg-white rounded-lg shadow-sm"
-        >
-          {error && (
-            <div className="p-3 mb-4 text-sm text-red-500 bg-red-100 rounded-md">
-              {error}
-            </div>
-          )}
-          <div className="border-b pb-4 mb-6">
-            <h2 className="text-2xl font-semibold text-gray-800">
-              Add New Product
-            </h2>
-            <p className="text-sm text-gray-600 mt-1">
-              Fill in the details to add a new product to your store
-            </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <ToastContainer position="top-right" theme="light" />
+      
+      <div className="max-w-5xl mx-auto">
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-8 py-6">
+            <h1 className="text-3xl font-bold">Add New Product</h1>
+            <p className="opacity-90 mt-1">Fill in the details to list your product</p>
           </div>
-          <div className="bg-gray-50 p-4 rounded-lg mb-6">
-            <p className="text-base font-medium mb-2">Product Images</p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-2">
-              {images.map((image, index) => (
-                <label
-                  key={index}
-                  htmlFor={`image-upload-${index}`}
-                  className="relative group cursor-pointer"
-                >
-                  <div className="w-full h-32 border-2 border-dashed border-gray-300 rounded-lg overflow-hidden group-hover:border-blue-500 transition-all duration-200">
-                    <input
-                      onChange={(e) => handleFileChange(e, index)}
-                      type="file"
-                      id={`image-upload-${index}`}
-                      accept="image/*"
-                      hidden
-                    />
-                    <Image
-                      className={`w-full h-full object-cover ${
-                        !image && "p-4 opacity-50"
-                      }`}
-                      src={
-                        image ? URL.createObjectURL(image) : assets.upload_area
-                      }
-                      alt="Upload Area"
-                      width={128}
-                      height={128}
-                    />
-                  </div>
-                  {image ? (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleRemoveImage(index);
-                      }}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+
+          <form onSubmit={handleSubmit} className="p-8 space-y-8">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
+
+            {/* Product Images */}
+            <div>
+              <label className="block text-lg font-semibold text-gray-800 mb-4">
+                Product Images <span className="text-red-500">*</span>
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+                {images.map((image, index) => (
+                  <div key={index} className="relative group">
+                    <label
+                      htmlFor={`upload-${index}`}
+                      className={`block h-48 border-2 border-dashed rounded-xl cursor-pointer transition-all
+                        ${image ? "border-blue-400" : "border-gray-300 hover:border-blue-500"} 
+                        ${image ? "bg-gray-50" : "bg-gray-100"}`}
                     >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                  ) : (
-                    <span className="block text-xs text-center mt-1 text-gray-500">
-                      {`Image ${index + 1}`}
-                    </span>
-                  )}
-                </label>
-              ))}
-            </div>
-            <p className="text-xs text-gray-500 mt-2">
-              Upload up to 4 images (max 5MB each)
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Left Column */}
-            <div className="space-y-6">
-              <div className="flex flex-col gap-1.5">
-                <label
-                  className="text-sm font-medium text-gray-700"
-                  htmlFor="product-name"
-                >
-                  Product Name
-                </label>
-                <input
-                  id="product-name"
-                  type="text"
-                  placeholder="Enter product name"
-                  className="outline-none py-2.5 px-3 rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors text-sm"
-                  onChange={(e) => setName(e.target.value)}
-                  value={name}
-                  required
-                />
+                      <input
+                        id={`upload-${index}`}
+                        type="file"
+                        accept="image/*"
+                        hidden
+                        onChange={(e) => handleFileChange(e, index)}
+                      />
+                      {image ? (
+                        <div className="relative h-full">
+                          <Image
+                            src={URL.createObjectURL(image)}
+                            alt={`Product ${index + 1}`}
+                            fill
+                            className="object-cover rounded-xl"
+                          />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleRemoveImage(index);
+                            }}
+                            className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-lg hover:bg-red-600"
+                          >
+                            <FaTrash className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                          <FaUpload className="text-3xl mb-2" />
+                          <span className="text-xs font-medium">Image {index + 1}</span>
+                          <span className="text-xs">Click to upload</span>
+                        </div>
+                      )}
+                    </label>
+                  </div>
+                ))}
               </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label
-                  className="text-sm font-medium text-gray-700"
-                  htmlFor="category"
-                >
-                  Category
-                </label>
-                <select
-                  id="category"
-                  className="outline-none py-2.5 px-3 rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors text-sm"
-                  onChange={(e) => setCategory(e.target.value)}
-                  value={category}
-                >
-                  {categories.map((cat) => (
-                    <option key={cat._id} value={cat.name}>
-                      {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label
-                    className="text-sm font-medium text-gray-700"
-                    htmlFor="product-price"
-                  >
-                    Price
-                  </label>
-                  <input
-                    id="product-price"
-                    type="number"
-                    placeholder="0"
-                    className="outline-none py-2.5 px-3 rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors text-sm"
-                    onChange={(e) => setPrice(e.target.value)}
-                    value={price}
-                    required
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label
-                    className="text-sm font-medium text-gray-700"
-                    htmlFor="min-order"
-                  >
-                    Min Order
-                  </label>
-                  <input
-                    id="min-order"
-                    type="number"
-                    placeholder="0"
-                    className="outline-none py-2.5 px-3 rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors text-sm"
-                    onChange={(e) => setMinOrder(e.target.value)}
-                    value={minOrder}
-                    required
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label
-                    className="text-sm font-medium text-gray-700"
-                    htmlFor="stock"
-                  >
-                    Stock
-                  </label>
-                  <input
-                    id="stock"
-                    type="number"
-                    placeholder="0"
-                    className="outline-none py-2.5 px-3 rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors text-sm"
-                    onChange={(e) => setStock(e.target.value)}
-                    value={stock}
-                    required
-                  />
-                </div>
-              </div>
+              <p className="text-xs text-gray-500 mt-3">Max 4 images • 5MB each • First image is primary</p>
             </div>
 
-            {/* Right Column */}
-            <div className="space-y-6">
-              <div className="flex flex-col gap-1.5">
-                <label
-                  className="text-sm font-medium text-gray-700"
-                  htmlFor="product-description"
-                >
-                  Description
-                </label>
-                <textarea
-                  id="product-description"
-                  rows={4}
-                  className="outline-none py-2.5 px-3 rounded-md border border-gray-300 resize-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors text-sm"
-                  placeholder="Enter product description"
-                  onChange={(e) => setDescription(e.target.value)}
-                  value={description}
-                  required
-                ></textarea>
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* Left Column */}
+              <div className="space-y-6">
+                <InputField label="Product Name" required value={name} onChange={setName} placeholder="e.g. Premium Leather Wallet" />
+                <SelectField label="Category" value={category} onChange={setCategory} options={categories.map(c => ({ value: c.name, label: c.name.charAt(0).toUpperCase() + c.name.slice(1) }))} />
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <InputField label="Price (₦)" type="number" required value={price} onChange={setPrice} placeholder="25000" />
+                  <InputField label="Min Order" type="number" required value={minOrder} onChange={setMinOrder} placeholder="1" />
+                </div>
+
+                <InputField label="Stock Quantity" type="number" required value={stock} onChange={setStock} placeholder="50" />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label
-                    className="text-sm font-medium text-gray-700"
-                    htmlFor="state"
-                  >
-                    State
-                  </label>
-                  <select
-                    id="state"
-                    className="outline-none py-2.5 px-3 rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors text-sm"
-                    onChange={(e) => setState(e.target.value)}
+              {/* Right Column */}
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Description <span className="text-red-500">*</span></label>
+                  <textarea
+                    rows={5}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Describe your product features, condition, materials..."
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <SelectField
+                    label="State"
                     value={state}
-                    required
-                  >
-                    <option value="" disabled>
-                      Select a state
-                    </option>
-                    {states.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label
-                    className="text-sm font-medium text-gray-700"
-                    htmlFor="condition"
-                  >
-                    Condition
-                  </label>
-                  <select
-                    id="condition"
-                    className="outline-none py-2.5 px-3 rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors text-sm"
-                    onChange={(e) => setCondition(e.target.value)}
+                    onChange={setState}
+                    options={states.map(s => ({ value: s, label: s }))}
+                    placeholder="Select state"
+                  />
+                  <SelectField
+                    label="Condition"
                     value={condition}
-                  >
-                    <option value="NEW">NEW</option>
-                    <option value="USED">USED</option>
-                  </select>
+                    onChange={setCondition}
+                    options={[
+                      { value: "NEW", label: "Brand New" },
+                      { value: "USED", label: "Used - Like New" },
+                    ]}
+                  />
                 </div>
               </div>
             </div>
-          </div>
-          <div className="mt-8 w-full pt-6 border-t border-gray-200">
-            <div className="flex items-center justify-start gap-4">
+
+            {/* Submit Button */}
+            <div className="flex justify-end pt-6 border-t border-gray-200">
               <button
                 type="submit"
                 disabled={loading}
-                className={`px-8 py-2.5 bg-blue-600 text-white font-medium rounded-md text-sm ${
-                  loading
-                    ? "opacity-50 cursor-not-allowed"
-                    : "hover:bg-blue-700 transform hover:-translate-y-0.5 transition-all"
-                }`}
+                className={`flex items-center gap-3 px-10 py-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed`}
               >
                 {loading ? (
-                  <span className="flex items-center gap-2">
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
+                  <>
+                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    Adding...
-                  </span>
+                    Adding Product...
+                  </>
                 ) : (
-                  "Add Product"
+                  "Publish Product"
                 )}
               </button>
             </div>
-          </div>
-        </form>
-      )}
+          </form>
+        </div>
+      </div>
     </div>
   );
 };
+
+// Reusable Input Component
+const InputField = ({ label, required, type = "text", value, onChange, placeholder }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-2">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
+    <input
+      type={type}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+      required={required}
+    />
+  </div>
+);
+
+// Reusable Select Component
+const SelectField = ({ label, value, onChange, options, placeholder }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+    >
+      {placeholder && <option value="" disabled>{placeholder}</option>}
+      {options.map((opt) => (
+        <option key={opt.value} value={opt.value}>
+          {opt.label}
+        </option>
+      ))}
+    </select>
+  </div>
+);
 
 export default AddProduct;

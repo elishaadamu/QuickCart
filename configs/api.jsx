@@ -18,7 +18,7 @@ export const API_CONFIG = {
       CREATE: "/order/create",
     },
     PROFILE: {
-      UPDATE: "/profile/update",
+      UPDATE: "/user/update/",
       GET: "/user/profile",
       UPDATE_USER: "/user/update",
       DELETE: "/user/delete/",

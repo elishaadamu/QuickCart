@@ -221,14 +221,7 @@ const Sidebar = ({
                 >
                   Personal Details
                 </Link>
-                <Link
-                  href="/dashboard/update-images"
-                  className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
-                    pathname === "/dashboard/update-images" ? "bg-gray-700" : ""
-                  }`}
-                >
-                  Update Images
-                </Link>
+               
                 <Link
                   href="/dashboard/pin-management"
                   className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
@@ -249,14 +242,7 @@ const Sidebar = ({
                 >
                   Change Password
                 </Link>
-                <Link
-                  href="/dashboard/shipping"
-                  className={`block pl-11 pr-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
-                    pathname === "/dashboard/shipping" ? "bg-gray-700" : ""
-                  }`}
-                >
-                  Shipping Address
-                </Link>
+                
               </div>
             </div>
 

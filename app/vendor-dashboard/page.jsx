@@ -644,117 +644,87 @@ const DashboardHome = () => {
               </Link>
             </div>
           </div>
-          {/* Recent Orders - Enhanced */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 p-6">
-            <div className="flex items-center justify-between mb-6">
+          {/* Recent Orders - Premium Redesign */}
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-300">
+            {/* Header */}
+            <div className="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 bg-blue-600 rounded-full animate-pulse"></div>
                   Recent Orders
                 </h2>
                 <p className="text-sm text-gray-500 mt-1">
-                  Your latest purchases
+                  Track your latest sales activity
                 </p>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">
-                  <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                  {dashboardData.recentOrders.length} orders
-                </span>
-              </div>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-semibold ring-1 ring-blue-100">
+                {dashboardData.recentOrders.length} New
+              </span>
             </div>
 
-            {dashboardData.recentOrders.length > 0 ? (
-              <div className="space-y-4">
-                {dashboardData.recentOrders.slice(0, 5).map((order, index) => (
-                  <div
-                    key={order._id}
-                    className="group p-4 rounded-lg border border-gray-200 hover:border-blue-200 hover:bg-blue-50 transition-all duration-200 cursor-pointer"
-                    onClick={() =>
-                      router.push(`/vendor-dashboard/all-orders/${order._id}`)
-                    }
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4 flex-1">
-                        {/* Order Icon with Status Color */}
-                        <div
-                          className={`p-3 rounded-xl ${
-                            order.status === "delivered"
-                              ? "bg-green-100 text-green-700"
-                              : order.status === "pending"
-                              ? "bg-yellow-100 text-yellow-700"
-                              : order.status === "paid"
-                              ? "bg-blue-100 text-blue-700"
-                              : order.status === "shipped"
-                              ? "bg-purple-100 text-purple-700"
-                              : "bg-red-100 text-red-700"
-                          }`}
-                        >
-                          <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
+            <div className="p-2">
+              {dashboardData.recentOrders.length > 0 ? (
+                <div className="space-y-2">
+                  {dashboardData.recentOrders.slice(0, 5).map((order) => (
+                    <div
+                      key={order._id}
+                      className="group relative p-4 rounded-xl border border-gray-100 hover:border-blue-200 hover:bg-blue-50/30 transition-all duration-300 cursor-pointer"
+                      onClick={() =>
+                        router.push(`/vendor-dashboard/all-orders/${order._id}`)
+                      }
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        {/* Left Side: Icon & Info */}
+                        <div className="flex items-start gap-4 flex-1">
+                          {/* Order Icon */}
+                          <div
+                            className={`p-3.5 rounded-2xl flex-shrink-0 transition-transform duration-300 group-hover:scale-110 ${
+                              order.status === "delivered"
+                                ? "bg-green-100 text-green-600"
+                                : order.status === "pending"
+                                ? "bg-amber-100 text-amber-600"
+                                : order.status === "paid"
+                                ? "bg-blue-100 text-blue-600"
+                                : order.status === "shipped"
+                                ? "bg-purple-100 text-purple-600"
+                                : "bg-red-100 text-red-600"
+                            }`}
                           >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                            />
-                          </svg>
-                        </div>
-
-                        {/* Order Details */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-3 mb-1">
-                            <span className="font-semibold text-gray-900 text-sm">
-                              #{order._id.slice(-8).toUpperCase()}
-                            </span>
-                            <span
-                              className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${
-                                {
-                                  delivered: "bg-green-100 text-green-800",
-                                  pending: "bg-yellow-100 text-yellow-800",
-                                  paid: "bg-blue-100 text-blue-800",
-                                  shipped: "bg-purple-100 text-purple-800",
-                                  cancelled: "bg-red-100 text-red-800",
-                                  failed: "bg-red-100 text-red-800",
-                                }[order.status] || "bg-gray-100 text-gray-800"
-                              }`}
-                            >
-                              {order.status.charAt(0).toUpperCase() +
-                                order.status.slice(1)}
-                            </span>
+                            <FaBoxOpen className="w-5 h-5" />
                           </div>
-                          <div className="flex items-center gap-4 text-xs text-gray-500">
-                            <span className="flex items-center gap-1">
-                              <svg
-                                className="w-3 h-3"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
+
+                          {/* Order Details */}
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-1.5">
+                              <span className="text-sm font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                                #{order._id.slice(-8).toUpperCase()}
+                              </span>
+                              <span
+                                className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border ${
+                                  {
+                                    delivered:
+                                      "bg-green-50 text-green-700 border-green-200",
+                                    pending:
+                                      "bg-amber-50 text-amber-700 border-amber-200",
+                                    paid: "bg-blue-50 text-blue-700 border-blue-200",
+                                    shipped:
+                                      "bg-purple-50 text-purple-700 border-purple-200",
+                                    cancelled:
+                                      "bg-red-50 text-red-700 border-red-200",
+                                    failed:
+                                      "bg-red-50 text-red-700 border-red-200",
+                                  }[order.status] ||
+                                  "bg-gray-50 text-gray-700 border-gray-200"
+                                }`}
                               >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                />
-                              </svg>
-                              {new Date(order.createdAt).toLocaleDateString(
-                                "en-US",
-                                {
-                                  month: "short",
-                                  day: "numeric",
-                                  year: "numeric",
-                                }
-                              )}
-                            </span>
-                            {order.itemsCount && (
-                              <span className="flex items-center gap-1">
+                                {order.status}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-4 text-xs text-gray-500 font-medium">
+                              <span className="flex items-center gap-1.5">
                                 <svg
-                                  className="w-3 h-3"
+                                  className="w-3.5 h-3.5"
                                   fill="none"
                                   stroke="currentColor"
                                   viewBox="0 0 24 24"
@@ -762,120 +732,115 @@ const DashboardHome = () => {
                                   <path
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                                  />
+                                    strokeWidth="2"
+                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                  ></path>
                                 </svg>
-                                {order.itemsCount} items
+                                {new Date(order.createdAt).toLocaleDateString(
+                                  "en-US",
+                                  {
+                                    month: "short",
+                                    day: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  }
+                                )}
                               </span>
-                            )}
+                              {order.itemsCount && (
+                                <span className="flex items-center gap-1.5">
+                                  <svg
+                                    className="w-3.5 h-3.5"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="2"
+                                      d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                                    ></path>
+                                  </svg>
+                                  {order.itemsCount} items
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
 
-                        {/* Order Total */}
-                        <div className="text-right">
-                          <div className="font-bold text-gray-800 text-lg">
+                        {/* Right Side: Price & Status */}
+                        <div className="text-right flex flex-col items-end">
+                          <div className="text-base font-bold text-gray-900 group-hover:text-blue-700 transition-colors">
                             ₦{order.totalAmount.toLocaleString()}
                           </div>
                           {order.paymentStatus && (
-                            <div
-                              className={`text-xs font-medium ${
-                                order.paymentStatus === "paid"
-                                  ? "text-green-600"
-                                  : "text-red-600"
-                              }`}
-                            >
-                              {order.paymentStatus.charAt(0).toUpperCase() +
-                                order.paymentStatus.slice(1)}
+                            <div className="flex items-center gap-1 mt-1">
+                              <div
+                                className={`w-1.5 h-1.5 rounded-full ${
+                                  order.paymentStatus === "paid"
+                                    ? "bg-green-500"
+                                    : "bg-red-500"
+                                }`}
+                              ></div>
+                              <span
+                                className={`text-[10px] font-bold uppercase tracking-wider ${
+                                  order.paymentStatus === "paid"
+                                    ? "text-green-600"
+                                    : "text-red-600"
+                                }`}
+                              >
+                                {order.paymentStatus}
+                              </span>
                             </div>
                           )}
                         </div>
                       </div>
 
-                      {/* View Arrow */}
-                      <div className="ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        <svg
-                          className="w-5 h-5 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 5l7 7-7 7"
-                          />
-                        </svg>
-                      </div>
+
                     </div>
-
-                    {/* Progress Bar for Processing Orders */}
-                    {order.status === "processing" && (
-                      <div className="mt-3">
-                        <div className="flex justify-between text-xs text-gray-500 mb-1">
-                          <span>Processing</span>
-                          <span>70%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-1.5">
-                          <div className="bg-blue-600 h-1.5 rounded-full w-3/4"></div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg
-                    className="w-8 h-8 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                    />
-                  </svg>
+                  ))}
                 </div>
-                <h3 className="text-gray-900 font-medium mb-1">
-                  No orders yet
-                </h3>
-                <p className="text-gray-500 text-sm mb-4">
-                  Your recent orders will appear here
-                </p>
-                <Link
-                  href="/products"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors duration-200"
-                >
-                  Start Shopping
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+              ) : (
+                <div className="text-center py-16 bg-gray-50/50 rounded-xl border border-dashed border-gray-200 m-2">
+                  <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm ring-4 ring-gray-100">
+                    <FaBoxOpen className="w-8 h-8 text-gray-300" />
+                  </div>
+                  <h3 className="text-gray-900 font-semibold mb-1 text-lg">
+                    No orders yet
+                  </h3>
+                  <p className="text-gray-500 text-sm mb-6 max-w-xs mx-auto">
+                    Your recent orders will appear here once customers start
+                    purchasing.
+                  </p>
+                  <Link
+                    href="/vendor-dashboard/products"
+                    className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M17 8l4 4m0 0l-4 4m4-4H3"
-                    />
-                  </svg>
-                </Link>
-              </div>
-            )}
+                    Manage Products
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M17 8l4 4m0 0l-4 4m4-4H3"
+                      ></path>
+                    </svg>
+                  </Link>
+                </div>
+              )}
+            </div>
 
-            {/* View All Link */}
+            {/* Footer Action */}
             {dashboardData.recentOrders.length > 0 && (
-              <div className="mt-6 pt-4 border-t border-gray-200">
+              <div className="p-4 bg-gray-50 border-t border-gray-100">
                 <Link
                   href="/vendor-dashboard/all-orders"
-                  className="group flex items-center justify-center gap-2 w-full py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors duration-200 bg-gray-50 hover:bg-gray-100 rounded-lg"
+                  className="group flex items-center justify-center gap-2 w-full py-3 bg-white border border-gray-200 hover:border-blue-300 text-gray-700 hover:text-blue-600 rounded-xl font-semibold transition-all duration-200 shadow-sm hover:shadow-md"
                 >
                   View All Orders
                   <svg
@@ -887,14 +852,15 @@ const DashboardHome = () => {
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
+                      strokeWidth="2"
+                      d="M17 8l4 4m0 0l-4 4m4-4H3"
+                    ></path>
                   </svg>
                 </Link>
               </div>
             )}
           </div>
+
         </>
       )}
 

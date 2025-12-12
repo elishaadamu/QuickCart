@@ -265,7 +265,11 @@ const OrderSummary = () => {
         showConfirmButton: false,
       });
 
+     if(userData.role === "vendor"){
+      router.push("/vendor-dashboard/all-orders");
+     }else{
       router.push("/dashboard/all-orders");
+     }
     } catch (error) {
       console.error("Error creating order:", error);
       const errorMessage =

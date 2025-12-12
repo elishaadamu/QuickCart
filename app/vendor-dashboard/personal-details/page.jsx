@@ -23,6 +23,7 @@ import { RiBankFill } from "react-icons/ri";
 import Image from "next/image";
 import "react-toastify/dist/ReactToastify.css";
 import Loading from "@/components/Loading";
+import statesData from "@/lib/states.json";
 
 const FormField = ({
   label,
@@ -33,7 +34,8 @@ const FormField = ({
   type = "text",
   readOnly = false,
   icon: Icon,
-  placeholder = ""
+  placeholder = "",
+  options = []
 }) => (
   <div className="space-y-2">
     <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
@@ -50,6 +52,20 @@ const FormField = ({
           placeholder={placeholder}
           className="mt-1 p-3 block w-full rounded-lg border border-gray-300 bg-white focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:ring-opacity-50 sm:text-sm transition-all duration-200 shadow-sm"
         />
+      ) : type === "select" ? (
+        <select
+          name={name}
+          value={value || ""}
+          onChange={onChange}
+          className="mt-1 p-3 block w-full rounded-lg border border-gray-300 bg-white focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:ring-opacity-50 sm:text-sm transition-all duration-200 shadow-sm"
+        >
+          <option value="">Select {label}</option>
+          {options.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
       ) : (
         <input
           type={type}
@@ -82,24 +98,7 @@ const SectionHeader = ({ title, icon: Icon, description }) => (
   </div>
 );
 
-const IDTypeButton = ({ type, currentType, onClick, label }) => (
-  <button
-    type="button"
-    onClick={() => onClick(type)}
-    className={`py-3 px-4 rounded-xl border transition-all duration-200 flex items-center justify-center gap-2 font-medium ${
-      currentType === type
-        ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-300 text-blue-700 ring-2 ring-blue-200 ring-opacity-50 shadow-sm"
-        : "border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm"
-    }`}
-  >
-    {type === "NIN" ? (
-      <HiIdentification className="text-lg" />
-    ) : (
-      <FaCreditCard className="text-lg" />
-    )}
-    {label}
-  </button>
-);
+
 
 const PersonalDetails = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -115,12 +114,12 @@ const PersonalDetails = () => {
     businessDesc: "",
     avatar: null,
     banner: null,
-    idType: "",
-    idNumber: "",
+    nin: "",
+    bvn: "",
     slip: null,
     bankName: "",
-    accountNumber: "",
-    accountName: "",
+    accNumber: "",
+    accName: "",
     shippingState: "",
     shippingAddress: "",
     zipCode: "",
@@ -177,6 +176,7 @@ const PersonalDetails = () => {
       const response = await axios.get(
         `${apiUrl(API_CONFIG.ENDPOINTS.PROFILE.GET)}/${userData.id}`
       );
+      console.log(response.data.user);
       if (response.data.user) {
         setProfile((prev) => ({ ...prev, ...response.data.user }));
       }
@@ -203,16 +203,15 @@ const PersonalDetails = () => {
         payload = {
           firstName: profile.firstName,
           lastName: profile.lastName,
-          phone: profile.phone,
           address: profile.address,
           businessName: profile.businessName,
           businessDesc: profile.businessDesc,
-          idType: profile.idType,
-          idNumber: profile.idNumber,
-          slip: profile.slip,
+          nin: profile.nin,
+          bvn: profile.bvn,
+          ninSlip: profile.slip,
           bankName: profile.bankName,
-          accountNumber: profile.accountNumber,
-          accountName: profile.accountName,
+          accNumber: profile.accNumber,
+          accName: profile.accName,
           shippingState: profile.shippingState,
           shippingAddress: profile.shippingAddress,
           zipCode: profile.zipCode,
@@ -321,6 +320,7 @@ const PersonalDetails = () => {
                 onChange={handleInputChange}
                 type="tel"
                 icon={FaPhone}
+                readOnly
                 placeholder="Enter your phone number"
               />
             </div>
@@ -354,7 +354,9 @@ const PersonalDetails = () => {
                   isEditing={isEditing}
                   onChange={handleInputChange}
                   icon={FaMapMarkerAlt}
-                  placeholder="Enter state"
+                  type="select"
+                  options={statesData.state}
+                  placeholder="Select state"
                 />
                 <FormField
                   label="Zip Code"
@@ -434,8 +436,8 @@ const PersonalDetails = () => {
                   />
                   <FormField
                     label="Account Number"
-                    name="accountNumber"
-                    value={profile.accountNumber}
+                    name="accNumber"
+                    value={profile.accNumber}
                     isEditing={isEditing}
                     onChange={handleInputChange}
                     icon={FaCreditCard}
@@ -444,8 +446,8 @@ const PersonalDetails = () => {
                   <div className="md:col-span-2">
                     <FormField
                       label="Account Name"
-                      name="accountName"
-                      value={profile.accountName}
+                      name="accName"
+                      value={profile.accName}
                       isEditing={isEditing}
                       onChange={handleInputChange}
                       icon={FaUser}
@@ -465,43 +467,31 @@ const PersonalDetails = () => {
                 
                 {isEditing ? (
                   <div className="space-y-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-                        <HiIdentification className="text-gray-400" />
-                        ID Type
-                      </label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md">
-                        <IDTypeButton
-                          type="NIN"
-                          currentType={profile.idType}
-                          onClick={(type) => setProfile({ ...profile, idType: type })}
-                          label="National ID (NIN)"
-                        />
-                        <IDTypeButton
-                          type="BVN"
-                          currentType={profile.idType}
-                          onClick={(type) => setProfile({ ...profile, idType: type })}
-                          label="Bank Verification (BVN)"
-                        />
-                      </div>
-                    </div>
-
-                    {profile.idType && (
+                    <div className="space-y-6">
                       <FormField
-                        label={`${profile.idType} Number`}
-                        name="idNumber"
-                        value={profile.idNumber}
+                        label="National Identification Number (NIN)"
+                        name="nin"
+                        value={profile.nin}
+                        isEditing={isEditing}
+                        onChange={handleInputChange}
+                        icon={HiIdentification}
+                        placeholder="Enter your NIN"
+                      />
+                      <FormField
+                        label="Bank Verification Number (BVN)"
+                        name="bvn"
+                        value={profile.bvn}
                         isEditing={isEditing}
                         onChange={handleInputChange}
                         icon={FaCreditCard}
-                        placeholder={`Enter your ${profile.idType} number`}
+                        placeholder="Enter your BVN"
                       />
-                    )}
+                    </div>
 
                     {/* File Upload */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-3">
-                        Upload Verification Document
+                        Upload NIN Slip
                       </label>
                       <div className="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center hover:border-blue-400 transition-colors duration-300 bg-gradient-to-b from-gray-50/50 to-white hover:from-blue-50/30">
                         <div className="space-y-4">
@@ -560,21 +550,21 @@ const PersonalDetails = () => {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField
-                      label="ID Type"
-                      value={profile.idType || "Not provided"}
+                      label="NIN"
+                      value={profile.nin || "Not provided"}
                       isEditing={false}
                       icon={HiIdentification}
                     />
                     <FormField
-                      label="ID Number"
-                      value={profile.idNumber || "Not provided"}
+                      label="BVN"
+                      value={profile.bvn || "Not provided"}
                       isEditing={false}
                       icon={FaCreditCard}
                     />
                     {profile.slip && (
                       <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Verification Document
+                          NIN Slip
                         </label>
                         <div className="border border-gray-200 rounded-xl p-4 bg-gray-50">
                           <div className="flex items-center gap-4">
