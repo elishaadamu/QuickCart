@@ -33,11 +33,9 @@ export default function RootLayout({ children }) {
           {children}
           {!isSpecialRoute && <Footer />} {/* Conditionally render Footer */}
         </AppContextProvider>
-        <Script src="https://cdn.botpress.cloud/webchat/v3.5/inject.js" strategy="lazyOnload" />
-        <Script
-          src="https://files.bpcontent.cloud/2025/12/13/16/20251213161208-0D9LWGZJ.js"
-          strategy="lazyOnload"
-        />
+        
+<script src="https://cdn.botpress.cloud/webchat/v3.5/inject.js"></script>
+<script src="https://files.bpcontent.cloud/2025/12/13/16/20251213161208-0D9LWGZJ.js" defer></script>
       </body>
     </html>
   );
