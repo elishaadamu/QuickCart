@@ -562,7 +562,7 @@ const PersonalDetails = () => {
                       isEditing={false}
                       icon={FaCreditCard}
                     />
-                    {profile.slip && (
+                    {profile.ninSlip && (
                       <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           NIN Slip
