@@ -116,7 +116,7 @@ const PersonalDetails = () => {
     banner: null,
     nin: "",
     bvn: "",
-    slip: null,
+    ninSlip: null,
     bankName: "",
     accNumber: "",
     accName: "",
@@ -160,7 +160,7 @@ const PersonalDetails = () => {
       reader.onloadend = () => {
         setProfile((prev) => ({
           ...prev,
-          slip: reader.result,
+          ninSlip: reader.result,
         }));
         toast.success("File uploaded successfully!");
       };
@@ -208,7 +208,7 @@ const PersonalDetails = () => {
           businessDesc: profile.businessDesc,
           nin: profile.nin,
           bvn: profile.bvn,
-          ninSlip: profile.slip,
+          ninSlip: profile.ninSlip,
           bankName: profile.bankName,
           accNumber: profile.accNumber,
           accName: profile.accName,
@@ -496,11 +496,11 @@ const PersonalDetails = () => {
                       </label>
                       <div className="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center hover:border-blue-400 transition-colors duration-300 bg-gradient-to-b from-gray-50/50 to-white hover:from-blue-50/30">
                         <div className="space-y-4">
-                          {profile.slip ? (
+                          {profile.ninSlip ? (
                             <div className="flex flex-col items-center">
                               <div className="relative w-48 h-48 mx-auto border-2 border-gray-200 rounded-xl overflow-hidden bg-white p-2">
                                 <img
-                                  src={profile.slip}
+                                  src={profile.ninSlip}
                                   alt="Document Preview"
                                   className="w-full h-full object-contain"
                                 />
@@ -571,7 +571,7 @@ const PersonalDetails = () => {
                           <div className="flex items-center gap-4">
                             <div className="w-16 h-16 border border-gray-300 rounded-lg overflow-hidden bg-white flex items-center justify-center">
                               <img
-                                src={profile.slip}
+                                src={profile.ninSlip}
                                 alt="Verification Document"
                                 className="max-w-full max-h-full object-contain"
                               />
