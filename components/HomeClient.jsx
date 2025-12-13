@@ -156,7 +156,7 @@ const HomeClient = () => {
 
         <NewsLetter /> */}
       </div>
-      {showBackToTop && (
+      {/* {showBackToTop && (
         <button
           onClick={scrollToTop}
           className="fixed bottom-8 right-8 bg-blue-600 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg hover:bg-blue-700 transition-all duration-300 z-50"
@@ -165,7 +165,7 @@ const HomeClient = () => {
         >
           <FaArrowUp className="w-5 h-5" />
         </button>
-      )}
+      )} */}
     </>
   );
 };

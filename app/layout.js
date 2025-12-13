@@ -6,6 +6,7 @@ import { ToastContainer } from "react-toastify";
 import Navbar from "@/components/Navbar"; // Import Navbar
 import Footer from "@/components/Footer"; // Import Footer
 import { usePathname } from "next/navigation";
+import Script from "next/script";
 
 const outfit = Outfit({ subsets: ["latin"], weight: ["300", "400", "500"] });
 
@@ -32,6 +33,11 @@ export default function RootLayout({ children }) {
           {children}
           {!isSpecialRoute && <Footer />} {/* Conditionally render Footer */}
         </AppContextProvider>
+        <Script src="https://cdn.botpress.cloud/webchat/v3.5/inject.js" strategy="lazyOnload" />
+        <Script
+          src="https://files.bpcontent.cloud/2025/12/13/16/20251213161208-0D9LWGZJ.js"
+          strategy="lazyOnload"
+        />
       </body>
     </html>
   );
