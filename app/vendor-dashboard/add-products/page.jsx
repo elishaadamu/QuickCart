@@ -25,7 +25,8 @@ const AddProduct = () => {
   const [stock, setStock] = useState("");
   const [loading, setLoading] = useState(false);
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState([]); // Removed duplicate state declaration if any
+  const [subscription, setSubscription] = useState(null);
   const [error, setError] = useState("");
   const [subscriptionInvalid, setSubscriptionInvalid] = useState(false);
   const [states] = useState(statesData.state);
@@ -55,9 +56,22 @@ const AddProduct = () => {
         const response = await axios.get(
           apiUrl(API_CONFIG.ENDPOINTS.SUBSCRIPTION.CHECK_STATUS + userData.id)
         );
-        setSubscriptionInvalid(!response.data?.canPostProduct);
-        if (!response.data?.canPostProduct) {
+        const canPost = response.data?.canPostProduct;
+        setSubscriptionInvalid(!canPost);
+        
+        if (!canPost) {
           setError("Your subscription does not allow adding products. Please upgrade.");
+        } else {
+             try {
+                const detailsResponse = await axios.get(
+                  apiUrl(API_CONFIG.ENDPOINTS.SUBSCRIPTION.GET_DETAILS + userData.id)
+                );
+                if (detailsResponse.data.success) {
+                  setSubscription(detailsResponse.data.subscription);
+                }
+             } catch (detailErr) {
+                console.error("Failed to fetch subscription details", detailErr);
+             }
         }
       } catch (err) {
         setSubscriptionInvalid(true);
@@ -142,7 +156,7 @@ const AddProduct = () => {
           <h3 className="text-2xl font-bold text-gray-800 mb-2">Subscription Required</h3>
           <p className="text-gray-600 mb-6">{error}</p>
           <button
-            onClick={() => router.push("/pricing")}
+            onClick={() => router.push("/vendor-dashboard/subscription-plans")}
             className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium px-8 py-3 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all"
           >
             View Plans
@@ -164,6 +178,22 @@ const AddProduct = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="p-8 space-y-8">
+            {subscription && (
+              <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                 <div>
+                    <h3 className="text-sm font-semibold text-indigo-900 uppercase tracking-wider mb-1">Current Plan</h3>
+                    <p className="text-2xl font-bold text-indigo-700">{subscription.plan.package}</p>
+                 </div>
+                 <div className="text-left sm:text-right">
+                    <p className="text-sm text-indigo-800 font-medium mb-1">
+                      Allowed Products: <span className="font-bold">{subscription.plan.products >= 1000 ? "Unlimited" : subscription.plan.products}</span>
+                    </p>
+                    <p className="text-xs text-indigo-500 font-medium">
+                      Expires: {new Date(subscription.endDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    </p>
+                 </div>
+              </div>
+            )}
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
                 {error}
