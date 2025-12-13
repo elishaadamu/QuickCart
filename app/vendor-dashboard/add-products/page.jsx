@@ -184,13 +184,22 @@ const AddProduct = () => {
                     <h3 className="text-sm font-semibold text-indigo-900 uppercase tracking-wider mb-1">Current Plan</h3>
                     <p className="text-2xl font-bold text-indigo-700">{subscription.plan.package}</p>
                  </div>
-                 <div className="text-left sm:text-right">
-                    <p className="text-sm text-indigo-800 font-medium mb-1">
-                      Allowed Products: <span className="font-bold">{subscription.plan.products >= 1000 ? "Unlimited" : subscription.plan.products}</span>
-                    </p>
-                    <p className="text-xs text-indigo-500 font-medium">
-                      Expires: {new Date(subscription.endDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-                    </p>
+                 <div className="flex flex-col items-end gap-2">
+                    <div className="text-left sm:text-right">
+                        <p className="text-sm text-indigo-800 font-medium mb-1">
+                        Allowed Products: <span className="font-bold">{subscription.plan.products >= 1000 ? "Unlimited" : subscription.plan.products}</span>
+                        </p>
+                        <p className="text-xs text-indigo-500 font-medium">
+                        Expires: {new Date(subscription.endDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => router.push("/vendor-dashboard/subscription-plans")}
+                        className="text-xs bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
+                    >
+                        Upgrade Plan
+                    </button>
                  </div>
               </div>
             )}
