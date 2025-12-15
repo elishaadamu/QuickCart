@@ -549,7 +549,7 @@ const OrderSummary = () => {
                 </div>
                 <p className="font-semibold text-gray-900">
                   {currency}
-                  {option.price.toFixed(2)}
+                  {option.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
               </div>
             ))}
@@ -566,7 +566,7 @@ const OrderSummary = () => {
             <p className="text-gray-600">Items ({getCartCount()})</p>
             <p className="font-medium text-gray-800">
               {currency}
-              {getCartAmount().toFixed(2)}
+              {getCartAmount().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
           <div className="flex justify-between items-center py-2">
@@ -575,14 +575,14 @@ const OrderSummary = () => {
             </p>
             <p className="font-medium text-gray-800">
               {currency}
-              {shippingFee.toFixed(2)}
+              {shippingFee.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
           <div className="flex justify-between items-center py-2">
             <p className="text-gray-600">Tax (2%)</p>
             <p className="font-medium text-gray-800">
               {currency}
-              {Math.floor(getCartAmount() * 0.02).toFixed(2)}
+              {Math.floor(getCartAmount() * 0.02).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
           {couponDiscount > 0 && (
@@ -590,7 +590,7 @@ const OrderSummary = () => {
               <p className="font-medium">Discount Applied</p>
               <p className="font-bold">
                 -{currency}
-                {couponDiscount.toFixed(2)}
+                {couponDiscount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
           )}
@@ -605,7 +605,7 @@ const OrderSummary = () => {
                 shippingFee +
                 Math.floor(getCartAmount() * 0.02) -
                 couponDiscount
-            ).toFixed(2)}
+            ).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         </div>
       </fieldset>
@@ -645,7 +645,7 @@ const OrderSummary = () => {
         {couponDiscount > 0 && (
           <p className="text-green-600 text-sm font-medium flex items-center gap-1">
             ✓ Coupon applied successfully! You saved {currency}
-            {couponDiscount.toFixed(2)}
+            {couponDiscount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         )}
       </fieldset>
@@ -654,7 +654,7 @@ const OrderSummary = () => {
 
       {/* Payment Section */}
       <fieldset className="space-y-3">
-        <label className="text-sm font-medium text-gray-700 block flex items-center gap-2">
+        <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
           <FaLock className="text-red-500" />
           Transaction PIN <span className="text-red-500">*</span>
         </label>
@@ -707,7 +707,7 @@ const OrderSummary = () => {
               shippingFee +
               Math.floor(getCartAmount() * 0.02) -
               couponDiscount
-          ).toFixed(2)}`
+          ).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
         )}
       </button>
     </div>

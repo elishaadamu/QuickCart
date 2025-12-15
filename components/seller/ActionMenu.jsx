@@ -162,7 +162,7 @@ const ActionMenu = ({ product, onDelete, onEdit, categories, states }) => {
             className="max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar"
           >
             <div className="space-y-4">
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
                 <input
                   name="name"
@@ -171,7 +171,7 @@ const ActionMenu = ({ product, onDelete, onEdit, categories, states }) => {
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-gray-800 placeholder-gray-400"
                   placeholder="Enter product name"
                 />
-              </div>
+              </div> */}
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -199,7 +199,7 @@ const ActionMenu = ({ product, onDelete, onEdit, categories, states }) => {
                 </div>
               </div>
 
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
                 <select
                   name="category"
@@ -257,7 +257,7 @@ const ActionMenu = ({ product, onDelete, onEdit, categories, states }) => {
                     ))}
                   </select>
                 </div>
-              </div>
+              </div> */}
             </div>
 
             <div className="flex justify-end items-center gap-3 mt-8 pt-4 border-t">

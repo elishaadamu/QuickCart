@@ -517,7 +517,11 @@ const Navbar = () => {
                             {product.name}
                           </p>
                           <p className="text-xs text-gray-600">
-                            {cartItems[itemId]} x ₦{product.price}
+                            {cartItems[itemId]} x ₦
+                            {product.price?.toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
                           </p>
                         </div>
                       </div>
@@ -540,7 +544,11 @@ const Navbar = () => {
           {isLoggedIn && (
             <div className="flex items-center gap-2">
               <p className="text-2xl text-gray-600">
-                ₦{walletBalance?.balance?.toFixed(2)}
+                ₦
+                {walletBalance?.balance?.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </p>
             </div>
           )}
@@ -722,7 +730,13 @@ const Navbar = () => {
                     />
                     <div>
                       <p className="font-medium">{product.name}</p>
-                      <p className="text-sm text-gray-600">₦{product.price}</p>
+                      <p className="text-sm text-gray-600">
+                        ₦
+                        {product.price?.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </p>
                     </div>
                   </div>
                 ))
@@ -1167,7 +1181,13 @@ const Navbar = () => {
             <div className="mt-8 text-sm text-gray-500">
               {/* Optional wallet / utility area */}
               {isLoggedIn && (
-                <div>Wallet: ₦{walletBalance?.balance?.toFixed(2)}</div>
+                <div>
+                  Wallet: ₦
+                  {walletBalance?.balance?.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </div>
               )}
             </div>
           </aside>

@@ -113,7 +113,7 @@ const Cart = () => {
                   <p className="font-medium text-slate-800">{product.name}</p>
                   <p className="text-sm text-slate-500 sm:hidden">
                     {currency}
-                    {product.price.toFixed(2)}
+                    {product.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </p>
                 </div>
               </div>
@@ -121,7 +121,7 @@ const Cart = () => {
               {/* Price (Desktop) */}
               <div className="hidden sm:block w-24 text-center text-slate-600">
                 {currency}
-                {product.price.toFixed(2)}
+                {product.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
 
               {/* Quantity Selector */}
@@ -156,7 +156,7 @@ const Cart = () => {
               {/* Subtotal */}
               <div className="w-24 text-right font-semibold text-slate-800">
                 {currency}
-                {(product.price * product.quantity).toFixed(2)}
+                {(product.price * product.quantity).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
 
               {/* Remove Button */}

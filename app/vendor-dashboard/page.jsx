@@ -421,7 +421,11 @@ const DashboardHome = () => {
                     <div>
                       <p className="text-blue-100 text-xs">Current Balance</p>
                       <h1 className="text-2xl font-bold mt-1">
-                        ₦{accountDetails?.balance?.toFixed(2) || "0.00"}
+                        ₦
+                        {accountDetails?.balance?.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        }) || "0.00"}
                       </h1>
                     </div>
                     <div className="flex gap-2 mt-3 sm:mt-0">
@@ -771,7 +775,11 @@ const DashboardHome = () => {
                         {/* Right Side: Price & Status */}
                         <div className="text-right flex flex-col items-end">
                           <div className="text-base font-bold text-gray-900 group-hover:text-blue-700 transition-colors">
-                            ₦{order.totalAmount.toLocaleString()}
+                            ₦
+                            {order.totalAmount.toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
                           </div>
                           {order.paymentStatus && (
                             <div className="flex items-center gap-1 mt-1">

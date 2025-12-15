@@ -49,7 +49,7 @@ const ProductCard = ({ product }) => {
       className="group relative flex w-full  max-w-xs cursor-pointer flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-lg"
     >
       {/* Product Image */}
-      <div className="relative h-32 overflow-hidden rounded-t-2xl bg-gray-50">
+      <div className="relative  h-64 md:h-64 overflow-hidden rounded-t-2xl bg-gray-50">
         <Image
           src={productImage}
           alt={product.name}
@@ -89,21 +89,23 @@ const ProductCard = ({ product }) => {
           <div className="flex items-center gap-2">
             <span className="text-lg font-bold text-gray-900">
               {currency}
-              {hasOffer ? product.offerPrice : product.price}
+              {hasOffer
+                ? product.offerPrice?.toLocaleString()
+                : product.price?.toLocaleString()}
             </span>
             {hasOffer && (
               <span className="text-sm text-gray-400 line-through">
                 {currency}
-                {product.price}
+                {product.price?.toLocaleString()}
               </span>
             )}
           </div>
-          <div className="flex items-center text-xs">
+          {/* <div className="flex items-center text-xs">
             <FaStar className="mr-1 h-3 w-3 text-yellow-400" />
             <span className="font-medium text-gray-700">
               {product.averageRating?.toFixed(1) || "4.5"}
             </span>
-          </div>
+          </div> */}
         </div>
 
         {/* Add to Cart */}

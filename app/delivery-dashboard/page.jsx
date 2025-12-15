@@ -173,7 +173,11 @@ const DashboardHome = () => {
           <p className="text-sm text-gray-500">Type: {task.deliveryType}</p>
         </div>
         <p className="font-bold text-lg text-green-600">
-          ₦{task.price.toLocaleString()}
+          ₦
+          {task.price.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
         </p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
@@ -310,7 +314,11 @@ const DashboardHome = () => {
                   <div className="text-right">
                     <p className="text-sm opacity-80">Wallet Balance</p>
                     <h1 className="text-3xl font-bold">
-                      ₦{walletBalance?.toFixed(1) || "0.00"}
+                      ₦
+                      {walletBalance?.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      }) || "0.00"}
                     </h1>
                   </div>
                 </div>

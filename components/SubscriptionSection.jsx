@@ -106,7 +106,7 @@ const SubscriptionPlans = () => {
 
                 <div className="mt-8 text-center">
                   <span className="text-4xl sm:text-5xl font-extrabold">
-                    ₦{plan.price}
+                    ₦{plan.price.toLocaleString()}
                   </span>
                   <span
                     className={`text-base sm:text-lg ml-1 ${

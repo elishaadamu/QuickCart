@@ -412,7 +412,11 @@ const DashboardHome = () => {
                     <div>
                       <p className="text-blue-100 text-xs">Current Balance</p>
                       <h1 className="text-2xl font-bold mt-1">
-                        ₦{walletBalance?.balance?.toFixed(2) || "0.00"}
+                        ₦
+                        {walletBalance?.balance?.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        }) || "0.00"}
                       </h1>
                     </div>
                     <Link href="/dashboard/transaction-history">
@@ -758,7 +762,11 @@ const DashboardHome = () => {
                         {/* Order Total */}
                         <div className="text-right">
                           <div className="font-bold text-gray-800 text-lg">
-                            ₦{order.totalAmount.toLocaleString()}
+                            ₦
+                            {order.totalAmount.toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
                           </div>
                           {order.paymentStatus && (
                             <div

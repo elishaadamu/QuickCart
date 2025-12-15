@@ -34,8 +34,8 @@ export default function RootLayout({ children }) {
           {!isSpecialRoute && <Footer />} {/* Conditionally render Footer */}
         </AppContextProvider>
         
-<script src="https://cdn.botpress.cloud/webchat/v3.5/inject.js"></script>
-<script src="https://files.bpcontent.cloud/2025/12/13/16/20251213161208-0D9LWGZJ.js" defer></script>
+        <Script src="https://cdn.botpress.cloud/webchat/v3.5/inject.js"></Script>
+        <Script src="https://files.bpcontent.cloud/2025/12/13/16/20251213161208-0D9LWGZJ.js" defer></Script>
       </body>
     </html>
   );
