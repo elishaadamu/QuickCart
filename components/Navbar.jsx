@@ -478,19 +478,19 @@ const Navbar = () => {
           <button
             onClick={handleMessageClick}
             disabled={isCreatingChat}
-            className="px-5 py-2.5 text-base font-bold rounded-full bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg transform hover:scale-105 transition-all duration-200 whitespace-nowrap flex items-center gap-2"
+            className="px-3 py-1  hidden md:px-5 md:py-2.5 text-base font-bold rounded-full bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg transform hover:scale-105 transition-all duration-200 whitespace-nowrap md:flex items-center gap-2"
           >
             {isCreatingChat ? (
               <>
                 <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                <span>Starting...</span>
+                <span className="text-[10px] md:text-base">Starting...</span>
               </>
             ) : (
               <>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <svg className="md:w-5 md:h-5 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
-                <span>Messages</span>
+                <span className="text-[10px] md:text-base">Messages</span>
               </>
             )}
           </button>
@@ -951,7 +951,28 @@ const Navbar = () => {
                     </div>
                   </div>
                 </li>
-
+                {/* Message Button */}
+                <li>        
+                  <button
+                    onClick={handleMessageClick}
+                    disabled={isCreatingChat}
+                    className="px-5 py-2.5 text-base font-bold rounded-full bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg transform hover:scale-105 transition-all duration-200 whitespace-nowrap flex items-center gap-2"
+                  >
+                    {isCreatingChat ? (
+                      <>
+                        <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                        <span className="">Starting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="md:w-5 md:h-5 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                        <span className="">Messages</span>
+                      </>
+                    )}
+                  </button>
+                </li>
                 <li>
                   {isLoggedIn && userData?.role === "vendor" ? (
                     <Link
