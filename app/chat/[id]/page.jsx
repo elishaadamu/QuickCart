@@ -303,7 +303,7 @@ export default function ChatPage() {
       {/* Input area - fixed at bottom */}
       <div className="bg-white border-t border-gray-200 shadow-lg">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-end gap-3">
+          <div className="flex items-start gap-3">
             <div className="flex-1">
               <textarea
                 value={newMessage}
