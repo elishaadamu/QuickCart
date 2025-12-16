@@ -22,7 +22,8 @@ export default function RootLayout({ children }) {
     pathname.startsWith("/delivery-signin") ||
     pathname.startsWith("/delivery-dashboard") ||
     pathname.startsWith("/seller") ||
-    pathname.startsWith("/vendor-dashboard");
+    pathname.startsWith("/vendor-dashboard") ||
+    pathname.startsWith("/chat");
 
   return (
     <html lang="en">

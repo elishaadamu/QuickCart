@@ -10,6 +10,7 @@ import { apiUrl, API_CONFIG } from "@/configs/api";
 import ProductCard from "@/components/ProductCard";
 import { FaStar, FaCopy } from "react-icons/fa";
 import { message } from "antd";
+import { supabase } from "@/lib/supabase";
 
 const StarRating = ({ rating, setRating }) => {
   const [hover, setHover] = useState(null);
@@ -60,6 +61,7 @@ const VendorPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [coupons, setCoupons] = useState([]);
   const [followerCount, setFollowerCount] = useState(0);
+  const [isCreatingChat, setIsCreatingChat] = useState(false);
 
   // Follow state
   const [isFollowing, setIsFollowing] = useState(followingList?.includes(id));
@@ -141,6 +143,50 @@ const VendorPage = () => {
     };
     fetchVendorProducts();
   }, [vendor]);
+
+  const handleMessageClick = async () => {
+    if (isCreatingChat || !vendor || !userData) return;
+
+    setIsCreatingChat(true);
+    try {
+      // Check if conversation already exists
+      const { data: existingConversation } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('user_id', userData._id || userData.id)
+        .eq('vendor_id', vendor?._id)
+        .single();
+
+      if (existingConversation) {
+        router.push(`/chat/${existingConversation.id}`);
+      } else {
+        // Create new conversation
+        const { data: newConversation, error } = await supabase
+          .from('conversations')
+          .insert({
+            user_id: userData._id || userData.id,
+            vendor_id: vendor?._id,
+            user_name: `${userData.firstName} ${userData.lastName}`,
+            vendor_name: vendor?.businessName,
+            last_message_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+
+        if (!error && newConversation) {
+          router.push(`/chat/${newConversation.id}`);
+        } else {
+          console.error('Error creating conversation:', error);
+          message.error("Failed to start chat. Please try again.");
+        }
+      }
+    } catch (error) {
+      console.error('Error in handleMessageClick:', error);
+      message.error("An error occurred");
+    } finally {
+      setIsCreatingChat(false);
+    }
+  };
 
   const handleFollowClick = (e) => {
     e.preventDefault();
@@ -304,17 +350,52 @@ const VendorPage = () => {
             <h1 className="text-3xl md:text-[32px] font-bold text-gray-800 mb-2 md:mb-0">
               {vendor.businessName}
             </h1>
-            {isLoggedIn && userData?.role === "user" && (
-              <button
-                onClick={handleFollowClick}
-                className={`px-4 py-2 text-sm font-semibold rounded-full transition-colors whitespace-nowrap ${
-                  isFollowing
-                    ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                    : "bg-gray-200 text-gray-800 hover:bg-gray-300"
-                }`}
-              >
-                {isFollowing ? "Following" : "Follow"}
-              </button>
+            {isLoggedIn && (
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleFollowClick}
+                  className={`px-6 py-3 text-base font-bold rounded-full transition-all duration-200 whitespace-nowrap flex items-center gap-2 transform hover:scale-105 ${
+                    isFollowing
+                      ? "bg-gradient-to-r from-blue-100 to-blue-200 text-blue-700 hover:shadow-lg"
+                      : "bg-gradient-to-r from-gray-200 to-gray-300 text-gray-800 hover:shadow-lg"
+                  }`}
+                >
+                  {isFollowing ? (
+                    <>
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      <span>Following</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                      </svg>
+                      <span>Follow</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={handleMessageClick}
+                  disabled={isCreatingChat}
+                  className="px-6 py-3 text-base font-bold rounded-full bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg transform hover:scale-105 transition-all duration-200 whitespace-nowrap flex items-center gap-2"
+                >
+                  {isCreatingChat ? (
+                    <>
+                      <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                      <span>Starting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                      <span>Message Vendor</span>
+                    </>
+                  )}
+                </button>
+              </div>
             )}
           </div>
 

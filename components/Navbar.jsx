@@ -9,6 +9,8 @@ import { decryptData } from "@/lib/encryption";
 import { apiUrl, API_CONFIG } from "@/configs/api";
 import axios from "axios";
 import { usePathname } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { message as antdMessage } from "antd";
 import {
   HiOutlineCpuChip,
   HiOutlineShoppingBag,
@@ -40,6 +42,7 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [animate, setAnimate] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isCreatingChat, setIsCreatingChat] = useState(false);
 
   // Desktop dropdown opens (hover + click)
   const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
@@ -192,6 +195,16 @@ const Navbar = () => {
     setTimeout(() => document.getElementById("search-modal-input")?.focus(), 0);
   };
 
+  const handleMessageClick = async () => {
+    if (!isLoggedIn) {
+      antdMessage.error("Please sign in to access messages.");
+      router.push("/signin");
+      return;
+    }
+
+    router.push("/chat");
+  };
+
   // Toggle a mobile accordion section
   const toggleMobileSection = (section) => {
     setMobileOpenSection((prev) => (prev === section ? null : section));
@@ -237,7 +250,9 @@ const Navbar = () => {
             Shop
           </Link>
 
-          {/* Desktop: Categories (hover + click) */}
+         
+
+          {/* Desktop: Categories (hover + click)
           <div
             className="relative"
             onMouseEnter={() => setIsCategoryMenuOpen(true)}
@@ -284,7 +299,7 @@ const Navbar = () => {
                 )}
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Desktop: Pages */}
           <div
@@ -459,7 +474,26 @@ const Navbar = () => {
             </div>
           </div>
         </div>
-
+{/* Message Button */}
+          <button
+            onClick={handleMessageClick}
+            disabled={isCreatingChat}
+            className="px-5 py-2.5 text-base font-bold rounded-full bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg transform hover:scale-105 transition-all duration-200 whitespace-nowrap flex items-center gap-2"
+          >
+            {isCreatingChat ? (
+              <>
+                <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                <span>Starting...</span>
+              </>
+            ) : (
+              <>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                <span>Messages</span>
+              </>
+            )}
+          </button>
         {/* Right side icons (desktop) */}
         <ul className="hidden lg:flex items-center gap-6 relative">
           <Image

@@ -365,7 +365,7 @@ const DashboardHome = () => {
                 </span>
               </Link>
               <Link
-                href="/dashboard/inbox"
+                href="/dashboard/inbox-support"
                 className="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow flex flex-col items-center justify-center text-center"
               >
                 <FaCommentDots className="w-6 h-6 text-yellow-600 mb-2" />
@@ -979,7 +979,7 @@ const DashboardHome = () => {
             <span>Home</span>
           </Link>
           <Link
-            href="/dashboard/inbox"
+            href="/dashboard/inbox-support"
             className="flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 text-xs"
           >
             <FaCommentDots className="w-5 h-5 mb-1" />

@@ -307,9 +307,9 @@ const Sidebar = ({
               </div>
             </div>
             <Link
-              href="/dashboard/inbox"
+              href="/dashboard/inbox-support"
               className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors ${
-                pathname === "/dashboard/inbox" ? "bg-gray-700" : ""
+                pathname === "/dashboard/inbox-support" ? "bg-gray-700" : ""
               }`}
             >
               <svg

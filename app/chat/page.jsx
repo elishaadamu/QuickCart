@@ -231,7 +231,7 @@ export default function ChatListPage() {
               return (
                 <Link
                   key={conversation.id}
-                  href={`/vendor-dashboard/inbox-support/${conversation.id}`}
+                  href={`/chat/${conversation.id}`}
                   className="block group"
                 >
                   <div className={`bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 p-5 border-2 ${

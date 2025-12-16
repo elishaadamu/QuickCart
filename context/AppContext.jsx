@@ -1,5 +1,4 @@
 "use client";
-import { productsDummyData } from "@/assets/assets";
 import { decryptData } from "@/lib/encryption";
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState } from "react";
