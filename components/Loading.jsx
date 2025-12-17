@@ -31,7 +31,7 @@ const Loading = () => {
           {/* Loading text with gradient */}
           <div className="flex flex-col items-center gap-2">
             <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent animate-pulse">
-              Kasuwar Kamani
+              Kasuwar Zamani
             </h3>
             <div className="flex gap-1">
               <span className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '0ms' }}></span>
