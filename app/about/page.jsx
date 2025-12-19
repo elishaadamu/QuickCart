@@ -3,7 +3,12 @@ import { assets } from "@/assets/assets";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
-import { FaHandshake, FaGlobeAfrica, FaShieldAlt, FaRocket } from "react-icons/fa";
+import {
+  FaHandshake,
+  FaGlobeAfrica,
+  FaShieldAlt,
+  FaRocket,
+} from "react-icons/fa";
 
 const AboutPage = () => {
   return (
@@ -16,10 +21,12 @@ const AboutPage = () => {
         </div>
         <div className="relative max-w-7xl mx-auto text-center">
           <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
-            Revolutionizing Commerce in Northern Nigeria
+            Revolutionizing Commerce in Nigeria
           </h1>
           <p className="mt-6 max-w-3xl mx-auto text-xl text-blue-100">
-            Kasuwar Zamani is more than just a marketplace; it's a bridge connecting modern digital convenience with our rich heritage of trade and enterprise.
+            Kasuwar Zamani is more than just a marketplace; it's a bridge
+            connecting modern digital convenience with our rich heritage of
+            trade and enterprise.
           </p>
         </div>
       </div>
@@ -42,10 +49,16 @@ const AboutPage = () => {
             <h2 className="text-3xl font-bold text-gray-900">Our Story</h2>
             <div className="w-20 h-1.5 bg-blue-600 rounded-full"></div>
             <p className="text-lg text-gray-600 leading-relaxed">
-              Born from the vibrant heart of Kano, Kasuwar Zamani was founded with a simple yet ambitious goal: to empower local businesses and provide consumers with a seamless, secure online shopping experience.
+              Kasuwar Zamani was founded with a simple yet ambitious goal: to
+              empower local businesses and provide consumers with a seamless,
+              secure online shopping experience.
             </p>
             <p className="text-lg text-gray-600 leading-relaxed">
-              We recognized the immense potential of our local artisans, traders, and entrepreneurs. By providing a digital platform tailored to our unique market needs, we are not just selling products; we are building a community where commerce thrives on trust and innovation.
+              We recognized the immense potential of our local artisans,
+              traders, and entrepreneurs. By providing a digital platform
+              tailored to our unique market needs, we are not just selling
+              products; we are building a community where commerce thrives on
+              trust and innovation.
             </p>
           </div>
         </div>
@@ -59,7 +72,9 @@ const AboutPage = () => {
               <FaRocket className="text-blue-600" /> Our Mission
             </h3>
             <p className="text-gray-600">
-              To provide a reliable, accessible, and user-friendly platform that empowers vendors to reach wider markets and offers customers a diverse range of high-quality products with simplified logistics.
+              To provide a reliable, accessible, and user-friendly platform that
+              empowers vendors to reach wider markets and offers customers a
+              diverse range of high-quality products with simplified logistics.
             </p>
           </div>
           <div className="bg-white p-8 rounded-2xl shadow-sm border-t-4 border-green-600 hover:shadow-md transition-shadow">
@@ -67,7 +82,9 @@ const AboutPage = () => {
               <FaGlobeAfrica className="text-green-600" /> Our Vision
             </h3>
             <p className="text-gray-600">
-              To become the leading e-commerce ecosystem in the region, fostering digital literacy and economic growth by seamlessly integrating traditional values with modern technology.
+              To become the leading e-commerce ecosystem in the region,
+              fostering digital literacy and economic growth by seamlessly
+              integrating traditional values with modern technology.
             </p>
           </div>
         </div>
@@ -76,9 +93,12 @@ const AboutPage = () => {
       {/* Core Values */}
       <div className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-gray-900">Why Choose Kasuwar Zamani?</h2>
+          <h2 className="text-3xl font-bold text-gray-900">
+            Why Choose Kasuwar Zamani?
+          </h2>
           <p className="mt-4 text-gray-600 max-w-2xl mx-auto">
-            We are committed to excellence in every transaction. Here is what sets us apart.
+            We are committed to excellence in every transaction. Here is what
+            sets us apart.
           </p>
         </div>
         <div className="grid md:grid-cols-3 gap-8">
@@ -105,11 +125,16 @@ const AboutPage = () => {
               bg: "bg-orange-50",
             },
           ].map((item, index) => (
-            <div key={index} className="flex flex-col items-center text-center p-6 rounded-xl hover:bg-gray-50 transition-colors">
+            <div
+              key={index}
+              className="flex flex-col items-center text-center p-6 rounded-xl hover:bg-gray-50 transition-colors"
+            >
               <div className={`p-4 rounded-full ${item.bg} ${item.color} mb-6`}>
                 <item.icon className="w-8 h-8" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">{item.title}</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">
+                {item.title}
+              </h3>
               <p className="text-gray-600 leading-relaxed">{item.desc}</p>
             </div>
           ))}
@@ -123,7 +148,8 @@ const AboutPage = () => {
             Ready to Experience the Future of Trade?
           </h2>
           <p className="text-blue-100 text-lg mb-8">
-            Join thousands of satisfied customers and vendors on Kasuwar Zamani today.
+            Join thousands of satisfied customers and vendors on Kasuwar Zamani
+            today.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
