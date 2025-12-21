@@ -4,17 +4,18 @@ import axios from "axios";
 import { apiUrl, API_CONFIG } from "@/configs/api";
 import { useRouter } from "next/navigation";
 
+import dynamic from "next/dynamic";
 import HeaderSlider from "@/components/HeaderSlider";
-import HomeProducts from "@/components/HomeProducts";
-import Banner from "@/components/Banner";
-import NewsLetter from "@/components/NewsLetter";
-import CategorySidebar from "@/components/CategorySidebar";
-import FeaturedProduct from "@/components/FeaturedProduct";
-import CategoryProducts from "@/components/CategoryProducts";
-import VendorSection from "@/components/VendorSection";
+const HomeProducts = dynamic(() => import("@/components/HomeProducts"), { ssr: false });
+const CategorySidebar = dynamic(() => import("@/components/CategorySidebar"), { ssr: false });
+const NewsLetter = dynamic(() => import("@/components/NewsLetter"), { ssr: false });
+const Banner = dynamic(() => import("@/components/Banner"), { ssr: false });
 import { FaArrowUp } from "react-icons/fa";
 import { useAppContext } from "@/context/AppContext";
-import SubscriptionPlans from "@/components/SubscriptionSection";
+const VendorSection = dynamic(() => import("@/components/VendorSection"), { ssr: false });
+const FeaturedProduct = dynamic(() => import("@/components/FeaturedProduct"), { ssr: false });
+const CategoryProducts = dynamic(() => import("@/components/CategoryProducts"), { ssr: false });
+const SubscriptionPlans = dynamic(() => import("@/components/SubscriptionSection"), { ssr: false });
 
 const useIdleTimeout = (
   onIdle,
@@ -52,10 +53,19 @@ const useIdleTimeout = (
 
     const events = ["mousemove", "keydown", "click", "scroll", "touchstart"];
 
+    let lastActivity = 0;
+    const throttleDelay = 2000; // 2 seconds
+
     const handleActivity = () => {
-      // Notify other tabs about the activity
-      channel.current.postMessage("user-activity");
-      resetTimer();
+      const now = Date.now();
+      if (now - lastActivity > throttleDelay) {
+        lastActivity = now;
+        // Notify other tabs about the activity
+        if (channel.current) {
+          channel.current.postMessage("user-activity");
+        }
+        resetTimer();
+      }
     };
 
     // Set up event listeners
@@ -69,7 +79,8 @@ const useIdleTimeout = (
     startTimer();
 
     // Cleanup
-    return () => {
+    // Cleanup function
+    const cleanup = () => {
       console.log("Cleaning up idle timer.");
       clearTimeout(timeoutId.current);
       events.forEach((event) => {
@@ -77,12 +88,28 @@ const useIdleTimeout = (
       });
       if (channel.current) {
         channel.current.close();
+        channel.current = null;
       }
+    };
+
+    // Handle pagehide for bfcache
+    const handlePageHide = () => {
+      if (channel.current) {
+        channel.current.close();
+        channel.current = null;
+      }
+    };
+
+    window.addEventListener("pagehide", handlePageHide);
+
+    return () => {
+      cleanup();
+      window.removeEventListener("pagehide", handlePageHide);
     };
   }, [onIdle, idleTimeInSeconds, handleBroadcastMessage, enabled]); // Dependencies for the effect
 };
 
-const HomeClient = () => {
+const HomeClient = ({ initialBanners }) => {
   const router = useRouter();
   const { logout, isLoggedIn, userData } = useAppContext();
 
@@ -132,9 +159,13 @@ const HomeClient = () => {
 
   return (
     <>
-      <div className="flex justify-center max-w-[1280px] mb-10 mx-auto gap-10">
-        <CategorySidebar />
-        <HeaderSlider />
+      <div className="flex justify-center max-w-[1280px] mb-10 mx-auto gap-10 min-h-[400px]">
+        <div className="hidden md:block md:w-[20%] min-w-[250px]">
+             <CategorySidebar />
+        </div>
+        <div className="w-full md:w-[80%]">
+             <HeaderSlider initialBanners={initialBanners} />
+        </div>
       </div>
       <div className="px-6  max-w-[1280px] mx-auto lg:px-32">
         <HomeProducts />
@@ -151,10 +182,10 @@ const HomeClient = () => {
         <SubscriptionPlans />
         <hr className="my-12 border-gray-200" />
 
-        {/* <Banner />
+        <Banner />
         <hr className="my-12 border-gray-200" />
 
-        <NewsLetter /> */}
+        <NewsLetter />
       </div>
       {/* {showBackToTop && (
         <button

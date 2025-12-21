@@ -51,11 +51,13 @@ const ProductCard = ({ product }) => {
       {/* Product Image */}
       <div className="relative  h-64 md:h-64 overflow-hidden rounded-t-2xl bg-gray-50">
         <Image
-          src={productImage}
+          src={productImage.includes("cloudinary.com") ? `${productImage}?q_auto,f_auto` : productImage}
           alt={product.name}
           width={400}
           height={400}
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+          loading="lazy"
         />
         {hasOffer && (
           <span className="absolute top-2 left-2 rounded-full bg-red-600 px-2.5 py-0.5 text-xs font-semibold text-white shadow">

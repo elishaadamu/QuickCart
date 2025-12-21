@@ -88,6 +88,7 @@ const FeaturedProduct = () => {
                   alt={product.name}
                   width={400}
                   height={400}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   className="w-full h-80 object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
                 />
 

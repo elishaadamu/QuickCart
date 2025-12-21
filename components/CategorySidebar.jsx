@@ -69,12 +69,12 @@ const CategorySidebar = () => {
   }, []);
 
   return (
-    <div className="w-full h-[400px] overflow-y-auto mt-6 md:flex-[20%] bg-white hidden md:block shadow-lg rounded-lg z-10 p-4  border border-gray-200 top-20 ">
+    <div className="w-full h-[400px] overflow-y-auto mt-6 bg-white shadow-lg rounded-lg z-10 p-4 border border-gray-200">
       <h3 className="text-lg font-semibold mb-4 text-gray-800">Categories</h3>
       {loading ? (
-        <div className="space-y-2">
-          {[...Array(8)].map((_, i) => (
-            <div key={i} className="flex items-center p-2">
+        <div className="space-y-2 h-full">
+          {[...Array(10)].map((_, i) => (
+            <div key={i} className="flex items-center p-2 animate-pulse">
               <div className="w-5 h-5 mr-2 bg-gray-200 rounded"></div>
               <div className="w-3/4 h-5 bg-gray-200 rounded"></div>
             </div>

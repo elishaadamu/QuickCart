@@ -223,6 +223,7 @@ const Navbar = () => {
             onClick={() => router.push("/")}
             src={Logo}
             alt="logo"
+            sizes="(max-width: 768px) 160px, (max-width: 1280px) 200px, 250px"
           />
         </div>
 

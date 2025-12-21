@@ -7,9 +7,9 @@ import Link from "next/link";
 import axios from "axios";
 import { apiUrl, API_CONFIG } from "@/configs/api";
 
-const HeaderSlider = () => {
-  const [banners, setBanners] = useState([]);
-  const [loading, setLoading] = useState(true);
+const HeaderSlider = ({ initialBanners }) => {
+  const [banners, setBanners] = useState(initialBanners || []);
+  const [loading, setLoading] = useState(!initialBanners || initialBanners.length === 0);
   const [error, setError] = useState(null);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -26,6 +26,8 @@ const HeaderSlider = () => {
   ];
 
   useEffect(() => {
+    if (initialBanners && initialBanners.length > 0) return;
+
     const fetchBanners = async () => {
       try {
         setLoading(true);
@@ -40,7 +42,7 @@ const HeaderSlider = () => {
       }
     };
     fetchBanners();
-  }, []);
+  }, [initialBanners]);
 
   useEffect(() => {
     if (banners.length === 0) return;
@@ -110,6 +112,7 @@ const HeaderSlider = () => {
                       href={banner.link || "#"}
                       className="inline-block px-10 py-3 bg-blue-600 text-white rounded-full font-semibold transition-all hover:bg-blue-700"
                     >
+                      
                       Shop Now
                     </Link>
                   </div>
@@ -131,12 +134,15 @@ const HeaderSlider = () => {
                 {/* IMAGE SECTION */}
                 <div className="flex-1 flex items-center justify-center">
                   <Image
-                    src={banner.image.url}
+                    src={`${banner.image.url}?q_auto,f_auto`}
                     alt={banner.title}
                     width={800}
                     height={800}
+                    sizes="(max-width: 768px) 90vw, (max-width: 1200px) 50vw, 33vw"
                     className="object-contain w-[80%] md:w-[90%] max-h-[280px] md:max-h-[320px]"
-                    priority
+                    priority={banners.indexOf(banner) === 0}
+                    loading={banners.indexOf(banner) === 0 ? "eager" : "lazy"}
+                    fetchPriority={banners.indexOf(banner) === 0 ? "high" : "auto"}
                   />
                 </div>
               </div>

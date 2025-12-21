@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { apiUrl, API_CONFIG } from "@/configs/api";
 import axios from "axios";
+import Image from "next/image";
 
 const SubscriptionPlans = () => {
   const [plans, setPlans] = useState([]);
@@ -35,10 +36,20 @@ const SubscriptionPlans = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading subscription plans...</p>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto w-full">
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+                {[...Array(3)].map((_, i) => (
+                    <div key={i} className="rounded-2xl p-6 sm:p-8 shadow-lg bg-white h-96 animate-pulse">
+                        <div className="h-8 bg-gray-200 rounded w-3/4 mx-auto mb-4"></div>
+                        <div className="h-4 bg-gray-200 rounded w-full mx-auto mb-8"></div>
+                        <div className="h-16 bg-gray-200 rounded w-1/2 mx-auto mb-8"></div>
+                        <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+                        <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+                        <div className="h-12 bg-gray-200 rounded w-full mt-8"></div>
+                    </div>
+                ))}
+            </div>
         </div>
       </div>
     );
@@ -128,9 +139,12 @@ const SubscriptionPlans = () => {
 
                 {plan.image && (
                   <div className="mt-6">
-                    <img
+                    <Image
                       src={plan.image}
                       alt={plan.package}
+                      width={400}
+                      height={200}
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       className="w-full h-32 object-cover rounded-lg"
                     />
                   </div>

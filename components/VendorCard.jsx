@@ -84,6 +84,7 @@ const VendorCard = ({
           src={banner?.url || "https://picsum.photos/seed/1/400/200"}
           alt="banner"
           fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           className="object-cover"
         />
 
@@ -101,6 +102,7 @@ const VendorCard = ({
             alt="avatar"
             width={80}
             height={80}
+            sizes="80px"
             className="object-cover"
           />
         </div>

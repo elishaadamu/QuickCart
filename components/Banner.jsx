@@ -9,6 +9,7 @@ const Banner = () => {
         className="max-w-56"
         src={assets.jbl_soundbox_image}
         alt="jbl_soundbox_image"
+        sizes="(max-width: 768px) 100vw, 224px"
       />
       <div className="flex flex-col items-center justify-center text-center space-y-2 px-4 md:px-0">
         <h2 className="text-2xl md:text-3xl font-semibold max-w-[290px]">

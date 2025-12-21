@@ -3,12 +3,18 @@ import { Outfit } from "next/font/google";
 import "./globals.css";
 import { AppContextProvider } from "@/context/AppContext";
 import { ToastContainer } from "react-toastify";
-import Navbar from "@/components/Navbar"; // Import Navbar
-import Footer from "@/components/Footer"; // Import Footer
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import Script from "next/script";
 
-const outfit = Outfit({ subsets: ["latin"], weight: ["300", "400", "500"] });
+const outfit = Outfit({
+  subsets: ["latin"],
+  weight: ["300", "400", "500"],
+  display: "swap",
+  variable: "--font-outfit",
+});
 
 export default function RootLayout({ children }) {
   const pathname = usePathname();
@@ -27,7 +33,7 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="en">
-      <body className={`${outfit.className} antialiased text-gray-700`}>
+      <body className={`${outfit.variable} antialiased text-gray-700 font-sans`}>
         <ToastContainer />
         <AppContextProvider>
           {!isSpecialRoute && <Navbar />} {/* Conditionally render Navbar */}
@@ -35,8 +41,8 @@ export default function RootLayout({ children }) {
           {!isSpecialRoute && <Footer />} {/* Conditionally render Footer */}
         </AppContextProvider>
         
-        <Script src="https://cdn.botpress.cloud/webchat/v3.5/inject.js"></Script>
-        <Script src="https://files.bpcontent.cloud/2025/12/13/16/20251213161208-0D9LWGZJ.js" defer></Script>
+        <Script src="https://cdn.botpress.cloud/webchat/v3.5/inject.js" strategy="lazyOnload"></Script>
+        <Script src="https://files.bpcontent.cloud/2025/12/13/16/20251213161208-0D9LWGZJ.js" strategy="lazyOnload"></Script>
       </body>
     </html>
   );
