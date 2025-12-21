@@ -150,7 +150,7 @@ const HeaderSlider = ({ initialBanners }) => {
           </div>
 
           {/* DOTS */}
-          <div className="absolute bottom-5 w-full flex items-center justify-center gap-3">
+          <div className="absolute bottom-5 mt-20 md:mt-2 w-full flex items-center justify-center gap-3">
             {banners.map((_, index) => (
               <div
                 key={index}
