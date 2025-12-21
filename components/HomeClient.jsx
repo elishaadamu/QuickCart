@@ -8,9 +8,8 @@ import dynamic from "next/dynamic";
 import HeaderSlider from "@/components/HeaderSlider";
 const HomeProducts = dynamic(() => import("@/components/HomeProducts"), { ssr: false });
 const CategorySidebar = dynamic(() => import("@/components/CategorySidebar"), { ssr: false });
-const NewsLetter = dynamic(() => import("@/components/NewsLetter"), { ssr: false });
+// const NewsLetter = dynamic(() => import("@/components/NewsLetter"), { ssr: false });
 const Banner = dynamic(() => import("@/components/Banner"), { ssr: false });
-import { FaArrowUp } from "react-icons/fa";
 import { useAppContext } from "@/context/AppContext";
 const VendorSection = dynamic(() => import("@/components/VendorSection"), { ssr: false });
 const FeaturedProduct = dynamic(() => import("@/components/FeaturedProduct"), { ssr: false });
@@ -185,7 +184,7 @@ const HomeClient = ({ initialBanners }) => {
         <Banner />
         <hr className="my-12 border-gray-200" />
 
-        <NewsLetter />
+        {/* <NewsLetter /> */}
       </div>
       {/* {showBackToTop && (
         <button
