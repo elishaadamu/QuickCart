@@ -213,7 +213,7 @@ const FeaturedProduct = () => {
         {/* View All Button */}
         <div className="text-center mt-12">
           <button
-            onClick={() => router.push("/products")}
+            onClick={() => router.push("/all-products")}
             className="bg-white text-gray-900 border-2 border-gray-300 px-8 py-4 rounded-xl font-semibold hover:border-blue-600 hover:text-blue-600 transition-all duration-300 flex items-center gap-3 mx-auto hover:shadow-lg"
           >
             View All Products
