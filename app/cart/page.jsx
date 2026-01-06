@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { assets } from "@/assets/assets";
 import OrderSummary from "@/components/OrderSummary";
 import Image from "next/image";
@@ -8,6 +8,8 @@ import ProductCard from "@/components/ProductCard";
 import { useAppContext } from "@/context/AppContext";
 import { toast } from "react-toastify";
 import { FaShoppingCart, FaTrash } from "react-icons/fa";
+import { supabase } from "@/lib/supabase";
+import { message } from "antd";
 
 const Cart = () => {
   const {
@@ -19,7 +21,9 @@ const Cart = () => {
     getCartCount,
     isLoggedIn,
     currency,
+    userData,
   } = useAppContext();
+  const [creatingChatFor, setCreatingChatFor] = useState(null);
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -27,6 +31,56 @@ const Cart = () => {
       router.push("/signin");
     }
   }, [isLoggedIn, router]);
+
+  const handleMessageClick = async (product) => {
+    if (!isLoggedIn) {
+      message.error("Please sign in to message the vendor.");
+      router.push("/signin");
+      return;
+    }
+
+    if (creatingChatFor || !product || !userData) return;
+
+    setCreatingChatFor(product._id);
+    try {
+      // Check if conversation already exists
+      const { data: existingConversation } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('user_id', userData._id || userData.id)
+        .eq('vendor_id', product?.vendor?._id)
+        .single();
+
+      if (existingConversation) {
+        router.push(`/chat/${existingConversation.id}`);
+      } else {
+        // Create new conversation
+        const { data: newConversation, error } = await supabase
+          .from('conversations')
+          .insert({
+            user_id: userData._id || userData.id,
+            vendor_id: product?.vendor?._id,
+            user_name: `${userData.firstName} ${userData.lastName}`,
+            vendor_name: product?.vendor?.businessName,
+            last_message_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+
+        if (!error && newConversation) {
+          router.push(`/chat/${newConversation.id}`);
+        } else {
+          console.error('Error creating conversation:', error);
+          message.error("Failed to start chat. Please try again.");
+        }
+      }
+    } catch (error) {
+      console.error('Error in handleMessageClick:', error);
+      message.error("An error occurred");
+    } finally {
+      setCreatingChatFor(null);
+    }
+  };
 
   const cartProductList = useMemo(() => {
     return Object.keys(cartItems)
@@ -96,79 +150,105 @@ const Cart = () => {
           {cartProductList.map((product) => (
             <div
               key={product._id}
-              className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 border border-slate-200 rounded-lg"
+              className="flex flex-col gap-4 p-4 border border-slate-200 rounded-lg"
             >
-              {/* Product Image & Info */}
-              <div className="flex items-center gap-4 flex-grow">
-                <div className="w-20 h-20 flex-shrink-0 bg-slate-100 rounded-md flex items-center justify-center">
-                  <Image
-                    src={product.images?.[0]?.url || ""}
-                    alt={product.name}
-                    className="w-full h-full object-contain mix-blend-multiply p-1"
-                    width={80}
-                    height={80}
-                  />
+              {/* Main Row */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                {/* Product Image & Info */}
+                <div className="flex items-center gap-4 flex-grow">
+                  <div className="w-20 h-20 flex-shrink-0 bg-slate-100 rounded-md flex items-center justify-center">
+                    <Image
+                      src={product.images?.[0]?.url || ""}
+                      alt={product.name}
+                      className="w-full h-full object-contain mix-blend-multiply p-1"
+                      width={80}
+                      height={80}
+                    />
+                  </div>
+                  <div className="flex-grow">
+                    <p className="font-medium text-slate-800">{product.name}</p>
+                    <p className="text-sm text-slate-500 sm:hidden">
+                      {currency}
+                      {product.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-grow">
-                  <p className="font-medium text-slate-800">{product.name}</p>
-                  <p className="text-sm text-slate-500 sm:hidden">
-                    {currency}
-                    {product.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </p>
+
+                {/* Price (Desktop) */}
+                <div className="hidden sm:block w-24 text-center text-slate-600">
+                  {currency}
+                  {product.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
-              </div>
 
-              {/* Price (Desktop) */}
-              <div className="hidden sm:block w-24 text-center text-slate-600">
-                {currency}
-                {product.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
+                {/* Quantity Selector */}
+                <div className="w-32 flex-shrink-0">
+                  <div className="flex items-center border border-slate-300 rounded-md w-fit">
+                    <button
+                      onClick={() =>
+                        updateCartQuantity(product._id, product.quantity - 1)
+                      }
+                      className="px-3 py-2 text-slate-500 hover:bg-slate-100 rounded-l-md"
+                      aria-label="Decrease quantity"
+                    >
+                      -
+                    </button>
+                    <input
+                      readOnly
+                      type="number"
+                      value={product.quantity}
+                      className="w-12 border-l border-r text-center appearance-none outline-none bg-transparent cursor-default"
+                      aria-label="Product quantity"
+                    />
+                    <button
+                      onClick={() => addToCart(product._id)}
+                      className="px-3 py-2 text-slate-500 hover:bg-slate-100 rounded-r-md"
+                      aria-label="Increase quantity"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
 
-              {/* Quantity Selector */}
-              <div className="w-32 flex-shrink-0">
-                <div className="flex items-center border border-slate-300 rounded-md w-fit">
+                {/* Subtotal */}
+                <div className="w-24 text-right font-semibold text-slate-800">
+                  {currency}
+                  {(product.price * product.quantity).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
+
+                {/* Remove Button */}
+                <div className="w-10 text-right">
                   <button
-                    onClick={() =>
-                      updateCartQuantity(product._id, product.quantity - 1)
-                    }
-                    className="px-3 py-2 text-slate-500 hover:bg-slate-100 rounded-l-md"
-                    aria-label="Decrease quantity"
+                    onClick={() => updateCartQuantity(product._id, 0)}
+                    className="text-slate-400 hover:text-red-500 transition-colors"
+                    aria-label="Remove item"
                   >
-                    -
-                  </button>
-                  <input
-                    readOnly
-                    type="number"
-                    value={product.quantity}
-                    className="w-12 border-l border-r text-center appearance-none outline-none bg-transparent cursor-default"
-                    aria-label="Product quantity"
-                  />
-                  <button
-                    onClick={() => addToCart(product._id)}
-                    className="px-3 py-2 text-slate-500 hover:bg-slate-100 rounded-r-md"
-                    aria-label="Increase quantity"
-                  >
-                    +
+                    <FaTrash />
                   </button>
                 </div>
               </div>
 
-              {/* Subtotal */}
-              <div className="w-24 text-right font-semibold text-slate-800">
-                {currency}
-                {(product.price * product.quantity).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
-
-              {/* Remove Button */}
-              <div className="w-10 text-right">
+              {/* Message Vendor Button */}
+              {product?.vendor && (
                 <button
-                  onClick={() => updateCartQuantity(product._id, 0)}
-                  className="text-slate-400 hover:text-red-500 transition-colors"
-                  aria-label="Remove item"
+                  onClick={() => handleMessageClick(product)}
+                  disabled={creatingChatFor === product._id}
+                  className="w-full sm:w-auto px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 flex items-center justify-center gap-2 text-sm font-medium"
                 >
-                  <FaTrash />
+                  {creatingChatFor === product._id ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                      <span>Starting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                      <span>Message Vendor</span>
+                    </>
+                  )}
                 </button>
-              </div>
+              )}
             </div>
           ))}
         </div>

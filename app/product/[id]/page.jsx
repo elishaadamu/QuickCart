@@ -12,6 +12,7 @@ import React from "react";
 import axios from "axios";
 import { apiUrl, API_CONFIG } from "@/configs/api";
 import { message } from "antd";
+import { supabase } from "@/lib/supabase";
 
 const Product = () => {
   const { id } = useParams();
@@ -21,6 +22,7 @@ const Product = () => {
   const [mainImage, setMainImage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [product, setProduct] = useState(null);
+  const [isCreatingChat, setIsCreatingChat] = useState(false);
 
   useEffect(() => {
     const fetchVendorProducts = async () => {
@@ -47,6 +49,56 @@ const Product = () => {
     };
     fetchVendorProducts();
   }, [id, userData]);
+
+  const handleMessageClick = async () => {
+    if (!isLoggedIn) {
+      message.error("Please sign in to message the vendor.");
+      router.push("/signin");
+      return;
+    }
+
+    if (isCreatingChat || !product || !userData) return;
+
+    setIsCreatingChat(true);
+    try {
+      // Check if conversation already exists
+      const { data: existingConversation } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('user_id', userData._id || userData.id)
+        .eq('vendor_id', product?.vendor?._id)
+        .single();
+
+      if (existingConversation) {
+        router.push(`/chat/${existingConversation.id}`);
+      } else {
+        // Create new conversation
+        const { data: newConversation, error } = await supabase
+          .from('conversations')
+          .insert({
+            user_id: userData._id || userData.id,
+            vendor_id: product?.vendor?._id,
+            user_name: `${userData.firstName} ${userData.lastName}`,
+            vendor_name: product?.vendor?.businessName,
+            last_message_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+
+        if (!error && newConversation) {
+          router.push(`/chat/${newConversation.id}`);
+        } else {
+          console.error('Error creating conversation:', error);
+          message.error("Failed to start chat. Please try again.");
+        }
+      }
+    } catch (error) {
+      console.error('Error in handleMessageClick:', error);
+      message.error("An error occurred");
+    } finally {
+      setIsCreatingChat(false);
+    }
+  };
 
   const relatedProducts = useMemo(() => {
     if (!product || !products) {
@@ -179,40 +231,65 @@ const Product = () => {
             </div>
 
             {/* Buttons */}
-            <div className="flex items-center mt-10 gap-4">
-              <button
-                onClick={() => {
-                  if (!isLoggedIn) {
-                    message.error("Please sign in to add items to cart");
-                    router.push("/signin");
-                    return;
-                  }
-                  addToCart(product._id);
-                  message.success(
-                    `${product.name} has been added to your cart!`
-                  );
-                }}
-                className="w-full py-3.5 bg-gray-100 text-gray-800/80 hover:bg-gray-200 transition"
-              >
-                Add to Cart
-              </button>
-              <button
-                onClick={() => {
-                  if (!isLoggedIn) {
-                    message.error("Please sign in to add items to cart");
-                    router.push("/signin");
-                    return;
-                  }
-                  addToCart(product._id);
-                  message.success(
-                    `${product.name} has been added to your cart!`
-                  );
-                  router.push("/cart");
-                }}
-                className="w-full py-3.5 bg-blue-500 text-white hover:bg-blue-600 transition"
-              >
-                Buy now
-              </button>
+            <div className="flex flex-col gap-4 mt-10">
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => {
+                    if (!isLoggedIn) {
+                      message.error("Please sign in to add items to cart");
+                      router.push("/signin");
+                      return;
+                    }
+                    addToCart(product._id);
+                    message.success(
+                      `${product.name} has been added to your cart!`
+                    );
+                  }}
+                  className="w-full py-3.5 bg-gray-100 text-gray-800/80 hover:bg-gray-200 transition"
+                >
+                  Add to Cart
+                </button>
+                <button
+                  onClick={() => {
+                    if (!isLoggedIn) {
+                      message.error("Please sign in to add items to cart");
+                      router.push("/signin");
+                      return;
+                    }
+                    addToCart(product._id);
+                    message.success(
+                      `${product.name} has been added to your cart!`
+                    );
+                    router.push("/cart");
+                  }}
+                  className="w-full py-3.5 bg-blue-500 text-white hover:bg-blue-600 transition"
+                >
+                  Buy now
+                </button>
+              </div>
+              
+              {/* Message Vendor Button */}
+              {isLoggedIn && product?.vendor && (
+                <button
+                  onClick={handleMessageClick}
+                  disabled={isCreatingChat}
+                  className="w-full py-3.5 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 flex items-center justify-center gap-2 font-medium"
+                >
+                  {isCreatingChat ? (
+                    <>
+                      <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                      <span>Starting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                      <span>Message Vendor</span>
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </div>
         </div>
